@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+.env
+*.egg-info/
+dist/
+build/
+
+# Pipenv
+.venv/
+
+# Flask / migrations temp
+instance/
+
+# Node
+node_modules/
+frontend/dist/
+.env.local
+.env.*.local
+
+# Misc
+.DS_Store
+*.log
+*.sqlite3

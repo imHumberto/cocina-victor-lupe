@@ -1,0 +1,113 @@
+:root {
+  --color-brand:        #ED4137;
+  --color-brand-dark:   #c73128;
+  --color-brand-light:  #fdf0ef;
+  --color-text:         #1a1a1a;
+  --color-muted:        #6c757d;
+  --radius:             0.75rem;
+  --shadow-card:        0 2px 12px rgba(0,0,0,.08);
+}
+
+body {
+  font-family: "Segoe UI", system-ui, sans-serif;
+  background: #f8f9fa;
+  color: var(--color-text);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Brand overrides */
+.btn-brand {
+  background: var(--color-brand);
+  color: #fff;
+  border: none;
+}
+.btn-brand:hover, .btn-brand:focus {
+  background: var(--color-brand-dark);
+  color: #fff;
+}
+.btn-outline-brand {
+  border-color: var(--color-brand);
+  color: var(--color-brand);
+}
+.btn-outline-brand:hover {
+  background: var(--color-brand);
+  color: #fff;
+}
+.text-brand { color: var(--color-brand) !important; }
+.bg-brand   { background: var(--color-brand) !important; }
+
+/* Cards */
+.card-sazon {
+  border: none;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-card);
+}
+
+/* Bottom nav (mobile) */
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 60px;
+  background: #fff;
+  border-top: 1px solid #e9ecef;
+  display: flex;
+  z-index: 1000;
+}
+.bottom-nav a {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: .65rem;
+  color: var(--color-muted);
+  text-decoration: none;
+  gap: 2px;
+  transition: color .15s;
+}
+.bottom-nav a.active,
+.bottom-nav a:hover {
+  color: var(--color-brand);
+}
+.bottom-nav i { font-size: 1.35rem; }
+
+/* Page padding for bottom nav */
+.page-with-nav {
+  padding-bottom: 72px;
+}
+
+/* Status badges */
+.badge-pendiente      { background: #ffc107; color: #000; }
+.badge-en_preparacion { background: #0dcaf0; color: #000; }
+.badge-en_camino      { background: #0d6efd; color: #fff; }
+.badge-entregado      { background: #198754; color: #fff; }
+.badge-cancelado      { background: #dc3545; color: #fff; }
+
+/* Notification badge */
+.notif-badge {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  background: var(--color-brand);
+  color: #fff;
+  border-radius: 50%;
+  width: 16px;
+  height: 16px;
+  font-size: .6rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Spinner overlay */
+.spinner-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(255,255,255,.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
