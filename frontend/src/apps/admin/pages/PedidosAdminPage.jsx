@@ -11,7 +11,7 @@ const TABS = [
   { key: "en_preparacion", label: "En preparación", estados: ["confirmado", "en_preparacion"] },
   { key: "listo",          label: "Listo",           estados: ["listo"] },
   { key: "en_camino",      label: "Enviado",         estados: ["en_camino"] },
-  { key: "cerrado",        label: "Entregados",      estados: ["entregado", "rechazado", "cancelado"] },
+  { key: "cerrado",        label: "Finalizado",      estados: ["entregado", "rechazado", "cancelado"] },
 ];
 
 const MOTIVOS_RAPIDOS = [
@@ -57,7 +57,7 @@ function TimeBadge({ pedido }) {
 
   if (estado === "pendiente") {
     const mins = minutesSince(created_at);
-    if (mins < 1) return <Badge color="#1e3a5f" text="Nuevo" />;
+    if (mins < 3) return <Badge color="#2563eb" text="Nuevo" />;
     return <Badge color="#f59e0b" text={`Recibido +${mins}m`} />;
   }
   if (estado === "confirmado" || estado === "en_preparacion") {
@@ -105,9 +105,9 @@ function TimerWidget({ pedido }) {
 
   if (estado === "pendiente") {
     const elapsed = (Date.now() - new Date(created_at).getTime()) / 1000;
-    const window = 600; // 10 min
+    const window = 1800; // 30 min = una vuelta completa
     progress = Math.min(elapsed / window, 1);
-    color = "#ef4444";
+    color = elapsed < 180 ? "#22c55e" : "#ef4444"; // verde 0-3 min, rojo después
     titulo = "Nuevo pedido entrante";
     tiempo = secondsToMMSS(elapsed);
     subtitulo = "El pedido no se ha confirmado";
@@ -158,7 +158,7 @@ function TimerWidget({ pedido }) {
   const offset = CIRCUM * (1 - progress);
 
   return (
-    <div className="d-flex align-items-center gap-3 p-3 rounded-3 mb-3" style={{ background: "#f8fafc", border: "1px solid #e2e8f0" }}>
+    <div className="d-flex align-items-center gap-3 p-3 rounded-3 mb-3" style={{ background: "#F9FBFC" }}>
       {/* SVG circle */}
       <div style={{ flexShrink: 0 }}>
         <svg width="64" height="64" viewBox="0 0 60 60">
@@ -187,33 +187,46 @@ function TimerWidget({ pedido }) {
 
 function PedidoCard({ pedido, seleccionado, onClick }) {
   const nombre = pedido.receptor_nombre || pedido.cliente?.nombre || "—";
-  const comidas = 1; // por ahora siempre 1 comida por pedido
+  const comidas = 1;
   return (
     <div
       onClick={onClick}
       className="rounded-3 p-3 mb-2"
       style={{
         cursor: "pointer",
-        border: seleccionado ? "2px solid #2563eb" : "1px solid #e5e7eb",
+        border: seleccionado ? "2px solid #1255F0" : "1px solid #e5e7eb",
         background: "#fff",
-        transition: "border-color 0.15s",
+        boxShadow: seleccionado ? "0 4px 16px rgba(128,159,184,0.20)" : "none",
+        transition: "border-color 0.15s, box-shadow 0.15s",
       }}
     >
+      {/* Título + badge */}
       <div className="d-flex justify-content-between align-items-start mb-1">
-        <span className="fw-bold" style={{ fontSize: "1rem" }}>Pedido #{pedido.id}</span>
+        <span style={{ fontSize: "1.5rem", fontWeight: 600, color: "#17181A", lineHeight: 1.2 }}>Pedido #{pedido.id}</span>
         <TimeBadge pedido={pedido} />
       </div>
-      <div className="text-muted small mb-1">
-        Hora de entrega: <span style={{ color: "#374151" }}>{pedido.hora_entrega}</span>
+
+      {/* Hora de entrega — pegada al título */}
+      <div className="mb-3">
+        <span style={{ fontSize: "0.75rem", fontWeight: 500, color: "#809FB8" }}>Hora de entrega: </span>
+        <span style={{ fontSize: "0.75rem", fontWeight: 500, color: "#545454" }}>{pedido.hora_entrega}</span>
       </div>
+
+      {/* Nombre + Comidas + Ver detalles — separados del bloque anterior */}
       <div className="d-flex justify-content-between align-items-end">
         <div>
-          <div className="small">Nombre: <span style={{ color: "#374151" }}>{nombre}</span></div>
-          <div className="small text-muted">Comidas: {comidas}</div>
+          <div style={{ lineHeight: 1.6 }}>
+            <span style={{ fontSize: "0.875rem", fontWeight: 500, color: "#809FB8" }}>Nombre: </span>
+            <span style={{ fontSize: "0.875rem", fontWeight: 500, color: "#545454" }}>{nombre}</span>
+          </div>
+          <div style={{ lineHeight: 1.6 }}>
+            <span style={{ fontSize: "0.875rem", fontWeight: 500, color: "#809FB8" }}>Comidas: </span>
+            <span style={{ fontSize: "0.875rem", fontWeight: 500, color: "#545454" }}>{comidas}</span>
+          </div>
         </div>
         <button
           className="btn btn-sm rounded-2"
-          style={{ fontSize: "0.75rem", background: "#f1f5f9", color: "#64748b", border: "none" }}
+          style={{ fontSize: "0.75rem", fontWeight: 700, background: "#f1f5f9", color: "#64748b", border: "none" }}
           onClick={onClick}
         >
           Ver detalles
@@ -227,10 +240,10 @@ function PedidoCard({ pedido, seleccionado, onClick }) {
 
 function InfoBox({ label, value, sub }) {
   return (
-    <div className="rounded-3 p-3" style={{ background: "#f8fafc", border: "1px solid #e2e8f0", flex: 1, minWidth: 0 }}>
-      <div className="text-muted" style={{ fontSize: "0.7rem", marginBottom: 2 }}>{label}</div>
-      <div className="fw-semibold" style={{ fontSize: "0.9rem", wordBreak: "break-word" }}>{value || "—"}</div>
-      {sub && <div className="text-muted" style={{ fontSize: "0.75rem" }}>{sub}</div>}
+    <div className="rounded-3 p-3" style={{ background: "#F9FBFC", flex: 1, minWidth: 0 }}>
+      <div style={{ fontSize: "0.75rem", fontWeight: 500, color: "#809FB8", marginBottom: 4 }}>{label}</div>
+      <div style={{ fontSize: "1rem", fontWeight: 600, color: "#545454", wordBreak: "break-word" }}>{value || "—"}</div>
+      {sub && <div style={{ fontSize: "0.75rem", color: "#809FB8" }}>{sub}</div>}
     </div>
   );
 }
@@ -271,27 +284,37 @@ function MapaEntrega({ pedido }) {
 function ResumenPedido({ pedido }) {
   const plato = pedido.plato_elegido === "alternativa" ? "Plato alternativo" : "Plato del día";
   const bebida = pedido.bebida_elegida === "alternativa" ? "Bebida alternativa" : "Bebida del día";
+  const txt = { fontSize: "1rem", color: "#545454" };
+  const sub = { fontSize: "1rem", fontWeight: 400, color: "#809FB8" };
+  const bold = { fontSize: "1rem", fontWeight: 700, color: "#545454" };
   return (
     <div className="mb-3">
-      <div className="fw-semibold mb-2" style={{ fontSize: "0.9rem" }}>Resumen del pedido</div>
+      <div className="fw-semibold mb-3" style={{ fontSize: "0.9rem", color: "#17181A" }}>Resumen del pedido</div>
       <div style={{ borderTop: "1px solid #e5e7eb" }}>
-        <div className="d-flex justify-content-between py-2" style={{ borderBottom: "1px solid #f3f4f6" }}>
-          <span className="small fw-semibold">1x Comida del Día</span>
+        {/* Item principal */}
+        <div className="d-flex justify-content-between align-items-center py-2" style={{ borderBottom: "1px solid #f3f4f6" }}>
+          <span style={{ ...txt, fontWeight: 600 }}>1x Comida del Día</span>
         </div>
-        <div className="d-flex justify-content-between py-1 px-2" style={{ borderBottom: "1px solid #f3f4f6" }}>
-          <span className="small text-muted">{plato}</span>
+        {/* Detalle plato */}
+        <div className="d-flex justify-content-between align-items-center py-1 px-2" style={{ borderBottom: "1px solid #f3f4f6" }}>
+          <span style={sub}>{plato}</span>
         </div>
-        <div className="d-flex justify-content-between py-1 px-2" style={{ borderBottom: "1px solid #f3f4f6" }}>
-          <span className="small text-muted">{bebida}</span>
+        {/* Detalle bebida */}
+        <div className="d-flex justify-content-between align-items-center py-1 px-2" style={{ borderBottom: "1px solid #f3f4f6" }}>
+          <span style={sub}>{bebida}</span>
         </div>
+        {/* Notas */}
         {pedido.notas && (
-          <div className="py-2 px-2">
-            <span className="small" style={{ color: "#92400e" }}>📝 {pedido.notas}</span>
+          <div className="py-2 px-2" style={{ borderBottom: "1px solid #f3f4f6" }}>
+            <span style={{ ...sub, color: "#92400e" }}>📝 {pedido.notas}</span>
           </div>
         )}
-        <div className="d-flex justify-content-between pt-2 mt-1" style={{ borderTop: "2px solid #e5e7eb" }}>
-          <span className="fw-bold small">Pago</span>
-          <span className="fw-bold small">{pedido.metodo_pago ?? "—"}</span>
+        {/* Total / método de pago */}
+        <div className="d-flex justify-content-between align-items-center pt-3 mt-1" style={{ borderTop: "2px solid #e5e7eb" }}>
+          <span style={bold}>Total</span>
+          <span style={{ ...bold, color: "#809FB8", fontWeight: 500, fontSize: "0.9rem" }}>
+            {pedido.metodo_pago ? `Pago con ${pedido.metodo_pago}` : "—"}
+          </span>
         </div>
       </div>
     </div>
@@ -392,7 +415,7 @@ function TabsScroll({ tab, setTab, counts }) {
               height: 44, borderRadius: 10, border: "none",
               flex: "1 0 auto", cursor: "pointer",
               minWidth: 100, padding: "0 16px",
-              background: tab === t.key ? "#2563eb" : "#fff",
+              background: tab === t.key ? "#2563eb" : "#F1F4F9",
               color: tab === t.key ? "#fff" : "#6b7280",
               fontSize: "0.85rem", fontWeight: 600,
               whiteSpace: "nowrap",
@@ -542,16 +565,17 @@ export default function PedidosAdminPage() {
   // ── Botones contextuales por estado ──────────────────────────────────────
 
   function AccionesPanel({ p }) {
+    const btnBase = { border: "none", borderRadius: 10, height: 50, fontWeight: 600, fontSize: "1rem" };
     if (p.estado === "pendiente") return (
       <div className="d-flex gap-2">
         <button
-          className="btn fw-semibold flex-fill py-2"
-          style={{ background: "#dcfce7", color: "#15803d", border: "none", borderRadius: 10 }}
+          className="btn flex-fill"
+          style={{ ...btnBase, background: "#dcfce7", color: "#15803d" }}
           onClick={() => confirmar(p.id)}
         >Aceptar</button>
         <button
-          className="btn fw-semibold flex-fill py-2"
-          style={{ background: "#ef4444", color: "#fff", border: "none", borderRadius: 10 }}
+          className="btn flex-fill"
+          style={{ ...btnBase, background: "#ef4444", color: "#fff" }}
           onClick={() => { setModalRechazo(p); setMotivoRechazo(""); }}
         >Rechazar</button>
       </div>
@@ -560,13 +584,13 @@ export default function PedidosAdminPage() {
     if (p.estado === "confirmado") return (
       <div className="d-flex gap-2">
         <button
-          className="btn fw-semibold flex-fill py-2"
-          style={{ background: "#dcfce7", color: "#15803d", border: "none", borderRadius: 10 }}
+          className="btn flex-fill"
+          style={{ ...btnBase, background: "#dcfce7", color: "#15803d" }}
           onClick={() => setModalEstado({ pedido: p, estado: "en_preparacion" })}
         ><i className="bi bi-fire me-1" />En preparación</button>
         <button
-          className="btn btn-outline-danger fw-semibold px-3 py-2"
-          style={{ borderRadius: 10 }}
+          className="btn"
+          style={{ ...btnBase, background: "#fef2f2", color: "#ef4444", padding: "0 20px" }}
           onClick={() => setModalEstado({ pedido: p, estado: "cancelado" })}
         >Cancelar</button>
       </div>
@@ -575,13 +599,13 @@ export default function PedidosAdminPage() {
     if (p.estado === "en_preparacion") return (
       <div className="d-flex gap-2">
         <button
-          className="btn fw-semibold flex-fill py-2"
-          style={{ background: "#dcfce7", color: "#15803d", border: "none", borderRadius: 10 }}
+          className="btn flex-fill"
+          style={{ ...btnBase, background: "#dcfce7", color: "#15803d" }}
           onClick={() => setModalEstado({ pedido: p, estado: "listo" })}
         ><i className="bi bi-bag-check me-1" />Pedido listo</button>
         <button
-          className="btn btn-outline-danger fw-semibold px-3 py-2"
-          style={{ borderRadius: 10 }}
+          className="btn"
+          style={{ ...btnBase, background: "#fef2f2", color: "#ef4444", padding: "0 20px" }}
           onClick={() => setModalEstado({ pedido: p, estado: "cancelado" })}
         >Cancelar</button>
       </div>
@@ -590,13 +614,13 @@ export default function PedidosAdminPage() {
     if (p.estado === "listo") return (
       <div className="d-flex flex-column gap-2">
         <button
-          className="btn fw-semibold py-2"
-          style={{ background: "#eff6ff", color: "#1d4ed8", border: "1px solid #bfdbfe", borderRadius: 10 }}
+          className="btn"
+          style={{ ...btnBase, background: "#eff6ff", color: "#1d4ed8" }}
           onClick={() => setModalRepartidor(p)}
         ><i className="bi bi-person-check me-1" />Asignar repartidor</button>
         <button
-          className="btn btn-outline-success fw-semibold py-2"
-          style={{ borderRadius: 10 }}
+          className="btn"
+          style={{ ...btnBase, background: "#dcfce7", color: "#15803d" }}
           onClick={() => setModalEstado({ pedido: p, estado: "entregado" })}
         ><i className="bi bi-check-circle me-1" />Marcar entregado</button>
       </div>
@@ -605,8 +629,8 @@ export default function PedidosAdminPage() {
     if (p.estado === "en_camino") return (
       <div className="d-flex gap-2">
         <button
-          className="btn btn-outline-success fw-semibold flex-fill py-2"
-          style={{ borderRadius: 10 }}
+          className="btn flex-fill"
+          style={{ ...btnBase, background: "#dcfce7", color: "#15803d" }}
           onClick={() => setModalEstado({ pedido: p, estado: "entregado" })}
         ><i className="bi bi-check-circle me-1" />Marcar entregado</button>
       </div>
@@ -654,8 +678,8 @@ export default function PedidosAdminPage() {
             <p className="text-muted text-center small py-4">Sin pedidos</p>
           ) : (
             <>
-              <div className="text-muted fw-semibold mb-2" style={{ fontSize: "0.8rem" }}>
-                {tabActual.label}
+              <div className="fw-semibold mb-2" style={{ fontSize: "1rem", color: "#17181A" }}>
+                {tabActual.label} pedidos
               </div>
               {lista.map(ped => (
                 <PedidoCard
