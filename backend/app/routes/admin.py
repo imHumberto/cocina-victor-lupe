@@ -366,3 +366,23 @@ def listar_invites():
         .all()
     )
     return jsonify([i.to_dict() for i in invites])
+
+
+@admin_bp.get("/repartidores")
+@jwt_required()
+@require_role("admin")
+def listar_repartidores():
+    reps = User.query.filter_by(rol="repartidor", activo=True).order_by(User.nombre).all()
+    return jsonify([r.to_dict() for r in reps])
+
+
+@admin_bp.patch("/pedidos/<int:pedido_id>/asignar-repartidor")
+@jwt_required()
+@require_role("admin")
+def asignar_repartidor(pedido_id):
+    pedido = Pedido.query.get_or_404(pedido_id)
+    data = request.get_json() or {}
+    pedido.repartidor_id = data.get("repartidor_id")
+    db.session.commit()
+    socketio.emit("pedido_actualizado", pedido.to_dict(include_cliente=True, include_repartidor=True), room="admin")
+    return jsonify(pedido.to_dict(include_cliente=True, include_repartidor=True))

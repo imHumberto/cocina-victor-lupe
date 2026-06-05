@@ -71,7 +71,7 @@ export default function PlatillosPage() {
   const visible = filtroTipo === "todos" ? platillos : platillos.filter((p) => p.tipo === filtroTipo);
 
   return (
-    <div>
+    <div className="p-4" style={{ height: "100%", overflowY: "auto" }}>
       <h2 className="h5 fw-bold mb-3">Catálogo de platillos</h2>
       <div className="row g-4">
         {/* Formulario */}

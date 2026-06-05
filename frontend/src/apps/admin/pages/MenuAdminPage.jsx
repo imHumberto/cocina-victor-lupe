@@ -3,9 +3,11 @@ import api from "../../../services/api";
 import dayjs from "dayjs";
 import isoWeek from "dayjs/plugin/isoWeek";
 import weekOfYear from "dayjs/plugin/weekOfYear";
+import isSameOrAfter from "dayjs/plugin/isSameOrAfter";
 
 dayjs.extend(isoWeek);
 dayjs.extend(weekOfYear);
+dayjs.extend(isSameOrAfter);
 
 const DIAS_NOMBRES = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes"];
 const DIAS_CORTOS  = ["Lun", "Mar", "Mié", "Jue", "Vie"];
@@ -63,15 +65,23 @@ function DotsCategorias({ d }) {
 // Chip de platillo seleccionado
 function Chip({ nombre, onRemove, disabled }) {
   return (
-    <span className="d-inline-flex align-items-center gap-1 px-2 py-1 rounded-pill border bg-white small fw-semibold me-1 mb-1">
+    <span style={{
+      display: "inline-flex", alignItems: "center", gap: 8,
+      background: "#e8eaed", borderRadius: 20,
+      padding: "6px 10px 6px 14px",
+      fontSize: "0.875rem", fontWeight: 500, color: "#374151",
+    }}>
       {nombre}
       {!disabled && (
         <button
           type="button"
-          className="btn-close"
-          style={{ fontSize: "0.55rem" }}
           onClick={onRemove}
-        />
+          style={{
+            background: "none", border: "none", padding: "0 2px",
+            cursor: "pointer", color: "#6b7280", fontSize: "1rem",
+            lineHeight: 1, display: "flex", alignItems: "center",
+          }}
+        >×</button>
       )}
     </span>
   );
@@ -99,39 +109,71 @@ function AgregarPlatillo({ opciones, seleccionados, onAgregar, disabled }) {
     <div className="position-relative d-inline-block" ref={ref}>
       <button
         type="button"
-        className="btn btn-sm btn-outline-secondary rounded-pill px-2 py-1 mb-1"
-        style={{ fontSize: "0.8rem" }}
         onClick={() => { setAbierto((a) => !a); setBusq(""); }}
+        style={{
+          display: "inline-flex", alignItems: "center", gap: 6,
+          background: "#fff", border: "1.5px solid #d1d5db", borderRadius: 20,
+          padding: "6px 14px", fontSize: "0.875rem", fontWeight: 600,
+          cursor: "pointer", color: "#374151",
+        }}
       >
-        <i className="bi bi-plus" /> Agregar platillo
+        + Agregar platillo
       </button>
       {abierto && (
-        <div className="bg-white border rounded shadow" style={{ position: "absolute", top: "110%", left: 0, zIndex: 100, minWidth: 220 }}>
+        <div className="bg-white border rounded-3 shadow-sm" style={{ position: "absolute", top: "110%", left: 0, zIndex: 100, minWidth: 220 }}>
           <div className="p-2 border-bottom">
             <input
-              autoFocus
-              type="text"
-              className="form-control form-control-sm"
-              placeholder="Buscar..."
-              value={busq}
+              autoFocus type="text" className="form-control form-control-sm"
+              placeholder="Buscar..." value={busq}
               onChange={(e) => setBusq(e.target.value)}
             />
           </div>
           <ul className="list-unstyled mb-0" style={{ maxHeight: 180, overflowY: "auto" }}>
             {disponibles.map((p) => (
               <li
-                key={p.id}
-                className="px-3 py-2 small"
-                style={{ cursor: "pointer" }}
+                key={p.id} className="px-3 py-2 small" style={{ cursor: "pointer" }}
                 onMouseEnter={(e) => e.currentTarget.style.background = "#f5f5f5"}
                 onMouseLeave={(e) => e.currentTarget.style.background = ""}
                 onClick={() => { onAgregar(p.id); setAbierto(false); setBusq(""); }}
-              >
-                {p.nombre}
-              </li>
+              >{p.nombre}</li>
             ))}
             {disponibles.length === 0 && <li className="px-3 py-2 text-muted small">Sin resultados</li>}
           </ul>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Footer de alternativo
+function FooterAlternativo({ label, descripcion, activo, onChange, publicado }) {
+  return (
+    <div className="d-flex align-items-center justify-content-between px-4 py-3" style={{ background: "#f5f6f8", borderTop: "1px solid #e5e7eb" }}>
+      <div>
+        <div className="d-flex align-items-center gap-2 mb-1">
+          <span className="fw-semibold" style={{ fontSize: "0.875rem" }}>{label}</span>
+          <span
+            className="rounded-pill px-2 py-0"
+            style={{
+              fontSize: "0.7rem", fontWeight: 600,
+              background: activo ? "#dcfce7" : "#f3f4f6",
+              color: activo ? "#15803d" : "#6b7280",
+            }}
+          >{activo ? "Activo" : "No disponible"}</span>
+        </div>
+        <div className="text-muted" style={{ fontSize: "0.78rem" }}>{descripcion}</div>
+      </div>
+      {!publicado && (
+        <div className="d-flex align-items-center gap-2">
+          <span className="small text-muted">{activo ? "Activo" : "Inactivo"}</span>
+          <input
+            className="form-check-input"
+            type="checkbox"
+            role="switch"
+            checked={activo}
+            onChange={onChange}
+            style={{ width: "2.5em", height: "1.4em", cursor: "pointer" }}
+          />
         </div>
       )}
     </div>
@@ -283,7 +325,7 @@ export default function MenuAdminPage() {
   const altBebidasDesc = altBebidas.map((p) => p.nombre).join(" o ");
 
   return (
-    <div>
+    <div className="p-4" style={{ height: "100%", overflowY: "auto" }}>
       {/* ── Header ── */}
       <div className="d-flex align-items-start justify-content-between mb-4 flex-wrap gap-3">
         <div>
@@ -483,7 +525,19 @@ export default function MenuAdminPage() {
                   </SeccionCategoria>
 
                   {/* Plato fuerte */}
-                  <SeccionCategoria titulo="Plato fuerte" count={d.platos_fuertes_ids.length} disabled={publicado}>
+                  <SeccionCategoria
+                    titulo="Plato fuerte"
+                    count={d.platos_fuertes_ids.length}
+                    footer={altPlatos.length > 0 ? (
+                      <FooterAlternativo
+                        label="Alternativo fijo"
+                        descripcion={altPlatosDesc}
+                        activo={d.alternativa_plato_disponible}
+                        onChange={() => setDia("alternativa_plato_disponible", !d.alternativa_plato_disponible)}
+                        publicado={publicado}
+                      />
+                    ) : null}
+                  >
                     {d.platos_fuertes_ids.map((id) => (
                       <Chip key={id} nombre={nombrePlatillo(id)} onRemove={() => quitarChip("platos_fuertes_ids", id)} disabled={publicado} />
                     ))}
@@ -493,30 +547,6 @@ export default function MenuAdminPage() {
                       onAgregar={(id) => agregarChip("platos_fuertes_ids", id)}
                       disabled={publicado}
                     />
-                    {/* Alternativo fijo */}
-                    {altPlatos.length > 0 && (
-                      <div className="mt-2 pt-2 border-top d-flex align-items-center justify-content-between">
-                        <div>
-                          <span className="fw-semibold small">Alternativo fijo </span>
-                          <span className={`badge ms-1 ${d.alternativa_plato_disponible ? "bg-success" : "bg-secondary"}`} style={{ fontSize: "0.65rem" }}>
-                            {d.alternativa_plato_disponible ? "Disponible" : "No disponible"}
-                          </span>
-                          <div className="text-muted" style={{ fontSize: "0.78rem" }}>{altPlatosDesc}</div>
-                        </div>
-                        {!publicado && (
-                          <div className="d-flex align-items-center gap-2">
-                            <span className="small text-muted">{d.alternativa_plato_disponible ? "Activo" : "Inactivo"}</span>
-                            <input
-                              className="form-check-input"
-                              type="checkbox"
-                              checked={d.alternativa_plato_disponible}
-                              onChange={() => setDia("alternativa_plato_disponible", !d.alternativa_plato_disponible)}
-                              style={{ width: "2.5em", height: "1.4em", cursor: "pointer" }}
-                            />
-                          </div>
-                        )}
-                      </div>
-                    )}
                   </SeccionCategoria>
 
                   {/* Guarnición */}
@@ -533,7 +563,19 @@ export default function MenuAdminPage() {
                   </SeccionCategoria>
 
                   {/* Bebida */}
-                  <SeccionCategoria titulo="Bebida" count={d.bebida_id ? 1 : 0} disabled={publicado}>
+                  <SeccionCategoria
+                    titulo="Bebida"
+                    count={d.bebida_id ? 1 : 0}
+                    footer={altBebidas.length > 0 ? (
+                      <FooterAlternativo
+                        label="Alternativo de bebida fijo"
+                        descripcion={altBebidasDesc}
+                        activo={d.alternativa_bebida_disponible}
+                        onChange={() => setDia("alternativa_bebida_disponible", !d.alternativa_bebida_disponible)}
+                        publicado={publicado}
+                      />
+                    ) : null}
+                  >
                     {d.bebida_id && (
                       <Chip nombre={nombrePlatillo(d.bebida_id)} onRemove={() => setDia("bebida_id", null)} disabled={publicado} />
                     )}
@@ -544,30 +586,6 @@ export default function MenuAdminPage() {
                         onAgregar={(id) => setDia("bebida_id", id)}
                         disabled={publicado}
                       />
-                    )}
-                    {/* Alternativo bebida fijo */}
-                    {altBebidas.length > 0 && (
-                      <div className="mt-2 pt-2 border-top d-flex align-items-center justify-content-between">
-                        <div>
-                          <span className="fw-semibold small">Alternativo de bebida fijo </span>
-                          <span className={`badge ms-1 ${d.alternativa_bebida_disponible ? "bg-success" : "bg-secondary"}`} style={{ fontSize: "0.65rem" }}>
-                            {d.alternativa_bebida_disponible ? "Activo" : "No disponible"}
-                          </span>
-                          <div className="text-muted" style={{ fontSize: "0.78rem" }}>{altBebidasDesc}</div>
-                        </div>
-                        {!publicado && (
-                          <div className="d-flex align-items-center gap-2">
-                            <span className="small text-muted">{d.alternativa_bebida_disponible ? "Activo" : "Inactivo"}</span>
-                            <input
-                              className="form-check-input"
-                              type="checkbox"
-                              checked={d.alternativa_bebida_disponible}
-                              onChange={() => setDia("alternativa_bebida_disponible", !d.alternativa_bebida_disponible)}
-                              style={{ width: "2.5em", height: "1.4em", cursor: "pointer" }}
-                            />
-                          </div>
-                        )}
-                      </div>
                     )}
                   </SeccionCategoria>
 
@@ -619,16 +637,21 @@ export default function MenuAdminPage() {
               <div className="modal-body">
                 {errorModal && <div className="alert alert-danger py-2 small">{errorModal}</div>}
                 <label className="form-label small fw-semibold">Semana que inicia el lunes:</label>
-                <input type="date" className="form-control" value={fechaSeleccionada} min={lunesMinimo} onChange={(e) => { setFechaSeleccionada(e.target.value); setErrorModal(""); }} />
-                {fechaSeleccionada && (
-                  <div className="text-muted small mt-2">
-                    Semana del {dayjs(fechaSeleccionada).format("DD/MM")} al {dayjs(fechaSeleccionada).add(4, "day").format("DD/MM/YYYY")}
-                  </div>
-                )}
+                <ModalNuevoMenu
+                  fechaSeleccionada={fechaSeleccionada}
+                  setFechaSeleccionada={setFechaSeleccionada}
+                  setErrorModal={setErrorModal}
+                  lunesMinimo={lunesMinimo}
+                  menus={menus}
+                />
               </div>
               <div className="modal-footer">
                 <button className="btn btn-sm btn-outline-secondary" onClick={() => setModalFecha(false)}>Cancelar</button>
-                <button className="btn btn-sm btn-brand" onClick={crearMenu} disabled={!fechaSeleccionada}>Crear</button>
+                <button
+                  className="btn btn-sm btn-brand"
+                  onClick={crearMenu}
+                  disabled={!fechaSeleccionada || menus.some(m => m.fecha_inicio === fechaSeleccionada)}
+                >Crear</button>
               </div>
             </div>
           </div>
@@ -638,17 +661,62 @@ export default function MenuAdminPage() {
   );
 }
 
-// Sección de categoría
-function SeccionCategoria({ titulo, count, children }) {
+// Modal: cuerpo del formulario nuevo menú
+function ModalNuevoMenu({ fechaSeleccionada, setFechaSeleccionada, setErrorModal, lunesMinimo, menus }) {
+  const ocupada = fechaSeleccionada && menus.some(m => m.fecha_inicio === fechaSeleccionada);
+  const semanasOcupadas = menus.filter(m => dayjs(m.fecha_inicio).isSameOrAfter(dayjs(), "week"));
+
   return (
-    <div className="rounded-3 border p-3" style={{ background: "#fafafa" }}>
-      <div className="d-flex justify-content-between align-items-center mb-2">
-        <span className="fw-semibold">{titulo}</span>
+    <>
+      <input
+        type="date"
+        className={`form-control ${ocupada ? "is-invalid" : ""}`}
+        value={fechaSeleccionada}
+        min={lunesMinimo}
+        onChange={(e) => { setFechaSeleccionada(e.target.value); setErrorModal(""); }}
+      />
+      {ocupada ? (
+        <div className="d-flex align-items-center gap-1 mt-2 text-danger small fw-semibold">
+          <i className="bi bi-lock-fill" /> Esa semana ya tiene un menú creado
+        </div>
+      ) : fechaSeleccionada ? (
+        <div className="text-muted small mt-2">
+          Semana del {dayjs(fechaSeleccionada).format("DD/MM")} al {dayjs(fechaSeleccionada).add(4, "day").format("DD/MM/YYYY")}
+        </div>
+      ) : null}
+
+      {semanasOcupadas.length > 0 && (
+        <div className="mt-3">
+          <div className="text-muted mb-1" style={{ fontSize: "0.72rem" }}>Semanas ya ocupadas:</div>
+          <div className="d-flex flex-wrap gap-1">
+            {semanasOcupadas.map(m => (
+              <span key={m.id} className="badge rounded-pill" style={{ background: "#fee2e2", color: "#b91c1c", fontSize: "0.7rem" }}>
+                <i className="bi bi-lock-fill me-1" />
+                {dayjs(m.fecha_inicio).format("DD/MM")} – {dayjs(m.fecha_inicio).add(4, "day").format("DD/MM")}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
+// Sección de categoría
+function SeccionCategoria({ titulo, count, children, footer }) {
+  return (
+    <div className="rounded-3 overflow-hidden" style={{ border: "1px solid #e5e7eb", background: "#fff" }}>
+      {/* Header */}
+      <div className="d-flex justify-content-between align-items-center px-4 py-3" style={{ background: "#f8f9fa" }}>
+        <span className="fw-semibold" style={{ fontSize: "0.95rem" }}>{titulo}</span>
         <span className="text-muted small">{count} Platillo{count !== 1 ? "s" : ""}</span>
       </div>
-      <div className="d-flex flex-wrap align-items-center">
+      {/* Body */}
+      <div className="px-4 py-3 d-flex flex-wrap align-items-center gap-2">
         {children}
       </div>
+      {/* Footer (alternativo) */}
+      {footer}
     </div>
   );
 }

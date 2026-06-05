@@ -1,10 +1,18 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import api from "../../../services/api";
 import EstadoBadge from "../../../components/shared/EstadoBadge";
 import { useSocketEvent } from "../../../hooks/useSocket";
 import { getSocket } from "../../../services/socket";
 
-const ESTADOS_RESUMEN = ["confirmado", "en_preparacion", "listo", "en_camino", "entregado", "cancelado"];
+// ── Constantes ──────────────────────────────────────────────────────────────
+
+const TABS = [
+  { key: "pendiente",      label: "Nuevos",         estados: ["pendiente"] },
+  { key: "en_preparacion", label: "En preparación", estados: ["confirmado", "en_preparacion"] },
+  { key: "listo",          label: "Listo",           estados: ["listo"] },
+  { key: "en_camino",      label: "Enviado",         estados: ["en_camino"] },
+  { key: "cerrado",        label: "Entregados",      estados: ["entregado", "rechazado", "cancelado"] },
+];
 
 const MOTIVOS_RAPIDOS = [
   "Se acabó el plato del día",
@@ -13,13 +21,413 @@ const MOTIVOS_RAPIDOS = [
   "Problema con el pago",
 ];
 
+// ── Helpers de tiempo ────────────────────────────────────────────────────────
+
+function horaEntregaSeconds(horaStr) {
+  if (!horaStr) return null;
+  const [h, m] = horaStr.split(":").map(Number);
+  const now = new Date();
+  const target = new Date(now);
+  target.setHours(h, m, 0, 0);
+  return (target - now) / 1000; // positivo = tiempo restante, negativo = demorado
+}
+
+function secondsToMMSS(sec) {
+  const abs = Math.abs(Math.round(sec));
+  const m = Math.floor(abs / 60);
+  const s = abs % 60;
+  return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+}
+
+function minutesSince(isoStr) {
+  if (!isoStr) return 0;
+  return Math.floor((Date.now() - new Date(isoStr).getTime()) / 60000);
+}
+
+// ── Badge de tiempo en cards ─────────────────────────────────────────────────
+
+function TimeBadge({ pedido }) {
+  const [, setTick] = useState(0);
+  useEffect(() => {
+    const t = setInterval(() => setTick(n => n + 1), 30000);
+    return () => clearInterval(t);
+  }, []);
+
+  const { estado, hora_entrega, created_at } = pedido;
+
+  if (estado === "pendiente") {
+    const mins = minutesSince(created_at);
+    if (mins < 1) return <Badge color="#1e3a5f" text="Nuevo" />;
+    return <Badge color="#f59e0b" text={`Recibido +${mins}m`} />;
+  }
+  if (estado === "confirmado" || estado === "en_preparacion") {
+    const rem = horaEntregaSeconds(hora_entrega);
+    if (rem === null) return null;
+    return rem >= 0
+      ? <Badge color="#22c55e" text="En tiempo" />
+      : <Badge color="#ef4444" text="Demorado" />;
+  }
+  if (estado === "listo") return <Badge color="#3b82f6" text="Listo" />;
+  if (estado === "en_camino") return <Badge color="#ED4137" text="En camino" />;
+  if (estado === "entregado") return <Badge color="#10b981" text="Entregado" />;
+  if (estado === "rechazado") return <Badge color="#ef4444" text="Rechazado" />;
+  if (estado === "cancelado") return <Badge color="#6b7280" text="Cancelado" />;
+  return null;
+}
+
+function Badge({ color, text }) {
+  return (
+    <span className="rounded-pill px-2 py-1 fw-semibold" style={{
+      background: color, color: "#fff", fontSize: "0.7rem", whiteSpace: "nowrap",
+    }}>{text}</span>
+  );
+}
+
+// ── Timer circular ────────────────────────────────────────────────────────────
+
+function TimerWidget({ pedido }) {
+  const [, setTick] = useState(0);
+  useEffect(() => {
+    const t = setInterval(() => setTick(n => n + 1), 1000);
+    return () => clearInterval(t);
+  }, []);
+
+  const R = 24;
+  const CIRCUM = 2 * Math.PI * R;
+
+  let color = "#ef4444";
+  let progress = 0;
+  let titulo = "";
+  let tiempo = "";
+  let subtitulo = "";
+
+  const { estado, hora_entrega, created_at, updated_at } = pedido;
+
+  if (estado === "pendiente") {
+    const elapsed = (Date.now() - new Date(created_at).getTime()) / 1000;
+    const window = 600; // 10 min
+    progress = Math.min(elapsed / window, 1);
+    color = "#ef4444";
+    titulo = "Nuevo pedido entrante";
+    tiempo = secondsToMMSS(elapsed);
+    subtitulo = "El pedido no se ha confirmado";
+  } else if (estado === "confirmado" || estado === "en_preparacion") {
+    const rem = horaEntregaSeconds(hora_entrega);
+    if (rem === null) return null;
+    if (rem >= 0) {
+      const totalWindow = 7200; // 2 horas como ventana máxima
+      progress = Math.min(1 - rem / totalWindow, 1);
+      color = "#22c55e";
+      titulo = "En tiempo";
+      tiempo = secondsToMMSS(rem);
+      subtitulo = "min para entrega";
+    } else {
+      progress = 1;
+      color = "#ef4444";
+      titulo = "Demorado";
+      tiempo = secondsToMMSS(rem);
+      subtitulo = "El pedido se encuentra demorado";
+    }
+  } else if (estado === "listo") {
+    const base = updated_at || created_at;
+    const elapsed = base ? (Date.now() - new Date(base).getTime()) / 1000 : 0;
+    const window = 900; // 15 min
+    progress = Math.min(elapsed / window, 1);
+    color = elapsed > 600 ? "#f59e0b" : "#22c55e";
+    titulo = "Listo para repartir";
+    tiempo = secondsToMMSS(elapsed);
+    subtitulo = "Estamos esperando un repartidor";
+  } else if (estado === "en_camino") {
+    const base = updated_at || created_at;
+    const elapsed = base ? (Date.now() - new Date(base).getTime()) / 1000 : 0;
+    progress = Math.min(elapsed / 3600, 1);
+    color = "#ED4137";
+    titulo = "En camino";
+    tiempo = secondsToMMSS(elapsed);
+    subtitulo = `Con ${pedido.repartidor?.nombre ?? "repartidor"}`;
+  } else if (estado === "entregado") {
+    progress = 1;
+    color = "#10b981";
+    titulo = "Entregado";
+    tiempo = "✓";
+    subtitulo = pedido.metodo_pago ? `Pagó con ${pedido.metodo_pago}` : "";
+  } else {
+    return null;
+  }
+
+  const offset = CIRCUM * (1 - progress);
+
+  return (
+    <div className="d-flex align-items-center gap-3 p-3 rounded-3 mb-3" style={{ background: "#f8fafc", border: "1px solid #e2e8f0" }}>
+      {/* SVG circle */}
+      <div style={{ flexShrink: 0 }}>
+        <svg width="64" height="64" viewBox="0 0 60 60">
+          <circle cx="30" cy="30" r={R} fill="none" stroke="#e5e7eb" strokeWidth="5" />
+          <circle
+            cx="30" cy="30" r={R} fill="none"
+            stroke={color} strokeWidth="5"
+            strokeDasharray={CIRCUM}
+            strokeDashoffset={offset}
+            strokeLinecap="round"
+            transform="rotate(-90 30 30)"
+            style={{ transition: "stroke-dashoffset 1s linear, stroke 0.3s" }}
+          />
+        </svg>
+      </div>
+      <div>
+        <div className="fw-bold small" style={{ color }}>{titulo}</div>
+        <div className="fw-bold" style={{ fontSize: "1.6rem", lineHeight: 1, color: color === "#22c55e" ? "#15803d" : color === "#ef4444" ? "#b91c1c" : color }}>{tiempo}</div>
+        <div className="text-muted" style={{ fontSize: "0.75rem" }}>{subtitulo}</div>
+      </div>
+    </div>
+  );
+}
+
+// ── Card de pedido ────────────────────────────────────────────────────────────
+
+function PedidoCard({ pedido, seleccionado, onClick }) {
+  const nombre = pedido.receptor_nombre || pedido.cliente?.nombre || "—";
+  const comidas = 1; // por ahora siempre 1 comida por pedido
+  return (
+    <div
+      onClick={onClick}
+      className="rounded-3 p-3 mb-2"
+      style={{
+        cursor: "pointer",
+        border: seleccionado ? "2px solid #2563eb" : "1px solid #e5e7eb",
+        background: "#fff",
+        transition: "border-color 0.15s",
+      }}
+    >
+      <div className="d-flex justify-content-between align-items-start mb-1">
+        <span className="fw-bold" style={{ fontSize: "1rem" }}>Pedido #{pedido.id}</span>
+        <TimeBadge pedido={pedido} />
+      </div>
+      <div className="text-muted small mb-1">
+        Hora de entrega: <span style={{ color: "#374151" }}>{pedido.hora_entrega}</span>
+      </div>
+      <div className="d-flex justify-content-between align-items-end">
+        <div>
+          <div className="small">Nombre: <span style={{ color: "#374151" }}>{nombre}</span></div>
+          <div className="small text-muted">Comidas: {comidas}</div>
+        </div>
+        <button
+          className="btn btn-sm rounded-2"
+          style={{ fontSize: "0.75rem", background: "#f1f5f9", color: "#64748b", border: "none" }}
+          onClick={onClick}
+        >
+          Ver detalles
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ── Info box ─────────────────────────────────────────────────────────────────
+
+function InfoBox({ label, value, sub }) {
+  return (
+    <div className="rounded-3 p-3" style={{ background: "#f8fafc", border: "1px solid #e2e8f0", flex: 1, minWidth: 0 }}>
+      <div className="text-muted" style={{ fontSize: "0.7rem", marginBottom: 2 }}>{label}</div>
+      <div className="fw-semibold" style={{ fontSize: "0.9rem", wordBreak: "break-word" }}>{value || "—"}</div>
+      {sub && <div className="text-muted" style={{ fontSize: "0.75rem" }}>{sub}</div>}
+    </div>
+  );
+}
+
+// ── Mapa estático (link) ─────────────────────────────────────────────────────
+
+function MapaEntrega({ pedido }) {
+  const dir = pedido.direccion?.direccion ?? pedido.entrega_direccion ?? pedido.cliente?.direccion_entrega;
+  const alias = pedido.direccion?.alias;
+  const refs = pedido.direccion?.referencias ?? pedido.entrega_referencias;
+  if (!dir) return null;
+  const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(dir)}`;
+  return (
+    <div className="mb-3">
+      <div className="fw-semibold mb-2" style={{ fontSize: "0.9rem" }}>Dirección de entrega</div>
+      <div className="rounded-3 overflow-hidden border">
+        <div className="p-3" style={{ background: "#f8fafc" }}>
+          {alias && <div className="fw-semibold small">{alias}</div>}
+          <div className="small text-muted">{dir}</div>
+          {refs && <div className="small text-muted" style={{ fontSize: "0.75rem" }}>{refs}</div>}
+        </div>
+        <a
+          href={mapsUrl}
+          target="_blank"
+          rel="noreferrer"
+          className="d-flex align-items-center justify-content-center gap-2 py-2 text-decoration-none"
+          style={{ background: "#eff6ff", color: "#1d4ed8", fontSize: "0.82rem", fontWeight: 600 }}
+        >
+          <i className="bi bi-map" /> Ver en Google Maps
+        </a>
+      </div>
+    </div>
+  );
+}
+
+// ── Resumen del pedido ───────────────────────────────────────────────────────
+
+function ResumenPedido({ pedido }) {
+  const plato = pedido.plato_elegido === "alternativa" ? "Plato alternativo" : "Plato del día";
+  const bebida = pedido.bebida_elegida === "alternativa" ? "Bebida alternativa" : "Bebida del día";
+  return (
+    <div className="mb-3">
+      <div className="fw-semibold mb-2" style={{ fontSize: "0.9rem" }}>Resumen del pedido</div>
+      <div style={{ borderTop: "1px solid #e5e7eb" }}>
+        <div className="d-flex justify-content-between py-2" style={{ borderBottom: "1px solid #f3f4f6" }}>
+          <span className="small fw-semibold">1x Comida del Día</span>
+        </div>
+        <div className="d-flex justify-content-between py-1 px-2" style={{ borderBottom: "1px solid #f3f4f6" }}>
+          <span className="small text-muted">{plato}</span>
+        </div>
+        <div className="d-flex justify-content-between py-1 px-2" style={{ borderBottom: "1px solid #f3f4f6" }}>
+          <span className="small text-muted">{bebida}</span>
+        </div>
+        {pedido.notas && (
+          <div className="py-2 px-2">
+            <span className="small" style={{ color: "#92400e" }}>📝 {pedido.notas}</span>
+          </div>
+        )}
+        <div className="d-flex justify-content-between pt-2 mt-1" style={{ borderTop: "2px solid #e5e7eb" }}>
+          <span className="fw-bold small">Pago</span>
+          <span className="fw-bold small">{pedido.metodo_pago ?? "—"}</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Tabs con scroll ──────────────────────────────────────────────────────────
+
+const easeInOut = (t) => t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
+
+function animateScroll(el, to, animRef) {
+  if (animRef.current) cancelAnimationFrame(animRef.current);
+  const from = el.scrollLeft;
+  const distance = to - from;
+  if (Math.abs(distance) < 1) return;
+  const duration = Math.min(350 + Math.abs(distance) * 0.25, 650);
+  const start = performance.now();
+  const step = (now) => {
+    const t = Math.min((now - start) / duration, 1);
+    el.scrollLeft = from + distance * easeInOut(t);
+    if (t < 1) animRef.current = requestAnimationFrame(step);
+  };
+  animRef.current = requestAnimationFrame(step);
+}
+
+function TabsScroll({ tab, setTab, counts }) {
+  const scrollRef = useRef(null);
+  const btnRefs = useRef({});
+  const animRef = useRef(null);
+  const leftBtnRef = useRef(null);
+  const rightBtnRef = useRef(null);
+
+  // Muestra u oculta flechas sin causar re-render
+  const updateArrows = useCallback(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const atStart = el.scrollLeft <= 4;
+    const atEnd = el.scrollLeft + el.clientWidth >= el.scrollWidth - 4;
+    if (leftBtnRef.current) {
+      leftBtnRef.current.style.display = atStart ? "none" : "flex";
+    }
+    if (rightBtnRef.current) {
+      rightBtnRef.current.style.display = atEnd ? "none" : "flex";
+    }
+  }, []);
+
+  useEffect(() => {
+    const el = scrollRef.current;
+    updateArrows();
+    el?.addEventListener("scroll", updateArrows, { passive: true });
+    window.addEventListener("resize", updateArrows);
+    return () => {
+      el?.removeEventListener("scroll", updateArrows);
+      window.removeEventListener("resize", updateArrows);
+    };
+  }, [updateArrows]);
+
+  // Al cambiar tab, scroll para que quede visible
+  useEffect(() => {
+    const el = scrollRef.current;
+    const btn = btnRefs.current[tab];
+    if (!el || !btn) return;
+    const elRect = el.getBoundingClientRect();
+    const btnRect = btn.getBoundingClientRect();
+    // Posición del botón dentro del contenido scrolleable
+    const btnLeft = el.scrollLeft + (btnRect.left - elRect.left);
+    const btnRight = btnLeft + btn.offsetWidth;
+    const visLeft = el.scrollLeft + 8;
+    const visRight = el.scrollLeft + el.clientWidth - 8;
+    if (btnLeft < visLeft) animateScroll(el, btnLeft - 8, animRef);
+    else if (btnRight > visRight) animateScroll(el, btnRight - el.clientWidth + 8, animRef);
+  }, [tab]);
+
+  const scroll = (dir) => {
+    const el = scrollRef.current;
+    if (!el) return;
+    animateScroll(el, dir > 0 ? el.scrollWidth : 0, animRef);
+  };
+
+  const floatBtn = {
+    position: "absolute", top: 0, bottom: 10,
+    width: 52, border: "none", borderRadius: 14,
+    background: "#94a3b8", color: "#fff",
+    fontSize: "1rem", cursor: "pointer",
+    display: "none", alignItems: "center", justifyContent: "center",
+    zIndex: 2,
+  };
+
+  return (
+    <div style={{ position: "relative", padding: "0 8px 10px", flexShrink: 0 }}>
+      <div ref={scrollRef} style={{ display: "flex", gap: 6, overflowX: "auto", scrollbarWidth: "none" }}>
+        {TABS.map(t => (
+          <button
+            key={t.key}
+            ref={el => btnRefs.current[t.key] = el}
+            onClick={() => setTab(t.key)}
+            style={{
+              height: 60, borderRadius: 14, border: "none",
+              flexShrink: 0, cursor: "pointer",
+              minWidth: 110, padding: "0 14px",
+              background: tab === t.key ? "#3b5bdb" : "#f1f5f9",
+              color: tab === t.key ? "#fff" : "#6b7280",
+              fontSize: "0.85rem", fontWeight: 600,
+              whiteSpace: "nowrap",
+            }}
+          >
+            {t.label}{counts[t.key] > 0 ? ` (${counts[t.key]})` : ""}
+          </button>
+        ))}
+      </div>
+
+      <button ref={leftBtnRef} onClick={() => scroll(-1)} style={{ ...floatBtn, left: 8 }}>
+        <i className="bi bi-chevron-left" />
+      </button>
+      <button ref={rightBtnRef} onClick={() => scroll(1)} style={{ ...floatBtn, right: 8 }}>
+        <i className="bi bi-chevron-right" />
+      </button>
+    </div>
+  );
+}
+
+// ── Componente principal ─────────────────────────────────────────────────────
+
 export default function PedidosAdminPage() {
   const [pedidos, setPedidos] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [filtro, setFiltro] = useState("todos");
+  const [tab, setTab] = useState("pendiente");
+  const [seleccionado, setSeleccionado] = useState(null);
+  const [busqueda, setBusqueda] = useState("");
+  const [repartidores, setRepartidores] = useState([]);
+
+  // Modales
   const [modalRechazo, setModalRechazo] = useState(null);
   const [motivoRechazo, setMotivoRechazo] = useState("");
-  const [modalEstado, setModalEstado] = useState(null); // { pedido, estado }
+  const [modalEstado, setModalEstado] = useState(null);
+  const [modalRepartidor, setModalRepartidor] = useState(null);
 
   const cargar = () => {
     api.get("/admin/pedidos-hoy")
@@ -29,43 +437,84 @@ export default function PedidosAdminPage() {
 
   useEffect(() => {
     cargar();
+    api.get("/admin/repartidores").then(({ data }) => setRepartidores(data)).catch(() => {});
     getSocket()?.emit("join_admin");
   }, []);
 
   const handleActualizado = useCallback((p) => {
-    setPedidos((ps) => ps.map((x) => x.id === p.id ? p : x));
+    setPedidos(ps => ps.map(x => x.id === p.id ? p : x));
+    setSeleccionado(s => s?.id === p.id ? p : s);
   }, []);
   useSocketEvent("pedido_actualizado", handleActualizado);
 
-  const cambiarEstado = async (id, estado) => {
-    try {
-      const { data } = await api.patch(`/admin/pedidos/${id}/estado`, { estado });
-      setPedidos((ps) => ps.map((x) => x.id === data.id ? data : x));
-      setModalEstado(null);
-    } catch (err) {
-      alert(err.response?.data?.error ?? "Error al cambiar el estado");
+  // Counts per tab
+  const counts = {};
+  TABS.forEach(t => {
+    counts[t.key] = pedidos.filter(p => t.estados.includes(p.estado)).length;
+  });
+
+  // Filtered list
+  const tabActual = TABS.find(t => t.key === tab);
+  const lista = pedidos
+    .filter(p => tabActual.estados.includes(p.estado))
+    .filter(p => {
+      if (!busqueda.trim()) return true;
+      const q = busqueda.toLowerCase();
+      return String(p.id).includes(q) ||
+        (p.receptor_nombre || p.cliente?.nombre || "").toLowerCase().includes(q);
+    })
+    .sort((a, b) => a.hora_entrega?.localeCompare(b.hora_entrega));
+
+  // Auto-seleccionar primero al cambiar tab
+  useEffect(() => {
+    const filtered = pedidos.filter(p => tabActual.estados.includes(p.estado));
+    if (filtered.length > 0) {
+      setSeleccionado(s => {
+        if (s && tabActual.estados.includes(s.estado)) return s;
+        return filtered[0];
+      });
+    } else {
+      setSeleccionado(null);
     }
-  };
+  }, [tab, pedidos]);
+
+  // ── Acciones ──────────────────────────────────────────────────────────────
 
   const confirmar = async (id) => {
     try {
       const { data } = await api.post(`/admin/pedidos/${id}/confirmar`);
-      setPedidos((ps) => ps.map((x) => x.id === data.id ? data : x));
-    } catch (err) {
-      alert(err.response?.data?.error ?? "Error al confirmar el pedido");
-    }
+      setPedidos(ps => ps.map(x => x.id === data.id ? data : x));
+      setSeleccionado(s => s?.id === data.id ? data : s);
+    } catch (err) { alert(err.response?.data?.error ?? "Error"); }
   };
 
   const rechazar = async () => {
     if (!motivoRechazo.trim()) return;
     try {
       const { data } = await api.post(`/admin/pedidos/${modalRechazo.id}/rechazar`, { motivo: motivoRechazo });
-      setPedidos((ps) => ps.map((x) => x.id === data.id ? data : x));
+      setPedidos(ps => ps.map(x => x.id === data.id ? data : x));
+      setSeleccionado(s => s?.id === data.id ? data : s);
       setModalRechazo(null);
       setMotivoRechazo("");
-    } catch (err) {
-      alert(err.response?.data?.error ?? "Error al rechazar el pedido");
-    }
+    } catch (err) { alert(err.response?.data?.error ?? "Error"); }
+  };
+
+  const cambiarEstado = async (id, estado) => {
+    try {
+      const { data } = await api.patch(`/admin/pedidos/${id}/estado`, { estado });
+      setPedidos(ps => ps.map(x => x.id === data.id ? data : x));
+      setSeleccionado(s => s?.id === data.id ? data : s);
+      setModalEstado(null);
+    } catch (err) { alert(err.response?.data?.error ?? "Error"); }
+  };
+
+  const asignarRepartidor = async (pedidoId, repartidorId) => {
+    try {
+      const { data } = await api.patch(`/admin/pedidos/${pedidoId}/asignar-repartidor`, { repartidor_id: repartidorId });
+      setPedidos(ps => ps.map(x => x.id === data.id ? data : x));
+      setSeleccionado(s => s?.id === data.id ? data : s);
+      setModalRepartidor(null);
+    } catch (err) { alert(err.response?.data?.error ?? "Error"); }
   };
 
   const imprimir = (p) => {
@@ -88,180 +537,195 @@ export default function PedidosAdminPage() {
     `);
   };
 
-  const visible = filtro === "todos" ? pedidos : pedidos.filter((p) => p.estado === filtro);
+  // ── Botones contextuales por estado ──────────────────────────────────────
 
-  const resumen = ESTADOS_RESUMEN.reduce((acc, e) => {
-    acc[e] = pedidos.filter((p) => p.estado === e).length;
-    return acc;
-  }, {});
+  function AccionesPanel({ p }) {
+    if (p.estado === "pendiente") return (
+      <div className="d-flex gap-2">
+        <button
+          className="btn fw-semibold flex-fill py-2"
+          style={{ background: "#dcfce7", color: "#15803d", border: "none", borderRadius: 10 }}
+          onClick={() => confirmar(p.id)}
+        >Aceptar</button>
+        <button
+          className="btn fw-semibold flex-fill py-2"
+          style={{ background: "#ef4444", color: "#fff", border: "none", borderRadius: 10 }}
+          onClick={() => { setModalRechazo(p); setMotivoRechazo(""); }}
+        >Rechazar</button>
+      </div>
+    );
 
-  if (loading) return <div className="d-flex justify-content-center mt-5"><div className="spinner-border text-brand" /></div>;
+    if (p.estado === "confirmado") return (
+      <div className="d-flex gap-2">
+        <button
+          className="btn fw-semibold flex-fill py-2"
+          style={{ background: "#dcfce7", color: "#15803d", border: "none", borderRadius: 10 }}
+          onClick={() => setModalEstado({ pedido: p, estado: "en_preparacion" })}
+        ><i className="bi bi-fire me-1" />En preparación</button>
+        <button
+          className="btn btn-outline-danger fw-semibold px-3 py-2"
+          style={{ borderRadius: 10 }}
+          onClick={() => setModalEstado({ pedido: p, estado: "cancelado" })}
+        >Cancelar</button>
+      </div>
+    );
+
+    if (p.estado === "en_preparacion") return (
+      <div className="d-flex gap-2">
+        <button
+          className="btn fw-semibold flex-fill py-2"
+          style={{ background: "#dcfce7", color: "#15803d", border: "none", borderRadius: 10 }}
+          onClick={() => setModalEstado({ pedido: p, estado: "listo" })}
+        ><i className="bi bi-bag-check me-1" />Pedido listo</button>
+        <button
+          className="btn btn-outline-danger fw-semibold px-3 py-2"
+          style={{ borderRadius: 10 }}
+          onClick={() => setModalEstado({ pedido: p, estado: "cancelado" })}
+        >Cancelar</button>
+      </div>
+    );
+
+    if (p.estado === "listo") return (
+      <div className="d-flex flex-column gap-2">
+        <button
+          className="btn fw-semibold py-2"
+          style={{ background: "#eff6ff", color: "#1d4ed8", border: "1px solid #bfdbfe", borderRadius: 10 }}
+          onClick={() => setModalRepartidor(p)}
+        ><i className="bi bi-person-check me-1" />Asignar repartidor</button>
+        <button
+          className="btn btn-outline-success fw-semibold py-2"
+          style={{ borderRadius: 10 }}
+          onClick={() => setModalEstado({ pedido: p, estado: "entregado" })}
+        ><i className="bi bi-check-circle me-1" />Marcar entregado</button>
+      </div>
+    );
+
+    if (p.estado === "en_camino") return (
+      <div className="d-flex gap-2">
+        <button
+          className="btn btn-outline-success fw-semibold flex-fill py-2"
+          style={{ borderRadius: 10 }}
+          onClick={() => setModalEstado({ pedido: p, estado: "entregado" })}
+        ><i className="bi bi-check-circle me-1" />Marcar entregado</button>
+      </div>
+    );
+
+    return null;
+  }
+
+  if (loading) return (
+    <div className="d-flex justify-content-center align-items-center" style={{ height: "100%" }}>
+      <div className="spinner-border text-brand" />
+    </div>
+  );
+
+  const p = seleccionado;
+  const nombre = p ? (p.receptor_nombre || p.cliente?.nombre) : null;
+  const telefono = p ? (p.receptor_telefono || p.cliente?.telefono_whatsapp) : null;
+  const direccion = p ? (p.direccion?.direccion ?? p.entrega_direccion ?? p.cliente?.direccion_entrega) : null;
 
   return (
-    <div>
-      <div className="d-flex flex-wrap gap-2 align-items-center justify-content-between mb-3">
-        <h2 className="h5 fw-bold mb-0">Pedidos del día</h2>
-        <button className="btn btn-sm btn-outline-brand" onClick={cargar}>
-          <i className="bi bi-arrow-clockwise me-1" /> Actualizar
-        </button>
-      </div>
+    <div style={{ display: "flex", height: "100%", gap: 16, padding: 16, overflow: "hidden" }}>
 
-      {/* Resumen */}
-      <div className="row g-2 mb-3">
-        {[
-          { k: "pendiente", label: "Pendientes", color: "warning" },
-          { k: "en_preparacion", label: "En preparación", color: "info" },
-          { k: "listo", label: "Listos", color: "warning" },
-          { k: "en_camino", label: "En camino", color: "primary" },
-          { k: "entregado", label: "Entregados", color: "success" },
-        ].map(({ k, label, color }) => (
-          <div className="col-6 col-md-3" key={k}>
-            <div className={`card border-${color} text-center p-2`} style={{ cursor: "pointer" }} onClick={() => setFiltro(filtro === k ? "todos" : k)}>
-              <div className={`fs-4 fw-bold text-${color}`}>{resumen[k]}</div>
-              <div className="small text-muted">{label}</div>
-            </div>
+      {/* ── Panel izquierdo ── */}
+      <div style={{ width: 360, minWidth: 360, display: "flex", flexDirection: "column", background: "#fff", borderRadius: 12, border: "1px solid #e5e7eb", overflow: "hidden" }}>
+
+        {/* Título + buscador */}
+        <div style={{ padding: "20px 16px 12px", flexShrink: 0 }}>
+          <h2 className="fw-bold mb-3" style={{ fontSize: "1.4rem" }}>Pedidos</h2>
+          <div style={{ position: "relative" }}>
+            <i className="bi bi-search" style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", color: "#9ca3af", fontSize: "0.85rem" }} />
+            <input
+              type="text"
+              className="form-control"
+              placeholder="buscar pedido"
+              value={busqueda}
+              onChange={e => setBusqueda(e.target.value)}
+              style={{ paddingLeft: 32, borderRadius: 8, border: "1px solid #e5e7eb", fontSize: "0.85rem" }}
+            />
           </div>
-        ))}
-      </div>
+        </div>
 
-      {/* Tabla */}
-      <div className="table-responsive">
-        <table className="table table-hover align-middle">
-          <thead className="table-light">
-            <tr>
-              <th>#</th><th>Cliente</th><th>Hora</th><th>Plato</th><th>Pago</th><th>Estado</th><th>Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            {visible.map((p) => (
-              <tr key={p.id}>
-                <td className="fw-bold">{p.id}</td>
-                <td>
-                  <div>{p.receptor_nombre || p.cliente?.nombre}</div>
-                  <div className="text-muted small">{p.direccion?.alias ?? p.entrega_direccion ?? p.cliente?.direccion_entrega}</div>
-                  {(p.direccion?.referencias || p.entrega_referencias) && <div className="text-muted" style={{ fontSize: "0.72rem" }}>{p.direccion?.referencias ?? p.entrega_referencias}</div>}
-                </td>
-                <td>{p.hora_entrega}</td>
-                <td>
-                  <div>{p.plato_elegido === "principal" ? "Principal" : "Alternativa"}</div>
-                  <div className="text-muted small">{p.bebida_elegida === "principal" ? "Beb. principal" : "Beb. alt."}</div>
-                  {p.notas && <div className="badge bg-warning text-dark">📝 Nota</div>}
-                </td>
-                <td>{p.metodo_pago}</td>
-                <td>
-                  <EstadoBadge estado={p.estado} />
-                </td>
-                <td>
-                  <div className="d-flex gap-1 flex-wrap align-items-center">
-                    {p.estado === "pendiente" && (
-                      <>
-                        <button className="btn btn-sm btn-success" onClick={() => confirmar(p.id)}>
-                          <i className="bi bi-check-lg me-1" />Aceptar
-                        </button>
-                        <button className="btn btn-sm btn-danger" onClick={() => { setModalRechazo(p); setMotivoRechazo(""); }}>
-                          <i className="bi bi-x-lg me-1" />Rechazar
-                        </button>
-                      </>
-                    )}
-                    {p.estado === "confirmado" && (
-                      <>
-                        <button className="btn btn-sm btn-brand" onClick={() => setModalEstado({ pedido: p, estado: "en_preparacion" })}>
-                          <i className="bi bi-fire me-1" />En preparación
-                        </button>
-                        <button className="btn btn-sm btn-outline-danger" onClick={() => setModalEstado({ pedido: p, estado: "cancelado" })}>
-                          Cancelar
-                        </button>
-                      </>
-                    )}
-                    {p.estado === "en_preparacion" && (
-                      <>
-                        <button className="btn btn-sm btn-brand" onClick={() => setModalEstado({ pedido: p, estado: "listo" })}>
-                          <i className="bi bi-bag-check me-1" />Pedido listo
-                        </button>
-                        <button className="btn btn-sm btn-outline-danger" onClick={() => setModalEstado({ pedido: p, estado: "cancelado" })}>
-                          Cancelar
-                        </button>
-                      </>
-                    )}
-                    {p.estado === "listo" && (
-                      <span className="text-muted small">
-                        <i className="bi bi-hourglass-split me-1" />Esperando repartidor
-                      </span>
-                    )}
-                    {p.estado === "en_camino" && (
-                      <>
-                        <span className="text-muted small me-1">
-                          <i className="bi bi-scooter me-1" />
-                          {p.repartidor?.nombre ?? "Sin repartidor"}
-                        </span>
-                        <button className="btn btn-sm btn-outline-success" onClick={() => setModalEstado({ pedido: p, estado: "entregado" })}>
-                          <i className="bi bi-check-circle me-1" />Entregado
-                        </button>
-                      </>
-                    )}
-                    {p.estado === "rechazado" && (
-                      <span className="text-danger small fst-italic">{p.motivo_rechazo}</span>
-                    )}
-                    <button className="btn btn-sm btn-outline-secondary" title="Imprimir comanda" onClick={() => imprimir(p)}>
-                      <i className="bi bi-printer" />
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-        {visible.length === 0 && <p className="text-center text-muted py-3">Sin pedidos con ese filtro</p>}
-      </div>
+        {/* Tabs */}
+        <TabsScroll tab={tab} setTab={setTab} counts={counts} />
 
-      {/* Modal confirmar cambio de estado */}
-      {modalEstado && (() => {
-        const LABELS = {
-          confirmado:     "Confirmado",
-          en_preparacion: "En preparación",
-          listo:          "Pedido listo",
-          en_camino:      "En camino",
-          entregado:      "Entregado",
-          cancelado:      "Cancelado",
-        };
-        return (
-          <div className="modal d-block" style={{ background: "rgba(0,0,0,0.4)" }}>
-            <div className="modal-dialog modal-dialog-centered">
-              <div className="modal-content">
-                <div className="modal-header">
-                  <h6 className="modal-title fw-bold">Confirmar cambio de estado</h6>
-                  <button className="btn-close" onClick={() => setModalEstado(null)} />
-                </div>
-                <div className="modal-body">
-                  <p className="mb-1 text-muted small">
-                    Pedido <strong>#{modalEstado.pedido.id}</strong> — {modalEstado.pedido.receptor_nombre || modalEstado.pedido.cliente?.nombre}
-                  </p>
-                  <p className="mb-0">
-                    ¿Cambiar estado a <strong>{LABELS[modalEstado.estado] ?? modalEstado.estado}</strong>?
-                  </p>
-                  {modalEstado.estado === "cancelado" && (
-                    <div className="alert alert-warning py-2 small mt-3 mb-0">
-                      <i className="bi bi-exclamation-triangle me-1" />
-                      El cliente recibirá una notificación de cancelación.
-                    </div>
-                  )}
-                </div>
-                <div className="modal-footer">
-                  <button className="btn btn-sm btn-outline-secondary" onClick={() => setModalEstado(null)}>Cancelar</button>
-                  <button
-                    className={`btn btn-sm ${modalEstado.estado === "cancelado" ? "btn-danger" : "btn-brand"}`}
-                    onClick={() => cambiarEstado(modalEstado.pedido.id, modalEstado.estado)}
-                  >
-                    Confirmar
-                  </button>
-                </div>
+        {/* Lista */}
+        <div style={{ flex: 1, overflowY: "auto", padding: "0 12px 12px" }}>
+          {lista.length === 0 ? (
+            <p className="text-muted text-center small py-4">Sin pedidos</p>
+          ) : (
+            <>
+              <div className="text-muted fw-semibold mb-2" style={{ fontSize: "0.8rem" }}>
+                {tabActual.label}
               </div>
-            </div>
-          </div>
-        );
-      })()}
+              {lista.map(ped => (
+                <PedidoCard
+                  key={ped.id}
+                  pedido={ped}
+                  seleccionado={seleccionado?.id === ped.id}
+                  onClick={() => setSeleccionado(ped)}
+                />
+              ))}
+            </>
+          )}
+        </div>
+      </div>
 
-      {/* Modal rechazo */}
+      {/* ── Panel derecho ── */}
+      <div style={{ flex: 1, minWidth: 0, background: "#fff", borderRadius: 12, border: "1px solid #e5e7eb", overflowY: "auto", padding: 24 }}>
+        {!p ? (
+          <div className="d-flex flex-column align-items-center justify-content-center text-muted" style={{ height: "100%" }}>
+            <i className="bi bi-bag-check fs-1 mb-3" />
+            <p>Selecciona un pedido para ver el detalle</p>
+          </div>
+        ) : (
+          <>
+            {/* Timer */}
+            <TimerWidget pedido={p} />
+
+            {/* Título + badge */}
+            <div className="d-flex align-items-center gap-2 mb-3">
+              <h3 className="fw-bold mb-0" style={{ fontSize: "1.2rem" }}>Pedido #{p.id}</h3>
+              <EstadoBadge estado={p.estado} />
+              <button
+                className="btn btn-sm btn-outline-secondary ms-auto"
+                style={{ borderRadius: 8 }}
+                onClick={() => imprimir(p)}
+                title="Imprimir comanda"
+              >
+                <i className="bi bi-printer" />
+              </button>
+            </div>
+
+            {/* Info boxes */}
+            <div className="d-flex gap-2 mb-3 flex-wrap">
+              <InfoBox label="Hora de entrega" value={p.hora_entrega} />
+              {direccion && <InfoBox label="Lugar de entrega" value={direccion} />}
+              {nombre && <InfoBox label={nombre} value={telefono} />}
+            </div>
+
+            {/* Mapa (solo en listo y en_camino) */}
+            {(p.estado === "listo" || p.estado === "en_camino") && (
+              <MapaEntrega pedido={p} />
+            )}
+
+            {/* Resumen */}
+            <ResumenPedido pedido={p} />
+
+            {/* Acciones */}
+            <AccionesPanel p={p} />
+
+            {/* Motivo rechazo si aplica */}
+            {p.estado === "rechazado" && p.motivo_rechazo && (
+              <div className="alert alert-danger py-2 small mt-2">
+                <i className="bi bi-x-circle me-1" />Motivo: {p.motivo_rechazo}
+              </div>
+            )}
+          </>
+        )}
+      </div>
+
+      {/* ── Modal rechazo ── */}
       {modalRechazo && (
         <div className="modal d-block" style={{ background: "rgba(0,0,0,0.4)" }}>
           <div className="modal-dialog modal-dialog-centered">
@@ -273,32 +737,105 @@ export default function PedidosAdminPage() {
               <div className="modal-body">
                 <p className="text-muted small mb-3">Cliente: <strong>{modalRechazo.cliente?.nombre}</strong></p>
                 <label className="form-label fw-semibold small">Motivo del rechazo</label>
-                {/* Motivos rápidos */}
                 <div className="d-flex flex-wrap gap-2 mb-3">
-                  {MOTIVOS_RAPIDOS.map((m) => (
+                  {MOTIVOS_RAPIDOS.map(m => (
                     <button
-                      key={m}
-                      type="button"
+                      key={m} type="button"
                       className={`btn btn-sm rounded-pill ${motivoRechazo === m ? "btn-danger" : "btn-outline-secondary"}`}
                       onClick={() => setMotivoRechazo(m)}
-                    >
-                      {m}
-                    </button>
+                    >{m}</button>
                   ))}
                 </div>
                 <textarea
-                  className="form-control"
-                  rows={3}
+                  className="form-control" rows={3}
                   placeholder="O escribe el motivo..."
                   value={motivoRechazo}
-                  onChange={(e) => setMotivoRechazo(e.target.value)}
+                  onChange={e => setMotivoRechazo(e.target.value)}
                 />
               </div>
               <div className="modal-footer">
                 <button className="btn btn-outline-secondary btn-sm" onClick={() => setModalRechazo(null)}>Cancelar</button>
-                <button className="btn btn-danger btn-sm" onClick={rechazar} disabled={!motivoRechazo.trim()}>
-                  Confirmar rechazo
-                </button>
+                <button className="btn btn-danger btn-sm" onClick={rechazar} disabled={!motivoRechazo.trim()}>Confirmar rechazo</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Modal confirmar cambio de estado ── */}
+      {modalEstado && (
+        <div className="modal d-block" style={{ background: "rgba(0,0,0,0.4)" }}>
+          <div className="modal-dialog modal-dialog-centered">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h6 className="modal-title fw-bold">Confirmar cambio</h6>
+                <button className="btn-close" onClick={() => setModalEstado(null)} />
+              </div>
+              <div className="modal-body">
+                <p className="mb-1 text-muted small">Pedido <strong>#{modalEstado.pedido.id}</strong> — {modalEstado.pedido.receptor_nombre || modalEstado.pedido.cliente?.nombre}</p>
+                <p className="mb-0">¿Cambiar estado a <strong>{{
+                  en_preparacion: "En preparación",
+                  listo: "Pedido listo",
+                  en_camino: "En camino",
+                  entregado: "Entregado",
+                  cancelado: "Cancelado",
+                }[modalEstado.estado] ?? modalEstado.estado}</strong>?</p>
+                {modalEstado.estado === "cancelado" && (
+                  <div className="alert alert-warning py-2 small mt-3 mb-0">
+                    <i className="bi bi-exclamation-triangle me-1" />El cliente recibirá una notificación.
+                  </div>
+                )}
+              </div>
+              <div className="modal-footer">
+                <button className="btn btn-sm btn-outline-secondary" onClick={() => setModalEstado(null)}>Cancelar</button>
+                <button
+                  className={`btn btn-sm ${modalEstado.estado === "cancelado" ? "btn-danger" : "btn-brand"}`}
+                  onClick={() => cambiarEstado(modalEstado.pedido.id, modalEstado.estado)}
+                >Confirmar</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Modal asignar repartidor ── */}
+      {modalRepartidor && (
+        <div className="modal d-block" style={{ background: "rgba(0,0,0,0.4)" }}>
+          <div className="modal-dialog modal-dialog-centered">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h6 className="modal-title fw-bold">Asignar repartidor — Pedido #{modalRepartidor.id}</h6>
+                <button className="btn-close" onClick={() => setModalRepartidor(null)} />
+              </div>
+              <div className="modal-body">
+                {repartidores.length === 0 ? (
+                  <p className="text-muted small text-center py-3">No hay repartidores disponibles</p>
+                ) : (
+                  <div className="d-flex flex-column gap-2">
+                    {repartidores.map(r => (
+                      <button
+                        key={r.id}
+                        className="btn text-start d-flex align-items-center gap-3 p-3 border rounded-3"
+                        style={{ background: "#fff" }}
+                        onClick={() => asignarRepartidor(modalRepartidor.id, r.id)}
+                      >
+                        <div
+                          className="rounded-circle d-flex align-items-center justify-content-center fw-bold text-white"
+                          style={{ width: 36, height: 36, background: "#ED4137", fontSize: "0.8rem", flexShrink: 0 }}
+                        >
+                          {r.nombre?.split(" ").map(w => w[0]).slice(0, 2).join("").toUpperCase()}
+                        </div>
+                        <div>
+                          <div className="fw-semibold small">{r.nombre}</div>
+                          <div className="text-muted" style={{ fontSize: "0.75rem" }}>{r.telefono_whatsapp}</div>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <div className="modal-footer">
+                <button className="btn btn-outline-secondary btn-sm" onClick={() => setModalRepartidor(null)}>Cancelar</button>
               </div>
             </div>
           </div>

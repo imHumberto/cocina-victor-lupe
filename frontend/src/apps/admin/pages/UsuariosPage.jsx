@@ -126,7 +126,7 @@ export default function UsuariosPage() {
   );
 
   return (
-    <>
+    <div className="p-4" style={{ height: "100%", overflowY: "auto" }}>
       <div className="d-flex align-items-center justify-content-between mb-3">
         <h2 className="h5 fw-bold mb-0">Usuarios</h2>
         <button className="btn btn-sm btn-brand" onClick={abrirModalInvite}>
@@ -318,6 +318,6 @@ export default function UsuariosPage() {
           </div>
         </div>
       )}
-    </>
+    </div>
   );
 }

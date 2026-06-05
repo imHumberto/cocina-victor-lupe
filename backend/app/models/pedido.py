@@ -64,6 +64,7 @@ class Pedido(db.Model):
             "entrega_direccion": self.entrega_direccion,
             "entrega_referencias": self.entrega_referencias,
             "created_at": self.created_at.isoformat() if self.created_at else None,
+            "updated_at": self.updated_at.isoformat() if self.updated_at else None,
         }
         if include_cliente and self.cliente:
             data["cliente"] = self.cliente.to_dict()
