@@ -372,16 +372,16 @@ function TabsScroll({ tab, setTab, counts }) {
   };
 
   const floatBtn = {
-    position: "absolute", top: 0, bottom: 10,
-    width: 52, border: "none", borderRadius: 14,
-    background: "#94a3b8", color: "#fff",
-    fontSize: "1rem", cursor: "pointer",
+    position: "absolute", top: "50%", transform: "translateY(-60%)",
+    width: 24, height: 24, border: "none", borderRadius: "50%",
+    background: "rgba(100,116,139,0.75)", color: "#fff",
+    fontSize: "0.7rem", cursor: "pointer",
     display: "none", alignItems: "center", justifyContent: "center",
-    zIndex: 2,
+    zIndex: 2, padding: 0,
   };
 
   return (
-    <div style={{ position: "relative", padding: "0 8px 10px", flexShrink: 0 }}>
+    <div style={{ position: "relative", padding: "0 0 10px", flexShrink: 0 }}>
       <div ref={scrollRef} style={{ display: "flex", gap: 6, overflowX: "auto", scrollbarWidth: "none" }}>
         {TABS.map(t => (
           <button
@@ -389,13 +389,15 @@ function TabsScroll({ tab, setTab, counts }) {
             ref={el => btnRefs.current[t.key] = el}
             onClick={() => setTab(t.key)}
             style={{
-              height: 60, borderRadius: 14, border: "none",
-              flexShrink: 0, cursor: "pointer",
-              minWidth: 110, padding: "0 14px",
-              background: tab === t.key ? "#3b5bdb" : "#f1f5f9",
+              height: 44, borderRadius: 10, border: "none",
+              flex: "1 0 auto", cursor: "pointer",
+              minWidth: 100, padding: "0 16px",
+              background: tab === t.key ? "#2563eb" : "#fff",
               color: tab === t.key ? "#fff" : "#6b7280",
               fontSize: "0.85rem", fontWeight: 600,
               whiteSpace: "nowrap",
+              boxShadow: tab === t.key ? "0 1px 4px rgba(37,99,235,0.25)" : "none",
+              transition: "background 0.15s, color 0.15s",
             }}
           >
             {t.label}{counts[t.key] > 0 ? ` (${counts[t.key]})` : ""}
@@ -403,10 +405,10 @@ function TabsScroll({ tab, setTab, counts }) {
         ))}
       </div>
 
-      <button ref={leftBtnRef} onClick={() => scroll(-1)} style={{ ...floatBtn, left: 8 }}>
+      <button ref={leftBtnRef} onClick={() => scroll(-1)} style={{ ...floatBtn, left: 4 }}>
         <i className="bi bi-chevron-left" />
       </button>
-      <button ref={rightBtnRef} onClick={() => scroll(1)} style={{ ...floatBtn, right: 8 }}>
+      <button ref={rightBtnRef} onClick={() => scroll(1)} style={{ ...floatBtn, right: 4 }}>
         <i className="bi bi-chevron-right" />
       </button>
     </div>
@@ -628,7 +630,7 @@ export default function PedidosAdminPage() {
     <div style={{ display: "flex", height: "100%", gap: 16, padding: 16, overflow: "hidden" }}>
 
       {/* ── Panel izquierdo ── */}
-      <div style={{ width: 360, minWidth: 360, display: "flex", flexDirection: "column", background: "#fff", borderRadius: 12, border: "1px solid #e5e7eb", overflow: "hidden" }}>
+      <div style={{ width: 360, minWidth: 360, display: "flex", flexDirection: "column", background: "transparent", overflow: "hidden" }}>
 
         {/* Título + buscador */}
         <div style={{ padding: "20px 16px 12px", flexShrink: 0 }}>
@@ -645,9 +647,6 @@ export default function PedidosAdminPage() {
             />
           </div>
         </div>
-
-        {/* Tabs */}
-        <TabsScroll tab={tab} setTab={setTab} counts={counts} />
 
         {/* Lista */}
         <div style={{ flex: 1, overflowY: "auto", padding: "0 12px 12px" }}>
@@ -672,7 +671,15 @@ export default function PedidosAdminPage() {
       </div>
 
       {/* ── Panel derecho ── */}
-      <div style={{ flex: 1, minWidth: 0, background: "#fff", borderRadius: 12, border: "1px solid #e5e7eb", overflowY: "auto", padding: 24 }}>
+      <div style={{ flex: 1, minWidth: 0, background: "#fff", borderRadius: 16, overflow: "hidden", display: "flex", flexDirection: "column" }}>
+
+        {/* Tabs */}
+        <div style={{ padding: "16px 16px 0", flexShrink: 0 }}>
+          <TabsScroll tab={tab} setTab={setTab} counts={counts} />
+        </div>
+
+        {/* Detalle scrolleable */}
+        <div style={{ flex: 1, overflowY: "auto", padding: "16px 24px 24px" }}>
         {!p ? (
           <div className="d-flex flex-column align-items-center justify-content-center text-muted" style={{ height: "100%" }}>
             <i className="bi bi-bag-check fs-1 mb-3" />
@@ -723,6 +730,7 @@ export default function PedidosAdminPage() {
             )}
           </>
         )}
+        </div>{/* fin detalle scrolleable */}
       </div>
 
       {/* ── Modal rechazo ── */}

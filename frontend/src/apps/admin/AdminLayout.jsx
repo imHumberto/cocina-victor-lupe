@@ -49,9 +49,9 @@ export default function AdminLayout() {
       </aside>
 
       {/* ── Main ── */}
-      <div className="flex-grow-1 d-flex flex-column" style={{ background: "#f4f4f4", minWidth: 0, overflow: "hidden" }}>
+      <div className="flex-grow-1 d-flex flex-column" style={{ background: "#F9FBFC", minWidth: 0, overflow: "hidden" }}>
         {/* Topbar */}
-        <header className="d-flex align-items-center justify-content-end px-4 py-2 bg-white border-bottom gap-3" style={{ flexShrink: 0 }}>
+        <header className="d-flex align-items-center justify-content-end px-4 py-2 gap-3" style={{ flexShrink: 0, background: "#F9FBFC" }}>
           <button className="btn btn-link p-1 text-muted"><i className="bi bi-bell fs-5" /></button>
           <div className="d-flex align-items-center gap-2" style={{ cursor: "pointer" }}>
             <div

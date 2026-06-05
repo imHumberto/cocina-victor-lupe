@@ -416,10 +416,18 @@ export default function MenuAdminPage() {
                   <button
                     key={m.id}
                     onClick={() => cargarMenuCompleto(m)}
-                    className={`btn btn-sm rounded-pill px-3 ${menuActivo?.id === m.id ? "btn-dark" : "btn-outline-secondary"}`}
+                    className="btn btn-sm rounded-pill px-3"
+                    style={{
+                      background: menuActivo?.id === m.id ? "#809FB8" : "transparent",
+                      color: menuActivo?.id === m.id ? "#fff" : "#374151",
+                      border: "1px solid #d1d5db",
+                      transition: "background 0.15s",
+                    }}
+                    onMouseEnter={e => { if (menuActivo?.id !== m.id) e.currentTarget.style.background = "#F1F4F9"; }}
+                    onMouseLeave={e => { if (menuActivo?.id !== m.id) e.currentTarget.style.background = "transparent"; }}
                   >
-                    {dayjs(m.fecha_inicio).format("DD/MM")} – {dayjs(m.fecha_inicio).add(4,"day").format("DD/MM")}
-                    {m.publicado && <i className="bi bi-check-circle ms-1 text-success" />}
+                    {dayjs(m.fecha_inicio).format("MMM D")} a {dayjs(m.fecha_inicio).add(4,"day").format("MMM D")}
+                    {m.publicado && <i className="bi bi-check-circle-fill ms-1" style={{ color: "#2BB316" }} />}
                   </button>
                 ))}
               </div>
