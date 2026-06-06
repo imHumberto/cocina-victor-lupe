@@ -438,6 +438,234 @@ function TabsScroll({ tab, setTab, counts }) {
   );
 }
 
+// ── Chips de método de pago ──────────────────────────────────────────────────
+
+const PAGO_CHIP = {
+  efectivo:      { label: "Efectivo",      bg: "#dbeafe", color: "#1d4ed8" },
+  tarjeta:       { label: "Tarjeta",       bg: "#ede9fe", color: "#6d28d9" },
+  transferencia: { label: "Transferencia", bg: "#e0e7ff", color: "#4338ca" },
+};
+
+function PagoBadge({ metodo }) {
+  const cfg = PAGO_CHIP[metodo];
+  if (!cfg) return null;
+  return (
+    <span className="rounded-pill px-2 py-1 fw-semibold" style={{
+      background: cfg.bg, color: cfg.color, fontSize: "0.7rem", whiteSpace: "nowrap",
+    }}>{cfg.label}</span>
+  );
+}
+
+// ── Card finalizado ──────────────────────────────────────────────────────────
+
+function PedidoCardFinalizado({ pedido, seleccionado, onClick }) {
+  const fecha = pedido.created_at
+    ? new Date(pedido.created_at).toLocaleDateString("es-MX", { day: "numeric", month: "long", year: "numeric" })
+    : "—";
+  return (
+    <div
+      onClick={onClick}
+      className="rounded-3 p-3 mb-2"
+      style={{
+        cursor: "pointer",
+        border: seleccionado ? "2px solid #1255F0" : "1px solid #e5e7eb",
+        background: "#fff",
+        boxShadow: seleccionado ? "0 4px 16px rgba(128,159,184,0.20)" : "none",
+        transition: "border-color 0.15s, box-shadow 0.15s",
+      }}
+    >
+      <div className="d-flex justify-content-between align-items-start mb-1">
+        <span style={{ fontSize: "1.5rem", fontWeight: 600, color: "#17181A", lineHeight: 1.2 }}>
+          Pedido #{pedido.id}
+        </span>
+        <button
+          className="btn btn-sm rounded-2"
+          style={{ fontSize: "0.75rem", fontWeight: 700, background: "#f1f5f9", color: "#64748b", border: "none", flexShrink: 0 }}
+          onClick={onClick}
+        >Ver detalles</button>
+      </div>
+      <div className="mb-2" style={{ fontSize: "0.78rem", color: "#809FB8" }}>Fecha: {fecha}</div>
+      <div className="d-flex gap-2 flex-wrap">
+        <EstadoBadge estado={pedido.estado} />
+        {pedido.metodo_pago && <PagoBadge metodo={pedido.metodo_pago} />}
+      </div>
+    </div>
+  );
+}
+
+// ── Panel filtros (finalizados) ──────────────────────────────────────────────
+
+function FiltroChip({ label, active, onClick }) {
+  return (
+    <button
+      onClick={onClick}
+      className="btn btn-sm rounded-pill px-3 py-1"
+      style={{
+        background: active ? "#e8edf5" : "transparent",
+        color: active ? "#2563eb" : "#6b7280",
+        border: "1px solid #e5e7eb",
+        fontWeight: active ? 600 : 400,
+        fontSize: "0.78rem",
+        transition: "all 0.12s",
+      }}
+    >{label}</button>
+  );
+}
+
+function FiltrosPanel({ filtros, setFiltros, onClose }) {
+  return (
+    <div
+      className="rounded-3 p-3 mb-2"
+      style={{ background: "#fff", border: "1px solid #e5e7eb", boxShadow: "0 4px 16px rgba(0,0,0,0.08)" }}
+    >
+      <div className="d-flex justify-content-between align-items-center mb-3">
+        <span className="fw-semibold" style={{ fontSize: "0.9rem" }}>Por fecha</span>
+        <button className="btn-close" style={{ fontSize: "0.7rem" }} onClick={onClose} />
+      </div>
+      <div className="d-flex gap-2 flex-wrap mb-3">
+        {["hoy", "ayer", "mes"].map(v => (
+          <FiltroChip key={v} label={{ hoy: "Hoy", ayer: "Ayer", mes: "Este mes" }[v]}
+            active={filtros.fecha === v} onClick={() => setFiltros(f => ({ ...f, fecha: f.fecha === v ? null : v }))} />
+        ))}
+      </div>
+
+      <div className="fw-semibold mb-2" style={{ fontSize: "0.9rem" }}>Estado</div>
+      <div className="d-flex gap-2 flex-wrap mb-3">
+        {[
+          { v: "todos",     l: "Todos" },
+          { v: "entregado", l: "Entregado" },
+          { v: "rechazado", l: "Rechazados" },
+        ].map(({ v, l }) => (
+          <FiltroChip key={v} label={l} active={filtros.estado === v}
+            onClick={() => setFiltros(f => ({ ...f, estado: v }))} />
+        ))}
+      </div>
+
+      <div className="fw-semibold mb-2" style={{ fontSize: "0.9rem" }}>Método de pago</div>
+      <div className="d-flex gap-2 flex-wrap">
+        {[
+          { v: "todos",        l: "Todos" },
+          { v: "efectivo",     l: "Efectivo" },
+          { v: "tarjeta",      l: "Tarjeta" },
+          { v: "transferencia",l: "Transferencia" },
+        ].map(({ v, l }) => (
+          <FiltroChip key={v} label={l} active={filtros.pago === v}
+            onClick={() => setFiltros(f => ({ ...f, pago: v }))} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ── Detalle finalizado ───────────────────────────────────────────────────────
+
+function DetalleFinalizado({ pedido: p }) {
+  const nombre = p.receptor_nombre || p.cliente?.nombre || "—";
+  const telefono = p.receptor_telefono || p.cliente?.telefono_whatsapp || "—";
+  const direccion = p.direccion?.direccion ?? p.entrega_direccion ?? p.cliente?.direccion_entrega;
+  const alias = p.direccion?.alias;
+  const refs = p.direccion?.referencias ?? p.entrega_referencias;
+
+  const horaRecibida = p.created_at
+    ? new Date(p.created_at).toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" })
+    : "—";
+  const horaEntregada = p.estado === "entregado" && p.updated_at
+    ? new Date(p.updated_at).toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" })
+    : null;
+
+  const plato = p.plato_elegido === "alternativa" ? "Plato alternativo" : "Comida del día";
+  const bebida = p.bebida_elegida === "alternativa" ? "Bebida alternativa" : "Bebida del día";
+
+  const rowStyle = { display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 0", borderBottom: "1px solid #f3f4f6" };
+  const labelStyle = { fontSize: "0.9rem", color: "#545454" };
+  const valueStyle = { fontSize: "0.9rem", fontWeight: 600, color: "#17181A" };
+  const subStyle = { fontSize: "0.9rem", color: "#809FB8" };
+
+  return (
+    <>
+      {/* Título */}
+      <div className="d-flex align-items-center gap-2 mb-3">
+        <h3 className="fw-bold mb-0" style={{ fontSize: "1.4rem", color: "#17181A" }}>Pedido #{p.id}</h3>
+        <EstadoBadge estado={p.estado} />
+        {p.metodo_pago && <PagoBadge metodo={p.metodo_pago} />}
+      </div>
+
+      {/* Info boxes: recibida / entregada / contacto */}
+      <div className="d-flex gap-2 mb-4 flex-wrap">
+        <InfoBox label="Orden recibida" value={horaRecibida} />
+        <InfoBox
+          label="Orden entregada"
+          value={p.estado === "entregado" ? horaEntregada : "Orden rechazada"}
+        />
+        <InfoBox label={nombre} value={telefono} />
+      </div>
+
+      {/* Dirección */}
+      {direccion && (
+        <div className="mb-4">
+          <div className="fw-semibold mb-1" style={{ fontSize: "0.95rem", color: "#17181A" }}>Dirección de entrega</div>
+          {alias && <div className="fw-semibold small" style={{ color: "#17181A" }}>{alias}</div>}
+          <div className="small" style={{ color: "#809FB8" }}>{direccion}</div>
+          {refs && <div className="small" style={{ color: "#9ca3af", fontSize: "0.75rem" }}>{refs}</div>}
+        </div>
+      )}
+
+      {/* Resumen */}
+      <div className="fw-semibold mb-2" style={{ fontSize: "0.95rem", color: "#17181A" }}>Resumen del pedido</div>
+      <div style={{ borderTop: "1px solid #e5e7eb" }}>
+
+        <div style={rowStyle}>
+          <span style={labelStyle}>Hora de entrega solicitada</span>
+          <span style={valueStyle}>{p.hora_entrega}</span>
+        </div>
+
+        {p.repartidor && (
+          <div style={rowStyle}>
+            <span style={labelStyle}>Entregado por</span>
+            <span style={valueStyle}>{p.repartidor.nombre}</span>
+          </div>
+        )}
+
+        {/* Ítem */}
+        <div style={{ ...rowStyle, borderBottom: "none", paddingBottom: 4 }}>
+          <span style={{ ...labelStyle, fontWeight: 600 }}>1x Comida del Día</span>
+        </div>
+        <div style={{ ...rowStyle, paddingTop: 2 }}>
+          <span style={subStyle}>{plato}</span>
+        </div>
+        <div style={rowStyle}>
+          <span style={subStyle}>{bebida}</span>
+        </div>
+        {p.notas && (
+          <div style={rowStyle}>
+            <span style={{ ...subStyle, fontStyle: "italic" }}>*{p.notas}*</span>
+          </div>
+        )}
+
+        {/* Total */}
+        <div style={{ ...rowStyle, borderTop: "2px solid #e5e7eb", borderBottom: "none", marginTop: 4 }}>
+          <span style={{ ...valueStyle, fontSize: "1rem" }}>Total</span>
+          <span style={{ ...valueStyle, fontSize: "1rem" }}>—</span>
+        </div>
+
+        {/* Forma de pago o motivo de rechazo */}
+        {p.estado === "entregado" && p.metodo_pago && (
+          <div style={rowStyle}>
+            <span style={labelStyle}>Forma de pago</span>
+            <span style={valueStyle}>{p.metodo_pago.charAt(0).toUpperCase() + p.metodo_pago.slice(1)}</span>
+          </div>
+        )}
+        {p.estado === "rechazado" && p.motivo_rechazo && (
+          <div style={rowStyle}>
+            <span style={labelStyle}>Motivo del rechazo</span>
+            <span style={{ ...valueStyle, fontStyle: "italic", color: "#ef4444" }}>*{p.motivo_rechazo}*</span>
+          </div>
+        )}
+      </div>
+    </>
+  );
+}
+
 // ── Componente principal ─────────────────────────────────────────────────────
 
 export default function PedidosAdminPage() {
@@ -447,6 +675,10 @@ export default function PedidosAdminPage() {
   const [seleccionado, setSeleccionado] = useState(null);
   const [busqueda, setBusqueda] = useState("");
   const [repartidores, setRepartidores] = useState([]);
+
+  // Filtros finalizados
+  const [filtroOpen, setFiltroOpen] = useState(false);
+  const [filtros, setFiltros] = useState({ fecha: "hoy", estado: "todos", pago: "todos" });
 
   // Modales
   const [modalRechazo, setModalRechazo] = useState(null);
@@ -480,6 +712,15 @@ export default function PedidosAdminPage() {
 
   // Filtered list
   const tabActual = TABS.find(t => t.key === tab);
+
+  const esMismaFecha = (isoStr, diasAtras) => {
+    if (!isoStr) return false;
+    const d = new Date(isoStr);
+    const ref = new Date();
+    ref.setDate(ref.getDate() - diasAtras);
+    return d.toDateString() === ref.toDateString();
+  };
+
   const lista = pedidos
     .filter(p => tabActual.estados.includes(p.estado))
     .filter(p => {
@@ -487,6 +728,28 @@ export default function PedidosAdminPage() {
       const q = busqueda.toLowerCase();
       return String(p.id).includes(q) ||
         (p.receptor_nombre || p.cliente?.nombre || "").toLowerCase().includes(q);
+    })
+    .filter(p => {
+      if (tab !== "cerrado") return true;
+      // filtro fecha
+      if (filtros.fecha === "hoy")  return esMismaFecha(p.created_at, 0);
+      if (filtros.fecha === "ayer") return esMismaFecha(p.created_at, 1);
+      if (filtros.fecha === "mes") {
+        const d = new Date(p.created_at);
+        const now = new Date();
+        return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+      }
+      return true;
+    })
+    .filter(p => {
+      if (tab !== "cerrado") return true;
+      if (filtros.estado !== "todos") return p.estado === filtros.estado;
+      return true;
+    })
+    .filter(p => {
+      if (tab !== "cerrado") return true;
+      if (filtros.pago !== "todos") return p.metodo_pago === filtros.pago;
+      return true;
     })
     .sort((a, b) => a.hora_entrega?.localeCompare(b.hora_entrega));
 
@@ -674,22 +937,53 @@ export default function PedidosAdminPage() {
 
         {/* Lista */}
         <div style={{ flex: 1, overflowY: "auto", padding: "0 12px 12px" }}>
-          {lista.length === 0 ? (
-            <p className="text-muted text-center small py-4">Sin pedidos</p>
-          ) : (
+          {/* Encabezado con filtro (solo finalizados) */}
+          {tab === "cerrado" ? (
             <>
+              <div className="d-flex justify-content-between align-items-center mb-2" style={{ position: "relative" }}>
+                <span className="fw-semibold" style={{ fontSize: "1rem", color: "#17181A" }}>Pedidos finalizados</span>
+                <button
+                  className="btn btn-sm"
+                  style={{ background: filtroOpen ? "#e8edf5" : "transparent", border: "none", color: filtroOpen ? "#2563eb" : "#6b7280", borderRadius: 8 }}
+                  onClick={() => setFiltroOpen(o => !o)}
+                >
+                  <i className="bi bi-sort-down-alt" style={{ fontSize: "1.1rem" }} />
+                </button>
+                {filtroOpen && (
+                  <div style={{ position: "absolute", top: "calc(100% + 4px)", right: 0, zIndex: 50, width: 320 }}>
+                    <FiltrosPanel filtros={filtros} setFiltros={setFiltros} onClose={() => setFiltroOpen(false)} />
+                  </div>
+                )}
+              </div>
+            </>
+          ) : (
+            lista.length > 0 && (
               <div className="fw-semibold mb-2" style={{ fontSize: "1rem", color: "#17181A" }}>
                 {tabActual.label} pedidos
               </div>
-              {lista.map(ped => (
-                <PedidoCard
-                  key={ped.id}
-                  pedido={ped}
-                  seleccionado={seleccionado?.id === ped.id}
-                  onClick={() => setSeleccionado(ped)}
-                />
-              ))}
-            </>
+            )
+          )}
+
+          {lista.length === 0 ? (
+            <p className="text-muted text-center small py-4">Sin pedidos</p>
+          ) : tab === "cerrado" ? (
+            lista.map(ped => (
+              <PedidoCardFinalizado
+                key={ped.id}
+                pedido={ped}
+                seleccionado={seleccionado?.id === ped.id}
+                onClick={() => setSeleccionado(ped)}
+              />
+            ))
+          ) : (
+            lista.map(ped => (
+              <PedidoCard
+                key={ped.id}
+                pedido={ped}
+                seleccionado={seleccionado?.id === ped.id}
+                onClick={() => setSeleccionado(ped)}
+              />
+            ))
           )}
         </div>
       </div>
@@ -709,6 +1003,8 @@ export default function PedidosAdminPage() {
             <i className="bi bi-bag-check fs-1 mb-3" />
             <p>Selecciona un pedido para ver el detalle</p>
           </div>
+        ) : tab === "cerrado" ? (
+          <DetalleFinalizado pedido={p} />
         ) : (
           <>
             {/* Timer */}
@@ -745,13 +1041,6 @@ export default function PedidosAdminPage() {
 
             {/* Acciones */}
             <AccionesPanel p={p} />
-
-            {/* Motivo rechazo si aplica */}
-            {p.estado === "rechazado" && p.motivo_rechazo && (
-              <div className="alert alert-danger py-2 small mt-2">
-                <i className="bi bi-x-circle me-1" />Motivo: {p.motivo_rechazo}
-              </div>
-            )}
           </>
         )}
         </div>{/* fin detalle scrolleable */}
