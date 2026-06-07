@@ -1,6 +1,6 @@
 from flask import Blueprint, jsonify, request
-from flask_jwt_extended import jwt_required, get_jwt
 from app.models.configuracion import Configuracion
+from app.utils.helpers import require_role
 
 config_bp = Blueprint("config", __name__)
 
@@ -13,13 +13,9 @@ def get_estado():
 
 
 @config_bp.post("/pedidos-pausados")
-@jwt_required()
+@require_role("admin")
 def set_pedidos_pausados():
     """Solo admin."""
-    claims = get_jwt()
-    if claims.get("rol") != "admin":
-        return jsonify({"error": "No autorizado"}), 403
-
     data = request.get_json() or {}
     pausado = bool(data.get("pausado", False))
     Configuracion.set("pedidos_pausados", "true" if pausado else "false")
