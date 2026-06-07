@@ -3,6 +3,7 @@ import api from "../../../services/api";
 import EstadoBadge from "../../../components/shared/EstadoBadge";
 import { useSocketEvent } from "../../../hooks/useSocket";
 import { getSocket } from "../../../services/socket";
+import { formatTelefono } from "../../../utils/format";
 
 // ── Constantes ──────────────────────────────────────────────────────────────
 
@@ -561,7 +562,7 @@ function FiltrosPanel({ filtros, setFiltros, onClose }) {
 
 function DetalleFinalizado({ pedido: p }) {
   const nombre = p.receptor_nombre || p.cliente?.nombre || "—";
-  const telefono = p.receptor_telefono || p.cliente?.telefono_whatsapp || "—";
+  const telefono = formatTelefono(p.receptor_telefono || p.cliente?.telefono_whatsapp) || "—";
   const direccion = p.direccion?.direccion ?? p.entrega_direccion ?? p.cliente?.direccion_entrega;
   const alias = p.direccion?.alias;
   const refs = p.direccion?.referencias ?? p.entrega_referencias;
@@ -910,7 +911,7 @@ export default function PedidosAdminPage() {
 
   const p = seleccionado;
   const nombre = p ? (p.receptor_nombre || p.cliente?.nombre) : null;
-  const telefono = p ? (p.receptor_telefono || p.cliente?.telefono_whatsapp) : null;
+  const telefono = p ? formatTelefono(p.receptor_telefono || p.cliente?.telefono_whatsapp) : null;
   const direccion = p ? (p.direccion?.direccion ?? p.entrega_direccion ?? p.cliente?.direccion_entrega) : null;
 
   return (
@@ -1148,7 +1149,7 @@ export default function PedidosAdminPage() {
                         </div>
                         <div>
                           <div className="fw-semibold small">{r.nombre}</div>
-                          <div className="text-muted" style={{ fontSize: "0.75rem" }}>{r.telefono_whatsapp}</div>
+                          <div className="text-muted" style={{ fontSize: "0.75rem" }}>{formatTelefono(r.telefono_whatsapp)}</div>
                         </div>
                       </button>
                     ))}
