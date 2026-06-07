@@ -133,13 +133,14 @@ export default function InicioPage() {
   const [loading, setLoading] = useState(true);
   const [cantidad, setCantidad] = useState(1);
   const [carritoGuardado, setCarritoGuardado] = useState(false);
+  const [pedidosPausados, setPedidosPausados] = useState(false);
   const navigate = useNavigate();
 
   const nombre = user?.nombre?.split(" ")[0] ?? "";
   const hoy = dayjs();
   const esFinDeSemana = hoy.day() === 0 || hoy.day() === 6;
-  const puedeOrdenar = !esFinDeSemana; // TODO: descomentar para producción
-  // const puedeOrdenar = !esFinDeSemana && (hoy.hour() * 60 + hoy.minute()) < (15 * 60 + 40);
+  const puedeOrdenar = !esFinDeSemana && !pedidosPausados; // TODO: descomentar horario para producción
+  // const puedeOrdenar = !esFinDeSemana && !pedidosPausados && (hoy.hour() * 60 + hoy.minute()) < (15 * 60 + 40);
 
   const DISMISS_KEY = "pedido_dismissed";
 
@@ -160,6 +161,7 @@ export default function InicioPage() {
   };
 
   useEffect(() => {
+    api.get("/config/estado").then(({ data }) => setPedidosPausados(data.pedidos_pausados)).catch(() => {});
     if (esFinDeSemana) { setLoading(false); return; }
     Promise.all([
       api.get("/menu/dia-hoy").catch(() => null),
@@ -215,6 +217,17 @@ export default function InicioPage() {
           {hoy.format("dddd D [de] MMMM")}
         </p>
       </div>
+
+      {/* Banner: pedidos pausados */}
+      {pedidosPausados && !esFinDeSemana && (
+        <div className="rounded-3 p-3 mb-4 d-flex align-items-center gap-3" style={{ background: "#fff7ed", border: "1px solid #fed7aa" }}>
+          <i className="bi bi-pause-circle-fill" style={{ fontSize: "1.6rem", color: "#ea580c", flexShrink: 0 }} />
+          <div>
+            <div className="fw-semibold" style={{ color: "#9a3412" }}>No estamos aceptando pedidos</div>
+            <div className="text-muted small">Por el momento el servicio está en pausa. Intenta más tarde.</div>
+          </div>
+        </div>
+      )}
 
       {/* Fin de semana */}
       {esFinDeSemana && (
@@ -302,7 +315,7 @@ export default function InicioPage() {
               </button>
             </div>
           )}
-          {!pedidoHoy && !puedeOrdenar && (
+          {!pedidoHoy && !puedeOrdenar && !pedidosPausados && (
             <p className="text-center text-muted small mt-4">
               El tiempo para ordenar hoy ya pasó (límite 3:40 PM)
             </p>

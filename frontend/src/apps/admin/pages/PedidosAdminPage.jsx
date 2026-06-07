@@ -687,6 +687,22 @@ export default function PedidosAdminPage() {
   const [modalEstado, setModalEstado] = useState(null);
   const [modalRepartidor, setModalRepartidor] = useState(null);
 
+  // Pausar pedidos
+  const [pausado, setPausado] = useState(false);
+  const [togglingPausa, setTogglingPausa] = useState(false);
+
+  const togglePausa = async () => {
+    setTogglingPausa(true);
+    try {
+      const { data } = await api.post("/config/pedidos-pausados", { pausado: !pausado });
+      setPausado(data.pedidos_pausados);
+    } catch (err) {
+      alert(err.response?.data?.error ?? "Error al cambiar estado");
+    } finally {
+      setTogglingPausa(false);
+    }
+  };
+
   const cargar = () => {
     api.get("/admin/pedidos-hoy")
       .then(({ data }) => setPedidos(data))
@@ -696,6 +712,7 @@ export default function PedidosAdminPage() {
   useEffect(() => {
     cargar();
     api.get("/admin/repartidores").then(({ data }) => setRepartidores(data)).catch(() => {});
+    api.get("/config/estado").then(({ data }) => setPausado(data.pedidos_pausados)).catch(() => {});
     getSocket()?.emit("join_admin");
   }, []);
 
@@ -922,7 +939,26 @@ export default function PedidosAdminPage() {
 
         {/* Título + buscador */}
         <div style={{ padding: "20px 16px 12px", flexShrink: 0 }}>
-          <h2 className="fw-bold mb-3" style={{ fontSize: "1.4rem" }}>Pedidos</h2>
+          <div className="d-flex align-items-center justify-content-between mb-3">
+            <h2 className="fw-bold mb-0" style={{ fontSize: "1.4rem" }}>Pedidos</h2>
+            <button
+              onClick={togglePausa}
+              disabled={togglingPausa}
+              title={pausado ? "Reanudar pedidos" : "Pausar nuevos pedidos"}
+              style={{
+                display: "flex", alignItems: "center", gap: 6,
+                border: "none", borderRadius: 20,
+                padding: "5px 12px",
+                fontSize: "0.78rem", fontWeight: 600, cursor: "pointer",
+                background: pausado ? "#fef2f2" : "#f0fdf4",
+                color: pausado ? "#dc2626" : "#16a34a",
+                transition: "background 0.2s, color 0.2s",
+              }}
+            >
+              <i className={`bi ${pausado ? "bi-pause-circle-fill" : "bi-play-circle-fill"}`} style={{ fontSize: "1rem" }} />
+              {togglingPausa ? "…" : pausado ? "Pausado" : "Activo"}
+            </button>
+          </div>
           <div style={{ position: "relative" }}>
             <i className="bi bi-search" style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", color: "#9ca3af", fontSize: "0.85rem" }} />
             <input

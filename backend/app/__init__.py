@@ -30,6 +30,7 @@ def create_app(env="default"):
     from app.routes.repartidor import repartidor_bp
     from app.routes.notificaciones import notif_bp
     from app.routes.geo import geo_bp
+    from app.routes.config import config_bp
 
     app.register_blueprint(auth_bp, url_prefix="/api/auth")
     app.register_blueprint(menu_bp, url_prefix="/api/menu")
@@ -38,5 +39,6 @@ def create_app(env="default"):
     app.register_blueprint(repartidor_bp, url_prefix="/api/repartidor")
     app.register_blueprint(notif_bp, url_prefix="/api/notificaciones")
     app.register_blueprint(geo_bp, url_prefix="/api/geo")
+    app.register_blueprint(config_bp, url_prefix="/api/config")
 
     return app

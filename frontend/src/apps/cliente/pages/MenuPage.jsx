@@ -16,12 +16,14 @@ export default function MenuPage() {
   const [menu, setMenu] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [pedidosPausados, setPedidosPausados] = useState(false);
   const navigate = useNavigate();
 
   const hoyIdx = dayjs().day() === 0 ? -1 : dayjs().day() - 1; // 0=lunes
   const [tab, setTab] = useState(hoyIdx >= 0 && hoyIdx <= 4 ? hoyIdx : 0);
 
   useEffect(() => {
+    api.get("/config/estado").then(({ data }) => setPedidosPausados(data.pedidos_pausados)).catch(() => {});
     api.get("/menu/actual")
       .then(({ data }) => setMenu(data))
       .catch(() => setError("No hay menú disponible esta semana"))
@@ -44,8 +46,8 @@ export default function MenuPage() {
   const dias = menu?.dias ?? [];
   const diaActivo = dias.find((d) => d.dia === tab);
   const esHoy = tab === hoyIdx;
-  const puedeOrdenar = esHoy; // TODO: descomentar para producción
-  // const puedeOrdenar = esHoy && dayjs().hour() * 60 + dayjs().minute() < 15 * 60 + 40;
+  const puedeOrdenar = esHoy && !pedidosPausados; // TODO: descomentar horario para producción
+  // const puedeOrdenar = esHoy && !pedidosPausados && dayjs().hour() * 60 + dayjs().minute() < 15 * 60 + 40;
 
   return (
     <div className="p-3">
@@ -107,7 +109,13 @@ export default function MenuPage() {
               Ordenar para hoy
             </button>
           )}
-          {esHoy && !puedeOrdenar && (
+          {esHoy && !puedeOrdenar && pedidosPausados && (
+            <div className="d-flex align-items-center gap-2 mt-3 rounded-3 p-2" style={{ background: "#fff7ed", border: "1px solid #fed7aa" }}>
+              <i className="bi bi-pause-circle-fill" style={{ color: "#ea580c" }} />
+              <p className="text-muted small mb-0">No estamos aceptando pedidos por el momento. Intenta más tarde.</p>
+            </div>
+          )}
+          {esHoy && !puedeOrdenar && !pedidosPausados && (
             <p className="text-muted text-center small mt-3">El tiempo para ordenar hoy ya pasó (límite 3:40 PM)</p>
           )}
         </div>
