@@ -79,7 +79,7 @@ export default function App() {
         <Route path="usuarios" element={<UsuariosPage />} />
       </Route>
 
-      <Route path="*" element={<Navigate to="/" replace />} />
+<Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
 }
