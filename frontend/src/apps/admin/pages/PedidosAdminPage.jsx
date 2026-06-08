@@ -1097,6 +1097,22 @@ export default function PedidosAdminPage() {
               {togglingPausa ? "…" : pausado ? "Pausado" : "Activo"}
             </button>
           </div>
+          {/* 🧪 BOTONES DE PRUEBA — quitar antes de producción */}
+          <div className="d-flex gap-2 mb-3 p-2 rounded-2" style={{ background: "#fafafa", border: "1px dashed #d1d5db" }}>
+            <span style={{ fontSize: "0.7rem", color: "#9ca3af", alignSelf: "center", whiteSpace: "nowrap" }}>🧪 test:</span>
+            <button
+              className="btn btn-sm"
+              style={{ fontSize: "0.72rem", background: "#fef2f2", color: "#dc2626", border: "1px solid #fca5a5", borderRadius: 8 }}
+              onClick={() => pushNotif("nuevo", "¡Nuevo pedido!", "María García · 14:30 hrs")}
+            >Pedido nuevo</button>
+            <button
+              className="btn btn-sm"
+              style={{ fontSize: "0.72rem", background: "#fffbeb", color: "#b45309", border: "1px solid #fcd34d", borderRadius: 8 }}
+              onClick={() => pushNotif("alerta", "Entrega en ~15 min", "Pedido #42 · Juan López · 14:45 hrs")}
+            >Alerta entrega</button>
+          </div>
+          {/* fin botones de prueba */}
+
           <div style={{ position: "relative" }}>
             <i className="bi bi-search" style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", color: "#9ca3af", fontSize: "0.85rem" }} />
             <input
