@@ -690,9 +690,13 @@ export default function PedidosAdminPage() {
   // Pausar pedidos
   const [pausado, setPausado] = useState(false);
   const [togglingPausa, setTogglingPausa] = useState(false);
+  const [modalPausa, setModalPausa] = useState(false);
+
+  const confirmarTogglePausa = () => setModalPausa(true);
 
   const togglePausa = async () => {
     setTogglingPausa(true);
+    setModalPausa(false);
     try {
       const { data } = await api.post("/config/pedidos-pausados", { pausado: !pausado });
       setPausado(data.pedidos_pausados);
@@ -942,7 +946,7 @@ export default function PedidosAdminPage() {
           <div className="d-flex align-items-center justify-content-between mb-3">
             <h2 className="fw-bold mb-0" style={{ fontSize: "1.4rem" }}>Pedidos</h2>
             <button
-              onClick={togglePausa}
+              onClick={confirmarTogglePausa}
               disabled={togglingPausa}
               title={pausado ? "Reanudar pedidos" : "Pausar nuevos pedidos"}
               style={{
@@ -1084,6 +1088,48 @@ export default function PedidosAdminPage() {
       </div>
 
       {/* ── Modal rechazo ── */}
+      {modalPausa && (
+        <div className="modal d-block" style={{ background: "rgba(0,0,0,0.4)" }}>
+          <div className="modal-dialog modal-dialog-centered" style={{ maxWidth: 380 }}>
+            <div className="modal-content" style={{ borderRadius: 14 }}>
+              <div className="modal-body p-4 text-center">
+                <div style={{ fontSize: "2.5rem", marginBottom: 12 }}>
+                  {pausado ? "▶️" : "⏸️"}
+                </div>
+                <h6 className="fw-bold mb-2">
+                  {pausado ? "¿Reanudar pedidos?" : "¿Pausar pedidos?"}
+                </h6>
+                <p className="text-muted small mb-4">
+                  {pausado
+                    ? "Los clientes podrán volver a ordenar normalmente."
+                    : "Los clientes no podrán hacer pedidos hasta que lo reactives."}
+                </p>
+                <div className="d-flex gap-2 justify-content-center">
+                  <button
+                    className="btn btn-outline-secondary"
+                    style={{ borderRadius: 10, minWidth: 100 }}
+                    onClick={() => setModalPausa(false)}
+                  >Cancelar</button>
+                  <button
+                    className="btn"
+                    style={{
+                      borderRadius: 10, minWidth: 100, fontWeight: 600,
+                      background: pausado ? "#dcfce7" : "#fef2f2",
+                      color: pausado ? "#16a34a" : "#dc2626",
+                      border: "none",
+                    }}
+                    onClick={togglePausa}
+                    disabled={togglingPausa}
+                  >
+                    {pausado ? "Sí, reanudar" : "Sí, pausar"}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {modalRechazo && (
         <div className="modal d-block" style={{ background: "rgba(0,0,0,0.4)" }}>
           <div className="modal-dialog modal-dialog-centered">
