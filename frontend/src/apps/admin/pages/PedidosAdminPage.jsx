@@ -764,50 +764,71 @@ function PedidoNuevoPopup({ pedido, onVerOrden }) {
   );
 }
 
-// ── Banner lateral — Alertas de entrega próxima ───────────────────────────────
+// ── Popup bloqueante — Alerta de entrega próxima ────────────────────────────
 
-function AlertaBanner({ notifs, onDismiss }) {
-  if (!notifs.length) return null;
+function AlertaEntregaPopup({ alerta, onEnPreparacion }) {
+  const beepIntervalRef = useRef(null);
+
+  useEffect(() => {
+    beepUnaVez("alerta");
+    beepIntervalRef.current = setInterval(() => beepUnaVez("alerta"), 2500);
+    return () => clearInterval(beepIntervalRef.current);
+  }, []);
+
+  const handleAccion = () => {
+    clearInterval(beepIntervalRef.current);
+    onEnPreparacion(alerta.pedido);
+  };
+
+  const { pedido } = alerta;
+  const nombre = pedido.receptor_nombre || pedido.cliente?.nombre || "Cliente";
+  const hora = pedido.hora_entrega?.slice(0, 5);
+
   return (
     <div style={{
-      position: "fixed", top: 16, right: 16, zIndex: 9999,
-      display: "flex", flexDirection: "column", gap: 10,
-      maxWidth: 360,
+      position: "fixed", inset: 0, zIndex: 10000,
+      background: "rgba(0,0,0,0.65)",
+      display: "flex", alignItems: "center", justifyContent: "center",
     }}>
-      {notifs.map(n => (
-        <div key={n.id} style={{
-          background: "#fffbeb",
-          border: "2px solid #f59e0b",
-          borderRadius: 14,
-          padding: "14px 16px",
-          boxShadow: "0 8px 24px rgba(0,0,0,0.14)",
-          display: "flex", alignItems: "flex-start", gap: 12,
-          animation: "slideInRight 0.25s ease",
-        }}>
-          <div style={{
-            width: 40, height: 40, borderRadius: 10, flexShrink: 0,
-            background: "#fef3c7",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            fontSize: "1.3rem",
-          }}>⏰</div>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontWeight: 700, fontSize: "0.9rem", color: "#17181A", marginBottom: 2 }}>
-              {n.titulo}
-            </div>
-            <div style={{ fontSize: "0.78rem", color: "#545454" }}>{n.cuerpo}</div>
+      <div style={{
+        background: "#fff", borderRadius: 20,
+        padding: "36px 32px", textAlign: "center",
+        maxWidth: 360, width: "90%",
+        boxShadow: "0 24px 60px rgba(0,0,0,0.3)",
+        animation: "popIn 0.2s ease",
+      }}>
+        <div style={{ fontSize: "3rem", marginBottom: 12 }}>⏰</div>
+        <div style={{
+          fontSize: "0.7rem", fontWeight: 700, letterSpacing: "0.12em",
+          color: "#f59e0b", textTransform: "uppercase", marginBottom: 16,
+        }}>¡Hora de preparar!</div>
+
+        <div style={{ background: "#f9fbfc", borderRadius: 12, padding: "14px 16px", marginBottom: 24, textAlign: "left" }}>
+          <div style={{ fontSize: "0.72rem", color: "#809FB8", fontWeight: 600, textTransform: "uppercase", marginBottom: 4 }}>
+            Pedido #{pedido.id}
           </div>
-          <button
-            onClick={() => onDismiss(n.id)}
-            style={{ border: "none", background: "transparent", color: "#9ca3af", cursor: "pointer", padding: 0, fontSize: "1.2rem", lineHeight: 1 }}
-          >×</button>
+          <div style={{ fontWeight: 700, fontSize: "1.1rem", color: "#17181A", marginBottom: 2 }}>
+            {nombre}
+          </div>
+          <div style={{ fontSize: "0.85rem", color: "#545454" }}>
+            Entrega: <strong>{hora} hrs</strong>
+          </div>
         </div>
-      ))}
-      <style>{`
-        @keyframes slideInRight {
-          from { opacity: 0; transform: translateX(40px); }
-          to   { opacity: 1; transform: translateX(0); }
-        }
-      `}</style>
+
+        <button
+          onClick={handleAccion}
+          style={{
+            width: "100%", padding: "14px 0",
+            background: "#f59e0b", color: "#fff",
+            border: "none", borderRadius: 12,
+            fontWeight: 700, fontSize: "1rem", cursor: "pointer",
+            letterSpacing: "0.02em",
+          }}
+        >
+          <i className="bi bi-fire me-2" />
+          En preparación
+        </button>
+      </div>
     </div>
   );
 }
@@ -833,20 +854,9 @@ export default function PedidosAdminPage() {
   const [modalRepartidor, setModalRepartidor] = useState(null);
 
   // Notificaciones admin
-  const [pedidoEntrante, setPedidoEntrante] = useState(null); // popup bloqueante
-  const [alertas, setAlertas] = useState([]);                  // banners de entrega próxima
+  const [pedidoEntrante, setPedidoEntrante] = useState(null); // popup pedido nuevo
+  const [alertaEntrega, setAlertaEntrega] = useState(null);   // popup alerta entrega
   const alertadosRef = useRef(new Set());
-
-  const pushAlerta = useCallback((titulo, cuerpo) => {
-    const id = Date.now() + Math.random();
-    setAlertas(prev => [...prev, { id, titulo, cuerpo }]);
-    beepUnaVez("alerta");
-    setTimeout(() => setAlertas(prev => prev.filter(n => n.id !== id)), 15000);
-  }, []);
-
-  const dismissAlerta = useCallback((id) => {
-    setAlertas(prev => prev.filter(n => n.id !== id));
-  }, []);
 
   // Pausar pedidos
   const [pausado, setPausado] = useState(false);
@@ -901,7 +911,18 @@ export default function PedidosAdminPage() {
     setSeleccionado(p);
   }, []);
 
-  // Alerta: pedido próximo a entrega → banner lateral
+  // Al dar "En preparación" desde el popup de alerta
+  const handleEnPreparacionDesdeAlerta = useCallback(async (p) => {
+    setAlertaEntrega(null);
+    try {
+      const { data } = await api.patch(`/admin/pedidos/${p.id}/estado`, { estado: "en_preparacion" });
+      setPedidos(ps => ps.map(x => x.id === data.id ? data : x));
+      setSeleccionado(s => s?.id === data.id ? data : s);
+      setTab("en_preparacion");
+    } catch (_) {}
+  }, []);
+
+  // Alerta: pedido próximo a entrega → popup bloqueante
   useEffect(() => {
     const intervalo = setInterval(() => {
       setPedidos(ps => {
@@ -916,18 +937,14 @@ export default function PedidosAdminPage() {
           const diffMin = (entrega - ahora) / 60000;
           if (diffMin > 0 && diffMin <= MINUTOS_ALERTA_ENTREGA) {
             alertadosRef.current.add(p.id);
-            const nombre = p.receptor_nombre || p.cliente?.nombre || "Cliente";
-            pushAlerta(
-              `Entrega en ~${Math.round(diffMin)} min`,
-              `Pedido #${p.id} · ${nombre} · ${p.hora_entrega?.slice(0, 5)} hrs`
-            );
+            setAlertaEntrega({ pedido: p });
           }
         });
         return ps;
       });
     }, 60000);
     return () => clearInterval(intervalo);
-  }, [pushAlerta]);
+  }, []);
 
   // Counts per tab
   const counts = {};
@@ -1177,7 +1194,7 @@ export default function PedidosAdminPage() {
             <button
               className="btn btn-sm"
               style={{ fontSize: "0.72rem", background: "#fffbeb", color: "#b45309", border: "1px solid #fcd34d", borderRadius: 8 }}
-              onClick={() => pushAlerta("Entrega en ~15 min", "Pedido #42 · Juan López · 14:45 hrs")}
+              onClick={() => setAlertaEntrega({ pedido: { id: 42, receptor_nombre: "Juan López", hora_entrega: "14:45:00", cliente: { nombre: "Juan López" }, estado: "confirmado" } })}
             >Alerta entrega</button>
           </div>
           {/* fin botones de prueba */}
@@ -1310,7 +1327,9 @@ export default function PedidosAdminPage() {
       {pedidoEntrante && (
         <PedidoNuevoPopup pedido={pedidoEntrante} onVerOrden={handleVerOrden} />
       )}
-      <AlertaBanner notifs={alertas} onDismiss={dismissAlerta} />
+      {alertaEntrega && (
+        <AlertaEntregaPopup alerta={alertaEntrega} onEnPreparacion={handleEnPreparacionDesdeAlerta} />
+      )}
 
       {modalPausa && (
         <div className="modal d-block" style={{ background: "rgba(0,0,0,0.4)" }}>
