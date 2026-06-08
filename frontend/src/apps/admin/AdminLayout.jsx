@@ -61,7 +61,6 @@ export default function AdminLayout() {
               {user?.nombre?.split(" ").map(w => w[0]).slice(0, 2).join("").toUpperCase()}
             </div>
             <span className="small fw-semibold">{user?.nombre}</span>
-            <i className="bi bi-chevron-down small text-muted" />
           </div>
         </header>
 
