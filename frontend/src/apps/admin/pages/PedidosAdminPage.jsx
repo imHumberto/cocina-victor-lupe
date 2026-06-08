@@ -676,13 +676,12 @@ function DetalleFinalizado({ pedido: p }) {
 
 // ── Audio ────────────────────────────────────────────────────────────────────
 
-function beep(tipo = "nuevo") {
+function beepUnaVez(tipo = "alerta") {
   try {
     const ctx = new (window.AudioContext || window.webkitAudioContext)();
-    const secuencias = tipo === "nuevo"
-      ? [{ freq: 880, t: 0 }, { freq: 1100, t: 0.15 }, { freq: 880, t: 0.30 }]
-      : [{ freq: 660, t: 0 }, { freq: 440, t: 0.20 }, { freq: 660, t: 0.40 }, { freq: 440, t: 0.60 }];
-
+    const secuencias = tipo === "alerta"
+      ? [{ freq: 660, t: 0 }, { freq: 440, t: 0.20 }, { freq: 660, t: 0.40 }, { freq: 440, t: 0.60 }]
+      : [{ freq: 880, t: 0 }, { freq: 1100, t: 0.15 }, { freq: 880, t: 0.30 }];
     secuencias.forEach(({ freq, t }) => {
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
@@ -698,20 +697,87 @@ function beep(tipo = "nuevo") {
   } catch (_) {}
 }
 
-// ── Banner de notificación ───────────────────────────────────────────────────
+// ── Popup bloqueante — Pedido nuevo entrante ─────────────────────────────────
 
-function NotifBanner({ notifs, onDismiss }) {
+function PedidoNuevoPopup({ pedido, onVerOrden }) {
+  const beepIntervalRef = useRef(null);
+
+  useEffect(() => {
+    // Suena de inmediato y repite cada 2.5s hasta que cierren el popup
+    beepUnaVez("nuevo");
+    beepIntervalRef.current = setInterval(() => beepUnaVez("nuevo"), 2500);
+    return () => clearInterval(beepIntervalRef.current);
+  }, []);
+
+  const handleVer = () => {
+    clearInterval(beepIntervalRef.current);
+    onVerOrden(pedido);
+  };
+
+  const nombre = pedido.receptor_nombre || pedido.cliente?.nombre || "Cliente";
+  const hora = pedido.hora_entrega?.slice(0, 5);
+
+  return (
+    <div style={{
+      position: "fixed", inset: 0, zIndex: 10000,
+      background: "rgba(0,0,0,0.65)",
+      display: "flex", alignItems: "center", justifyContent: "center",
+    }}>
+      <div style={{
+        background: "#fff", borderRadius: 20,
+        padding: "36px 32px", textAlign: "center",
+        maxWidth: 360, width: "90%",
+        boxShadow: "0 24px 60px rgba(0,0,0,0.3)",
+        animation: "popIn 0.2s ease",
+      }}>
+        <div style={{ fontSize: "3rem", marginBottom: 12 }}>🛎️</div>
+        <div style={{
+          fontSize: "0.7rem", fontWeight: 700, letterSpacing: "0.12em",
+          color: "#ED4137", textTransform: "uppercase", marginBottom: 8,
+        }}>Pedido nuevo entrante</div>
+        <div style={{ fontWeight: 700, fontSize: "1.3rem", color: "#17181A", marginBottom: 4 }}>
+          {nombre}
+        </div>
+        <div style={{ color: "#545454", fontSize: "0.9rem", marginBottom: 28 }}>
+          Entrega: <strong>{hora} hrs</strong>
+        </div>
+        <button
+          onClick={handleVer}
+          style={{
+            width: "100%", padding: "14px 0",
+            background: "#ED4137", color: "#fff",
+            border: "none", borderRadius: 12,
+            fontWeight: 700, fontSize: "1rem", cursor: "pointer",
+            letterSpacing: "0.02em",
+          }}
+        >
+          Ver orden
+        </button>
+      </div>
+      <style>{`
+        @keyframes popIn {
+          from { opacity: 0; transform: scale(0.88); }
+          to   { opacity: 1; transform: scale(1); }
+        }
+      `}</style>
+    </div>
+  );
+}
+
+// ── Banner lateral — Alertas de entrega próxima ───────────────────────────────
+
+function AlertaBanner({ notifs, onDismiss }) {
   if (!notifs.length) return null;
   return (
     <div style={{
       position: "fixed", top: 16, right: 16, zIndex: 9999,
       display: "flex", flexDirection: "column", gap: 10,
-      maxWidth: 380,
+      maxWidth: 360,
     }}>
       {notifs.map(n => (
         <div key={n.id} style={{
-          background: n.tipo === "nuevo" ? "#fff" : "#fffbeb",
-          border: `2px solid ${n.tipo === "nuevo" ? "#ED4137" : "#f59e0b"}`,
+          background: "#fffbeb",
+          border: "2px solid #f59e0b",
           borderRadius: 14,
           padding: "14px 16px",
           boxShadow: "0 8px 24px rgba(0,0,0,0.14)",
@@ -720,12 +786,10 @@ function NotifBanner({ notifs, onDismiss }) {
         }}>
           <div style={{
             width: 40, height: 40, borderRadius: 10, flexShrink: 0,
-            background: n.tipo === "nuevo" ? "#fef2f2" : "#fef3c7",
+            background: "#fef3c7",
             display: "flex", alignItems: "center", justifyContent: "center",
             fontSize: "1.3rem",
-          }}>
-            {n.tipo === "nuevo" ? "🛎️" : "⏰"}
-          </div>
+          }}>⏰</div>
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ fontWeight: 700, fontSize: "0.9rem", color: "#17181A", marginBottom: 2 }}>
               {n.titulo}
@@ -734,7 +798,7 @@ function NotifBanner({ notifs, onDismiss }) {
           </div>
           <button
             onClick={() => onDismiss(n.id)}
-            style={{ border: "none", background: "transparent", color: "#9ca3af", cursor: "pointer", padding: 0, fontSize: "1.1rem", lineHeight: 1 }}
+            style={{ border: "none", background: "transparent", color: "#9ca3af", cursor: "pointer", padding: 0, fontSize: "1.2rem", lineHeight: 1 }}
           >×</button>
         </div>
       ))}
@@ -769,19 +833,19 @@ export default function PedidosAdminPage() {
   const [modalRepartidor, setModalRepartidor] = useState(null);
 
   // Notificaciones admin
-  const [notifs, setNotifs] = useState([]);
-  const alertadosRef = useRef(new Set()); // IDs de pedidos ya alertados por entrega próxima
+  const [pedidoEntrante, setPedidoEntrante] = useState(null); // popup bloqueante
+  const [alertas, setAlertas] = useState([]);                  // banners de entrega próxima
+  const alertadosRef = useRef(new Set());
 
-  const pushNotif = useCallback((tipo, titulo, cuerpo) => {
+  const pushAlerta = useCallback((titulo, cuerpo) => {
     const id = Date.now() + Math.random();
-    setNotifs(prev => [...prev, { id, tipo, titulo, cuerpo }]);
-    beep(tipo);
-    // Auto-dismiss a los 12 segundos
-    setTimeout(() => setNotifs(prev => prev.filter(n => n.id !== id)), 12000);
+    setAlertas(prev => [...prev, { id, titulo, cuerpo }]);
+    beepUnaVez("alerta");
+    setTimeout(() => setAlertas(prev => prev.filter(n => n.id !== id)), 15000);
   }, []);
 
-  const dismissNotif = useCallback((id) => {
-    setNotifs(prev => prev.filter(n => n.id !== id));
+  const dismissAlerta = useCallback((id) => {
+    setAlertas(prev => prev.filter(n => n.id !== id));
   }, []);
 
   // Pausar pedidos
@@ -823,15 +887,21 @@ export default function PedidosAdminPage() {
   }, []);
   useSocketEvent("pedido_actualizado", handleActualizado);
 
-  // Notificación: pedido nuevo
+  // Notificación: pedido nuevo → popup bloqueante
   const handlePedidoNuevo = useCallback((p) => {
     setPedidos(ps => [p, ...ps]);
-    const nombre = p.receptor_nombre || p.cliente?.nombre || "Cliente";
-    pushNotif("nuevo", "¡Nuevo pedido!", `${nombre} · ${p.hora_entrega?.slice(0, 5)} hrs`);
-  }, [pushNotif]);
+    setPedidoEntrante(p);
+  }, []);
   useSocketEvent("pedido_nuevo", handlePedidoNuevo);
 
-  // Alerta: pedido próximo a entrega
+  // Al dar "Ver orden": cierra popup, selecciona el pedido y va a tab Nuevos
+  const handleVerOrden = useCallback((p) => {
+    setPedidoEntrante(null);
+    setTab("pendiente");
+    setSeleccionado(p);
+  }, []);
+
+  // Alerta: pedido próximo a entrega → banner lateral
   useEffect(() => {
     const intervalo = setInterval(() => {
       setPedidos(ps => {
@@ -847,18 +917,17 @@ export default function PedidosAdminPage() {
           if (diffMin > 0 && diffMin <= MINUTOS_ALERTA_ENTREGA) {
             alertadosRef.current.add(p.id);
             const nombre = p.receptor_nombre || p.cliente?.nombre || "Cliente";
-            pushNotif(
-              "alerta",
+            pushAlerta(
               `Entrega en ~${Math.round(diffMin)} min`,
               `Pedido #${p.id} · ${nombre} · ${p.hora_entrega?.slice(0, 5)} hrs`
             );
           }
         });
-        return ps; // no muta el estado
+        return ps;
       });
-    }, 60000); // revisa cada minuto
+    }, 60000);
     return () => clearInterval(intervalo);
-  }, [pushNotif]);
+  }, [pushAlerta]);
 
   // Counts per tab
   const counts = {};
@@ -1103,12 +1172,12 @@ export default function PedidosAdminPage() {
             <button
               className="btn btn-sm"
               style={{ fontSize: "0.72rem", background: "#fef2f2", color: "#dc2626", border: "1px solid #fca5a5", borderRadius: 8 }}
-              onClick={() => pushNotif("nuevo", "¡Nuevo pedido!", "María García · 14:30 hrs")}
+              onClick={() => setPedidoEntrante({ id: 99, receptor_nombre: "María García", hora_entrega: "14:30:00", cliente: { nombre: "María García" } })}
             >Pedido nuevo</button>
             <button
               className="btn btn-sm"
               style={{ fontSize: "0.72rem", background: "#fffbeb", color: "#b45309", border: "1px solid #fcd34d", borderRadius: 8 }}
-              onClick={() => pushNotif("alerta", "Entrega en ~15 min", "Pedido #42 · Juan López · 14:45 hrs")}
+              onClick={() => pushAlerta("Entrega en ~15 min", "Pedido #42 · Juan López · 14:45 hrs")}
             >Alerta entrega</button>
           </div>
           {/* fin botones de prueba */}
@@ -1238,7 +1307,10 @@ export default function PedidosAdminPage() {
       </div>
 
       {/* ── Modal rechazo ── */}
-      <NotifBanner notifs={notifs} onDismiss={dismissNotif} />
+      {pedidoEntrante && (
+        <PedidoNuevoPopup pedido={pedidoEntrante} onVerOrden={handleVerOrden} />
+      )}
+      <AlertaBanner notifs={alertas} onDismiss={dismissAlerta} />
 
       {modalPausa && (
         <div className="modal d-block" style={{ background: "rgba(0,0,0,0.4)" }}>
