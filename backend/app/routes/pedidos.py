@@ -2,7 +2,7 @@ from datetime import date, datetime, time, timezone
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
 
-from app import db
+from app import db, socketio
 from app.models.direccion import DireccionCliente
 from app.models.pedido import Pedido
 from app.models.menu import DiaMenu, MenuSemanal
@@ -81,6 +81,8 @@ def crear_pedido():
     )
     db.session.add(pedido)
     db.session.commit()
+
+    socketio.emit("pedido_nuevo", pedido.to_dict(include_cliente=True), room="admin")
 
     return jsonify(pedido.to_dict()), 201
 

@@ -7,6 +7,13 @@ import { formatTelefono } from "../../../utils/format";
 
 // ── Constantes ──────────────────────────────────────────────────────────────
 
+// ⏱️ Minutos de anticipación para la alerta de entrega próxima.
+// Cambia este número para ajustar cuándo se dispara la notificación.
+const MINUTOS_ALERTA_ENTREGA = 15;
+
+// Estados que se consideran "activos" para la alerta de entrega
+const ESTADOS_ALERTA = ["pendiente", "confirmado", "en_preparacion"];
+
 const TABS = [
   { key: "pendiente",      label: "Nuevos",         estados: ["pendiente"] },
   { key: "en_preparacion", label: "En preparación", estados: ["confirmado", "en_preparacion"] },
@@ -667,6 +674,80 @@ function DetalleFinalizado({ pedido: p }) {
   );
 }
 
+// ── Audio ────────────────────────────────────────────────────────────────────
+
+function beep(tipo = "nuevo") {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const secuencias = tipo === "nuevo"
+      ? [{ freq: 880, t: 0 }, { freq: 1100, t: 0.15 }, { freq: 880, t: 0.30 }]
+      : [{ freq: 660, t: 0 }, { freq: 440, t: 0.20 }, { freq: 660, t: 0.40 }, { freq: 440, t: 0.60 }];
+
+    secuencias.forEach(({ freq, t }) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.frequency.value = freq;
+      osc.type = "sine";
+      gain.gain.setValueAtTime(0.4, ctx.currentTime + t);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + t + 0.12);
+      osc.start(ctx.currentTime + t);
+      osc.stop(ctx.currentTime + t + 0.13);
+    });
+  } catch (_) {}
+}
+
+// ── Banner de notificación ───────────────────────────────────────────────────
+
+function NotifBanner({ notifs, onDismiss }) {
+  if (!notifs.length) return null;
+  return (
+    <div style={{
+      position: "fixed", top: 16, right: 16, zIndex: 9999,
+      display: "flex", flexDirection: "column", gap: 10,
+      maxWidth: 380,
+    }}>
+      {notifs.map(n => (
+        <div key={n.id} style={{
+          background: n.tipo === "nuevo" ? "#fff" : "#fffbeb",
+          border: `2px solid ${n.tipo === "nuevo" ? "#ED4137" : "#f59e0b"}`,
+          borderRadius: 14,
+          padding: "14px 16px",
+          boxShadow: "0 8px 24px rgba(0,0,0,0.14)",
+          display: "flex", alignItems: "flex-start", gap: 12,
+          animation: "slideInRight 0.25s ease",
+        }}>
+          <div style={{
+            width: 40, height: 40, borderRadius: 10, flexShrink: 0,
+            background: n.tipo === "nuevo" ? "#fef2f2" : "#fef3c7",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            fontSize: "1.3rem",
+          }}>
+            {n.tipo === "nuevo" ? "🛎️" : "⏰"}
+          </div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontWeight: 700, fontSize: "0.9rem", color: "#17181A", marginBottom: 2 }}>
+              {n.titulo}
+            </div>
+            <div style={{ fontSize: "0.78rem", color: "#545454" }}>{n.cuerpo}</div>
+          </div>
+          <button
+            onClick={() => onDismiss(n.id)}
+            style={{ border: "none", background: "transparent", color: "#9ca3af", cursor: "pointer", padding: 0, fontSize: "1.1rem", lineHeight: 1 }}
+          >×</button>
+        </div>
+      ))}
+      <style>{`
+        @keyframes slideInRight {
+          from { opacity: 0; transform: translateX(40px); }
+          to   { opacity: 1; transform: translateX(0); }
+        }
+      `}</style>
+    </div>
+  );
+}
+
 // ── Componente principal ─────────────────────────────────────────────────────
 
 export default function PedidosAdminPage() {
@@ -686,6 +767,22 @@ export default function PedidosAdminPage() {
   const [motivoRechazo, setMotivoRechazo] = useState("");
   const [modalEstado, setModalEstado] = useState(null);
   const [modalRepartidor, setModalRepartidor] = useState(null);
+
+  // Notificaciones admin
+  const [notifs, setNotifs] = useState([]);
+  const alertadosRef = useRef(new Set()); // IDs de pedidos ya alertados por entrega próxima
+
+  const pushNotif = useCallback((tipo, titulo, cuerpo) => {
+    const id = Date.now() + Math.random();
+    setNotifs(prev => [...prev, { id, tipo, titulo, cuerpo }]);
+    beep(tipo);
+    // Auto-dismiss a los 12 segundos
+    setTimeout(() => setNotifs(prev => prev.filter(n => n.id !== id)), 12000);
+  }, []);
+
+  const dismissNotif = useCallback((id) => {
+    setNotifs(prev => prev.filter(n => n.id !== id));
+  }, []);
 
   // Pausar pedidos
   const [pausado, setPausado] = useState(false);
@@ -725,6 +822,43 @@ export default function PedidosAdminPage() {
     setSeleccionado(s => s?.id === p.id ? p : s);
   }, []);
   useSocketEvent("pedido_actualizado", handleActualizado);
+
+  // Notificación: pedido nuevo
+  const handlePedidoNuevo = useCallback((p) => {
+    setPedidos(ps => [p, ...ps]);
+    const nombre = p.receptor_nombre || p.cliente?.nombre || "Cliente";
+    pushNotif("nuevo", "¡Nuevo pedido!", `${nombre} · ${p.hora_entrega?.slice(0, 5)} hrs`);
+  }, [pushNotif]);
+  useSocketEvent("pedido_nuevo", handlePedidoNuevo);
+
+  // Alerta: pedido próximo a entrega
+  useEffect(() => {
+    const intervalo = setInterval(() => {
+      setPedidos(ps => {
+        ps.forEach(p => {
+          if (!ESTADOS_ALERTA.includes(p.estado)) return;
+          if (alertadosRef.current.has(p.id)) return;
+          if (!p.hora_entrega) return;
+          const [h, m] = p.hora_entrega.split(":").map(Number);
+          const ahora = new Date();
+          const entrega = new Date(ahora);
+          entrega.setHours(h, m, 0, 0);
+          const diffMin = (entrega - ahora) / 60000;
+          if (diffMin > 0 && diffMin <= MINUTOS_ALERTA_ENTREGA) {
+            alertadosRef.current.add(p.id);
+            const nombre = p.receptor_nombre || p.cliente?.nombre || "Cliente";
+            pushNotif(
+              "alerta",
+              `Entrega en ~${Math.round(diffMin)} min`,
+              `Pedido #${p.id} · ${nombre} · ${p.hora_entrega?.slice(0, 5)} hrs`
+            );
+          }
+        });
+        return ps; // no muta el estado
+      });
+    }, 60000); // revisa cada minuto
+    return () => clearInterval(intervalo);
+  }, [pushNotif]);
 
   // Counts per tab
   const counts = {};
@@ -1088,6 +1222,8 @@ export default function PedidosAdminPage() {
       </div>
 
       {/* ── Modal rechazo ── */}
+      <NotifBanner notifs={notifs} onDismiss={dismissNotif} />
+
       {modalPausa && (
         <div className="modal d-block" style={{ background: "rgba(0,0,0,0.4)" }}>
           <div className="modal-dialog modal-dialog-centered" style={{ maxWidth: 380 }}>
