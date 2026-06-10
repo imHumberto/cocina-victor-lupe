@@ -39,10 +39,9 @@ export default function LoginPage() {
     }}>
       {/* Logo */}
       <img
-        src="/logo.png"
+        src="/logo.svg"
         alt="La Cocina de Víctor y Lupe"
         style={{ width: 120, marginBottom: 32 }}
-        onError={e => { e.target.style.display = "none"; }}
       />
 
       {/* Título */}
