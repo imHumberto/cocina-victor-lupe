@@ -21,7 +21,7 @@ export default function AdminLayout() {
           <img src={logo} alt="Logo" style={{ width: 110, height: 110 }} />
         </div>
 
-        <nav className="flex-grow-1 px-2">
+        <nav className="flex-grow-1 px-3">
           {NAV.map(({ to, icon, label }) => (
             <NavLink
               key={to}
