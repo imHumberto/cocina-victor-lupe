@@ -90,7 +90,7 @@ function TrackerPedido({ pedido, onDismiss }) {
       <div className="position-relative mb-3">
         <div style={{ height: 4, background: "#f0f0f0", borderRadius: 2 }}>
           <div style={{
-            height: 4, borderRadius: 2, background: "#ED4137",
+            height: 4, borderRadius: 2, background: "var(--color-brand)",
             width: `${Math.min(100, (idxActual / (PASOS.length - 1)) * 100)}%`,
             transition: "width 0.5s ease",
           }} />
@@ -102,7 +102,7 @@ function TrackerPedido({ pedido, onDismiss }) {
                 className="rounded-circle mx-auto mb-1 d-flex align-items-center justify-content-center"
                 style={{
                   width: 28, height: 28,
-                  background: i <= idxActual ? "#ED4137" : "#f0f0f0",
+                  background: i <= idxActual ? "var(--color-brand)" : "#e5e7eb",
                   fontSize: "0.75rem",
                 }}
               >
@@ -111,7 +111,7 @@ function TrackerPedido({ pedido, onDismiss }) {
                   : <span style={{ color: "#ccc", fontSize: "0.7rem" }}>●</span>
                 }
               </div>
-              <div style={{ fontSize: "0.65rem", color: i <= idxActual ? "#ED4137" : "#bbb", fontWeight: i === idxActual ? 700 : 400 }}>
+              <div style={{ fontSize: "0.65rem", color: i <= idxActual ? "var(--color-brand)" : "#bbb", fontWeight: i === idxActual ? 700 : 400 }}>
                 {p.label}
               </div>
             </div>
@@ -120,7 +120,7 @@ function TrackerPedido({ pedido, onDismiss }) {
       </div>
 
       <div className="text-center mt-3">
-        <span className="fw-semibold" style={{ color: "#ED4137" }}>{PASOS[idxActual]?.label}</span>
+        <span className="fw-semibold" style={{ color: "var(--color-brand)" }}>{PASOS[idxActual]?.label}</span>
       </div>
     </div>
   );
@@ -202,132 +202,149 @@ export default function InicioPage() {
 
   if (loading) return (
     <div className="d-flex justify-content-center align-items-center" style={{ minHeight: "60vh" }}>
-      <div className="spinner-border text-brand" />
+      <div className="spinner-border" style={{ color: "var(--color-brand)" }} />
     </div>
   );
 
+  // Descripción corta del menú para mostrar bajo el platillo
+  const descripcionMenu = dia ? [
+    dia.entrada?.nombre,
+    dia.guarniciones?.map(g => g.nombre).join(", "),
+    dia.bebida?.nombre,
+    dia.postre?.nombre,
+  ].filter(Boolean).join(", ") : "";
+
+  const platilloDia = dia?.platos_fuertes?.[0]?.nombre ?? "";
+
   return (
-    <div className="p-4" style={{ maxWidth: 480, margin: "0 auto" }}>
+    <div style={{ maxWidth: 480, margin: "0 auto", padding: "28px 20px 100px" }}>
+
       {/* Saludo */}
-      <div className="mb-4">
-        <h1 className="fw-bold mb-0" style={{ fontSize: "1.8rem" }}>
-          {saludo()},<br />{nombre}!
-        </h1>
-        <p className="text-muted small mb-0 mt-1">
-          {hoy.format("dddd D [de] MMMM")}
-        </p>
-      </div>
+      <h1 style={{
+        fontWeight: 900, fontSize: "1.9rem", lineHeight: 1.15,
+        textTransform: "uppercase", color: "var(--color-navy)",
+        letterSpacing: "0.02em", marginBottom: 20,
+      }}>
+        {saludo()},<br />{nombre}
+      </h1>
 
       {/* Banner: pedidos pausados */}
       {pedidosPausados && !esFinDeSemana && (
-        <div className="rounded-3 p-3 mb-4 d-flex align-items-center gap-3" style={{ background: "#fff7ed", border: "1px solid #fed7aa" }}>
-          <i className="bi bi-pause-circle-fill" style={{ fontSize: "1.6rem", color: "#ea580c", flexShrink: 0 }} />
+        <div style={{ background: "#fff7ed", border: "1px solid #fed7aa", borderRadius: 12, padding: "12px 16px", marginBottom: 16, display: "flex", alignItems: "center", gap: 12 }}>
+          <i className="bi bi-pause-circle-fill" style={{ fontSize: "1.4rem", color: "#ea580c", flexShrink: 0 }} />
           <div>
-            <div className="fw-semibold" style={{ color: "#9a3412" }}>No estamos aceptando pedidos</div>
-            <div className="text-muted small">Por el momento el servicio está en pausa. Intenta más tarde.</div>
+            <div style={{ fontWeight: 600, color: "#9a3412", fontSize: "0.9rem" }}>No estamos aceptando pedidos</div>
+            <div style={{ color: "var(--color-muted)", fontSize: "0.78rem" }}>Por el momento el servicio está en pausa. Intenta más tarde.</div>
           </div>
         </div>
+      )}
+
+      {/* Banner: carrito en progreso */}
+      {!esFinDeSemana && carritoGuardado && !pedidoHoy && (
+        <div style={{ background: "var(--color-brand-light)", border: "1px solid #a7c4be", borderRadius: 12, padding: "12px 16px", marginBottom: 16, display: "flex", alignItems: "center", gap: 12 }}>
+          <i className="bi bi-bag" style={{ fontSize: "1.3rem", color: "var(--color-brand)", flexShrink: 0 }} />
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontWeight: 600, fontSize: "0.9rem" }}>Tienes un pedido en progreso</div>
+            <div style={{ color: "var(--color-muted)", fontSize: "0.75rem" }}>Continúa donde lo dejaste</div>
+          </div>
+          <div className="d-flex gap-2">
+            <button
+              style={{ border: "1px solid #ccc", background: "transparent", borderRadius: 20, padding: "4px 12px", fontSize: "0.8rem", cursor: "pointer" }}
+              onClick={() => { clearCart(user.id); setCarritoGuardado(false); }}
+            >Descartar</button>
+            <button
+              style={{ border: "none", background: "var(--color-brand)", color: "#fff", borderRadius: 20, padding: "4px 12px", fontSize: "0.8rem", fontWeight: 600, cursor: "pointer" }}
+              onClick={() => navigate("/cliente/ordenar")}
+            >Continuar</button>
+          </div>
+        </div>
+      )}
+
+      {/* Tracker de pedido */}
+      {!esFinDeSemana && pedidoHoy && (
+        <TrackerPedido pedido={pedidoHoy} onDismiss={() => dismissPedido(pedidoHoy)} />
       )}
 
       {/* Fin de semana */}
       {esFinDeSemana && (
-        <div className="rounded-3 p-4 text-center" style={{ background: "#f5f5f5" }}>
+        <div style={{ background: "#fff", borderRadius: 16, padding: "32px 24px", textAlign: "center" }}>
           <span style={{ fontSize: "2.5rem" }}>🛋️</span>
-          <p className="fw-semibold mt-2 mb-0">Hoy no hay servicio</p>
-          <p className="text-muted small">Descansa, nos vemos el lunes</p>
+          <p style={{ fontWeight: 700, marginTop: 12, marginBottom: 4 }}>Hoy no hay servicio</p>
+          <p style={{ color: "var(--color-muted)", fontSize: "0.85rem", margin: 0 }}>Descansa, nos vemos el lunes</p>
         </div>
       )}
 
-      {/* Banner: carrito en progreso — solo si no hay pedido activo/cancelado hoy */}
-      {!esFinDeSemana && carritoGuardado && !pedidoHoy && !loading && (
-        <div className="rounded-3 p-3 mb-4 d-flex align-items-center gap-3" style={{ background: "#fff5f5", border: "1px solid #fecaca" }}>
-          <i className="bi bi-bag text-brand" style={{ fontSize: "1.4rem", flexShrink: 0 }} />
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div className="fw-semibold small">Tienes un pedido en progreso</div>
-            <div className="text-muted" style={{ fontSize: "0.75rem" }}>Continúa donde lo dejaste</div>
-          </div>
-          <div className="d-flex gap-2">
-            <button
-              className="btn btn-sm btn-outline-secondary rounded-pill"
-              onClick={() => { clearCart(user.id); setCarritoGuardado(false); }}
-            >
-              Descartar
-            </button>
-            <button
-              className="btn btn-sm btn-brand rounded-pill"
-              onClick={() => navigate("/cliente/ordenar")}
-            >
-              Continuar
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Pedido ya hecho hoy */}
-      {!esFinDeSemana && pedidoHoy && <TrackerPedido pedido={pedidoHoy} onDismiss={() => dismissPedido(pedidoHoy)} />}
-
-      {/* Menú del día */}
-      {!esFinDeSemana && dia && (
-        <div>
-          <h2 className="fw-bold mb-3" style={{ fontSize: "1.1rem" }}>El menú de hoy</h2>
-          <div className="rounded-3 p-3 bg-white border">
-            <ItemMenu icono="🥗" label="Entrada" valor={dia.entrada?.nombre} />
-            <ItemMenu icono="🍽️" label="Plato fuerte" valor={dia.platos_fuertes?.map(p => p.nombre).join(" / ")} />
-            {dia.alternativa_plato_disponible && dia.alternativas_plato?.length > 0 && (
-              <ItemMenu icono="🔄" label={`Alternativa (+$${dia.alternativa_plato_costo_extra})`} valor={dia.alternativas_plato.map(p => p.nombre).join(" o ")} />
-            )}
-            <ItemMenu icono="🥦" label="Guarnición" valor={dia.guarniciones?.map(p => p.nombre).join(" / ")} />
-            <ItemMenu icono="🥤" label="Bebida" valor={dia.bebida?.nombre} />
-            {dia.alternativa_bebida_disponible && dia.alternativas_bebida?.length > 0 && (
-              <ItemMenu icono="🥤" label={`Alt. bebida (+$${dia.alternativa_bebida_costo_extra})`} valor={dia.alternativas_bebida.map(p => p.nombre).join(" o ")} />
-            )}
-            <ItemMenu icono="🍮" label="Postre" valor={dia.postre?.nombre} />
+      {/* Hero menú del día */}
+      {!esFinDeSemana && dia && !pedidoHoy && (
+        <>
+          {/* Imagen hero */}
+          <div style={{
+            width: "100%", aspectRatio: "4/3",
+            background: "#e0e0e0", borderRadius: 16,
+            marginBottom: 16, overflow: "hidden",
+            display: "flex", alignItems: "center", justifyContent: "center",
+          }}>
+            {dia.imagen_url
+              ? <img src={dia.imagen_url} alt={platilloDia} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+              : <span style={{ color: "#aaa", fontSize: "0.8rem", fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase" }}>IMG Placeholder</span>
+            }
           </div>
 
-          {/* Botón ordenar con contador */}
-          {!pedidoHoy && puedeOrdenar && (
-            <div className="mt-4">
-              {/* Contador */}
-              <div className="d-flex align-items-center justify-content-between mb-3 px-1">
-                <span className="fw-semibold">¿Cuántas comidas?</span>
-                <div className="d-flex align-items-center gap-3">
-                  <button
-                    className="btn rounded-circle fw-bold d-flex align-items-center justify-content-center"
-                    style={{ width: 36, height: 36, background: cantidad <= 1 ? "#f0f0f0" : "#ED4137", color: cantidad <= 1 ? "#aaa" : "#fff", border: "none", fontSize: "1.2rem" }}
-                    onClick={() => setCantidad(c => Math.max(1, c - 1))}
-                    disabled={cantidad <= 1}
-                  >−</button>
-                  <span className="fw-bold fs-5">{cantidad}</span>
-                  <button
-                    className="btn rounded-circle fw-bold d-flex align-items-center justify-content-center"
-                    style={{ width: 36, height: 36, background: cantidad >= 4 ? "#f0f0f0" : "#ED4137", color: cantidad >= 4 ? "#aaa" : "#fff", border: "none", fontSize: "1.2rem" }}
-                    onClick={() => setCantidad(c => Math.min(4, c + 1))}
-                    disabled={cantidad >= 4}
-                  >+</button>
-                </div>
-              </div>
+          {/* Info platillo */}
+          <div style={{ marginBottom: 24 }}>
+            <div style={{ fontSize: "0.7rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: "var(--color-brand)", marginBottom: 4 }}>
+              Platillo del día
+            </div>
+            <h2 style={{ fontWeight: 900, fontSize: "1.5rem", textTransform: "uppercase", color: "var(--color-navy)", marginBottom: 4, letterSpacing: "0.02em" }}>
+              {platilloDia}
+            </h2>
+            <p style={{ color: "var(--color-muted)", fontSize: "0.88rem", margin: 0 }}>
+              {descripcionMenu}
+            </p>
+          </div>
+
+          {/* Botón + contador */}
+          {puedeOrdenar && (
+            <div style={{ display: "flex", gap: 10, alignItems: "stretch" }}>
               <button
-                className="btn btn-brand w-100 py-3 fw-bold rounded-3"
-                style={{ fontSize: "1rem" }}
+                style={{
+                  flex: 1, padding: "14px 0",
+                  background: "var(--color-brand)", color: "#fff",
+                  border: "none", borderRadius: 12,
+                  fontWeight: 700, fontSize: "1rem", cursor: "pointer",
+                }}
                 onClick={() => navigate("/cliente/ordenar", { state: { cantidad } })}
               >
-                Ordenar {cantidad > 1 ? `${cantidad} comidas` : "mi comida"} · ${130 * cantidad}
+                Ordenar · ${130 * cantidad}
               </button>
+              <button
+                style={{ width: 48, background: "#fff", border: "1.5px solid #d1d5db", borderRadius: 12, fontSize: "1.2rem", fontWeight: 700, cursor: "pointer", color: cantidad <= 1 ? "#ccc" : "var(--color-navy)" }}
+                onClick={() => setCantidad(c => Math.max(1, c - 1))}
+                disabled={cantidad <= 1}
+              >−</button>
+              <span style={{ width: 32, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: "1.1rem", color: "var(--color-navy)" }}>
+                {cantidad}
+              </span>
+              <button
+                style={{ width: 48, background: cantidad >= 4 ? "#e5e7eb" : "var(--color-brand)", border: "none", borderRadius: 12, fontSize: "1.2rem", fontWeight: 700, cursor: "pointer", color: cantidad >= 4 ? "#aaa" : "#fff" }}
+                onClick={() => setCantidad(c => Math.min(4, c + 1))}
+                disabled={cantidad >= 4}
+              >+</button>
             </div>
           )}
-          {!pedidoHoy && !puedeOrdenar && !pedidosPausados && (
-            <p className="text-center text-muted small mt-4">
+          {!puedeOrdenar && !pedidosPausados && (
+            <p style={{ textAlign: "center", color: "var(--color-muted)", fontSize: "0.85rem", marginTop: 16 }}>
               El tiempo para ordenar hoy ya pasó (límite 3:40 PM)
             </p>
           )}
-        </div>
+        </>
       )}
 
       {/* Sin menú */}
       {!esFinDeSemana && !dia && (
-        <div className="text-center py-5 text-muted">
+        <div style={{ textAlign: "center", padding: "40px 0", color: "var(--color-muted)" }}>
           <span style={{ fontSize: "2.5rem" }}>🍽️</span>
-          <p className="mt-2">No hay menú publicado para hoy</p>
+          <p style={{ marginTop: 12 }}>No hay menú publicado para hoy</p>
         </div>
       )}
     </div>

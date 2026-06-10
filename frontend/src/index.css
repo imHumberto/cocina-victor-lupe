@@ -1,16 +1,23 @@
 :root {
-  --color-brand:        #ED4137;
-  --color-brand-dark:   #c73128;
-  --color-brand-light:  #fdf0ef;
-  --color-text:         #1a1a1a;
-  --color-muted:        #6c757d;
+  /* Paleta La Cocina de Víctor y Lupe */
+  --color-brand:        #094D40;
+  --color-brand-dark:   #063530;
+  --color-brand-light:  #e6f0ee;
+  --color-green:        #2BB316;
+  --color-green-light:  #e8f5e4;
+  --color-green-soft:   #6EC168;
+  --color-yellow:       #F9D74F;
+  --color-navy:         #233345;
+  --color-bg:           #F2F2E6;
+  --color-text:         #233345;
+  --color-muted:        #6b7280;
   --radius:             0.75rem;
   --shadow-card:        0 2px 12px rgba(0,0,0,.08);
 }
 
 body {
   font-family: "Segoe UI", system-ui, sans-serif;
-  background: #f8f9fa;
+  background: var(--color-bg);
   color: var(--color-text);
   -webkit-font-smoothing: antialiased;
 }
@@ -69,7 +76,7 @@ body {
 }
 .bottom-nav a.active,
 .bottom-nav a:hover {
-  color: var(--color-brand);
+  color: var(--color-green);
 }
 .bottom-nav i { font-size: 1.35rem; }
 

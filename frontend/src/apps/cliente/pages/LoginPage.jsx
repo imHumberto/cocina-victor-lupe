@@ -28,39 +28,106 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-vh-100 d-flex align-items-center justify-content-center bg-brand-light p-3" style={{ background: "var(--color-brand-light)" }}>
-      <div className="card card-sazon p-4 w-100" style={{ maxWidth: 400 }}>
-        <div className="text-center mb-4">
-          <h1 className="h4 fw-bold text-brand">La Cocina de Víctor y Lupe 🍽️</h1>
-          <p className="text-muted small">Comida corrida a domicilio</p>
+    <div style={{
+      minHeight: "100vh",
+      background: "var(--color-bg)",
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
+      justifyContent: "center",
+      padding: "24px 24px 40px",
+    }}>
+      {/* Logo */}
+      <img
+        src="/logo.png"
+        alt="La Cocina de Víctor y Lupe"
+        style={{ width: 120, marginBottom: 32 }}
+        onError={e => { e.target.style.display = "none"; }}
+      />
+
+      {/* Título */}
+      <h1 style={{
+        fontWeight: 900,
+        fontSize: "2rem",
+        letterSpacing: "0.04em",
+        color: "var(--color-navy)",
+        textTransform: "uppercase",
+        marginBottom: 32,
+        textAlign: "center",
+      }}>
+        Ingresar
+      </h1>
+
+      <form onSubmit={handleSubmit} style={{ width: "100%", maxWidth: 360 }}>
+        {error && (
+          <div style={{
+            background: "#fef2f2", border: "1px solid #fecaca",
+            borderRadius: 10, padding: "10px 14px",
+            color: "#dc2626", fontSize: "0.85rem", marginBottom: 16,
+          }}>
+            {error}
+          </div>
+        )}
+
+        {/* Teléfono */}
+        <div style={{ marginBottom: 12 }}>
+          <PhoneInput
+            value={form.telefono_whatsapp}
+            onChange={(v) => setForm({ ...form, telefono_whatsapp: v })}
+            required
+            style={{
+              borderRadius: 10,
+              border: "1.5px solid #d1d5db",
+              background: "#fff",
+              fontSize: "0.95rem",
+            }}
+          />
         </div>
 
-        {error && <div className="alert alert-danger py-2">{error}</div>}
+        {/* Contraseña */}
+        <div style={{ marginBottom: 24 }}>
+          <PasswordInput
+            value={form.password}
+            onChange={(e) => setForm({ ...form, password: e.target.value })}
+            required
+            autoComplete="current-password"
+            placeholder="Contraseña"
+            style={{
+              borderRadius: 10,
+              border: "1.5px solid #d1d5db",
+              background: "#fff",
+              fontSize: "0.95rem",
+            }}
+          />
+        </div>
 
-        <form onSubmit={handleSubmit}>
-          <div className="mb-3">
-            <label className="form-label fw-semibold">Número de teléfono</label>
-            <PhoneInput
-              value={form.telefono_whatsapp}
-              onChange={(v) => setForm({ ...form, telefono_whatsapp: v })}
-              required
-            />
-          </div>
-          <div className="mb-4">
-            <label className="form-label fw-semibold">Contraseña</label>
-            <PasswordInput
-              value={form.password}
-              onChange={(e) => setForm({ ...form, password: e.target.value })}
-              required
-              autoComplete="current-password"
-            />
-          </div>
-          <button type="submit" className="btn btn-brand w-100 py-2 fw-semibold" disabled={loading}>
-            {loading ? <span className="spinner-border spinner-border-sm me-2" /> : null}
-            Entrar
-          </button>
-        </form>
-      </div>
+        {/* Botón */}
+        <button
+          type="submit"
+          disabled={loading}
+          style={{
+            width: "100%",
+            padding: "14px 0",
+            background: "var(--color-brand)",
+            color: "#fff",
+            border: "none",
+            borderRadius: 12,
+            fontWeight: 700,
+            fontSize: "1rem",
+            cursor: "pointer",
+            letterSpacing: "0.01em",
+          }}
+        >
+          {loading ? <span className="spinner-border spinner-border-sm me-2" /> : null}
+          Ingresar
+        </button>
+      </form>
+
+      {/* Link solicitar cuenta */}
+      <p style={{ marginTop: 24, fontSize: "0.85rem", color: "var(--color-muted)", textAlign: "center" }}>
+        Si no cuentas con cuenta, puedes solicitar una{" "}
+        <Link to="/registro" style={{ color: "var(--color-navy)", fontWeight: 700 }}>aquí.</Link>
+      </p>
     </div>
   );
 }

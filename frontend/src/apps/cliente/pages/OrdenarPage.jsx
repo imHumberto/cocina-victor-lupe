@@ -24,16 +24,26 @@ const HORAS = ["13:00","13:30","14:00","14:30","15:00","15:30","16:00","16:30","
 function RadioOpcion({ nombre, precio, seleccionado, onSelect, descripcion }) {
   return (
     <label
-      className="d-flex align-items-center justify-content-between p-3 border rounded-3 mb-2"
-      style={{ cursor: "pointer", background: seleccionado ? "#fff5f5" : "#fff", borderColor: seleccionado ? "#ED4137" : "#dee2e6" }}
+      className="d-flex align-items-center justify-content-between p-3 rounded-3 mb-2"
+      style={{
+        cursor: "pointer",
+        background: seleccionado ? "var(--color-green-light)" : "#fff",
+        border: seleccionado ? "1.5px solid var(--color-green)" : "1.5px solid #e5e7eb",
+        transition: "background 0.15s, border-color 0.15s",
+      }}
       onClick={onSelect}
     >
       <div style={{ minWidth: 0 }}>
-        <div className="fw-semibold">{nombre}</div>
-        {descripcion && <div className="text-muted small">{descripcion}</div>}
-        {precio > 0 && <div className="small" style={{ color: "#ED4137" }}>+${precio}</div>}
+        <div style={{ fontWeight: 600, color: "var(--color-navy)" }}>{nombre}</div>
+        {descripcion && <div style={{ color: "var(--color-muted)", fontSize: "0.8rem" }}>{descripcion}</div>}
+        {precio > 0 && <div style={{ fontSize: "0.8rem", color: "var(--color-green)", fontWeight: 600 }}>+${precio}</div>}
       </div>
-      <div style={{ width: 22, height: 22, borderRadius: "50%", border: seleccionado ? "6px solid #ED4137" : "2px solid #ccc", flexShrink: 0, marginLeft: 8 }} />
+      <div style={{
+        width: 22, height: 22, borderRadius: "50%", flexShrink: 0, marginLeft: 8,
+        border: seleccionado ? "6px solid var(--color-green)" : "2px solid #d1d5db",
+        background: "#fff",
+        transition: "border 0.15s",
+      }} />
     </label>
   );
 }
@@ -42,7 +52,7 @@ function RadioOpcion({ nombre, precio, seleccionado, onSelect, descripcion }) {
 function Seccion({ titulo, children }) {
   return (
     <div className="mb-4">
-      <h3 className="fw-semibold mb-2 text-muted" style={{ fontSize: "0.8rem", textTransform: "uppercase", letterSpacing: "0.06em" }}>{titulo}</h3>
+      <h3 style={{ fontSize: "1rem", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--color-navy)", marginBottom: 10 }}>{titulo}</h3>
       {children}
     </div>
   );
@@ -52,7 +62,7 @@ function Seccion({ titulo, children }) {
 function SeccionOpcional({ titulo, activo, onToggle, children }) {
   return (
     <div className="mb-4">
-      <h3 className="fw-semibold mb-2 text-muted" style={{ fontSize: "0.8rem", textTransform: "uppercase", letterSpacing: "0.06em" }}>{titulo}</h3>
+      <h3 style={{ fontSize: "1rem", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--color-navy)", marginBottom: 10 }}>{titulo}</h3>
       {children}
       <RadioOpcion
         nombre={`Sin ${titulo.toLowerCase()}`}
@@ -97,7 +107,7 @@ function DatoTransferencia({ label, valor, copiable }) {
         <div className="fw-semibold small">{valor}</div>
       </div>
       {copiable && (
-        <button type="button" className="btn btn-sm btn-link p-0 ms-2" onClick={copiar} style={{ color: copiado ? "#28a745" : "#ED4137" }}>
+        <button type="button" className="btn btn-sm btn-link p-0 ms-2" onClick={copiar} style={{ color: copiado ? "#28a745" : "var(--color-brand)" }}>
           <i className={`bi ${copiado ? "bi-check-lg" : "bi-copy"}`} />
         </button>
       )}
@@ -353,7 +363,7 @@ export default function OrdenarPage() {
           return (
             <div key={idx} className={idx < comidas.length - 1 ? "mb-3 pb-3 border-bottom" : "mb-0"}>
               {comidas.length > 1 && (
-                <div className="fw-semibold small mb-2" style={{ color: "#ED4137" }}>Comida {idx + 1}</div>
+                <div className="fw-semibold small mb-2" style={{ color: "var(--color-brand)" }}>Comida {idx + 1}</div>
               )}
               {dia?.entrada && <FilaResumen label="Entrada" valor={c.conEntrada ? dia.entrada.nombre : "Sin entrada"} muted={!c.conEntrada} />}
               {pEleg && <FilaResumen label="Plato" valor={pEleg.nombre} />}
@@ -408,24 +418,25 @@ export default function OrdenarPage() {
   return (
     <div style={{ maxWidth: 480, margin: "0 auto", paddingBottom: 160 }}>
       {/* Header */}
-      <div className="d-flex align-items-center gap-2 px-4 pt-4 pb-2">
-        <button className="btn btn-link p-0 text-dark" onClick={() => paso > 1 ? setPaso(p => p - 1) : navigate(-1)}>
-          <i className="bi bi-arrow-left fs-5" />
+      <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "20px 20px 8px" }}>
+        <button
+          style={{ border: "none", background: "transparent", padding: 0, cursor: "pointer", color: "var(--color-navy)" }}
+          onClick={() => paso > 1 ? setPaso(p => p - 1) : navigate(-1)}
+        >
+          <i className="bi bi-arrow-left" style={{ fontSize: "1.2rem" }} />
         </button>
         <div>
-          <h2 className="fw-bold mb-0" style={{ fontSize: "1.1rem" }}>
-            {paso === 1 ? "Personaliza tu pedido" : paso === 2 ? "Datos de entrega" : "Resumen y pago"}
-          </h2>
-          <p className="text-muted mb-0" style={{ fontSize: "0.78rem" }}>
-            Paso {paso} de 3
-          </p>
+          <div style={{ fontSize: "0.65rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: "var(--color-brand)" }}>
+            {paso === 1 ? "Personaliza tu comida" : paso === 2 ? "Datos de entrega" : "Resumen y pago"}
+          </div>
+          <div style={{ fontSize: "0.78rem", color: "var(--color-muted)" }}>Paso {paso} de 3</div>
         </div>
       </div>
 
       {/* Indicador de pasos */}
-      <div className="d-flex gap-1 px-4 mb-4">
+      <div style={{ display: "flex", gap: 6, padding: "6px 20px 16px" }}>
         {[1,2,3].map((n) => (
-          <div key={n} style={{ height: 3, flex: 1, borderRadius: 2, background: n <= paso ? "#ED4137" : "#e0e0e0" }} />
+          <div key={n} style={{ height: 3, flex: 1, borderRadius: 2, background: n <= paso ? "var(--color-green)" : "#e0e0e0" }} />
         ))}
       </div>
 
@@ -458,7 +469,7 @@ export default function OrdenarPage() {
                     </div>
                   );
                 })()}
-                <div className="fw-semibold small" style={{ color: "#ED4137" }}>${totalComida(c)}</div>
+                <div className="fw-semibold small" style={{ color: "var(--color-brand)" }}>${totalComida(c)}</div>
               </div>
               <i className={`bi ${comidasAbiertas.has(idx) ? "bi-chevron-up" : "bi-chevron-down"} text-muted`} />
             </div>
@@ -550,7 +561,7 @@ export default function OrdenarPage() {
             <div className="mb-4">
               <div className="d-flex align-items-center justify-content-between mb-1">
                 <label className="form-label fw-semibold mb-0">Dirección de entrega</label>
-                <button type="button" className="btn btn-link p-0 small" style={{ color: "#ED4137", fontSize: "0.85rem" }} onClick={abrirSheet}>
+                <button type="button" className="btn btn-link p-0 small" style={{ color: "var(--color-brand)", fontSize: "0.85rem" }} onClick={abrirSheet}>
                   Cambiar
                 </button>
               </div>
@@ -573,7 +584,7 @@ export default function OrdenarPage() {
             <div className="mb-4">
               <div className="d-flex align-items-center justify-content-between mb-1">
                 <label className="form-label fw-semibold mb-0">Teléfono de contacto</label>
-                <button type="button" className="btn btn-link p-0 small" style={{ color: "#ED4137", fontSize: "0.85rem" }}
+                <button type="button" className="btn btn-link p-0 small" style={{ color: "var(--color-brand)", fontSize: "0.85rem" }}
                   onClick={() => setEditandoTelefono(v => !v)}>
                   {editandoTelefono ? "Cancelar" : "Cambiar"}
                 </button>
@@ -599,7 +610,7 @@ export default function OrdenarPage() {
                     type="button"
                     className="btn w-100 mt-3 py-3 fw-semibold rounded-3"
                     style={{
-                      background: /\d{10}$/.test(telefonoReceptor) ? "#ED4137" : "#e0e0e0",
+                      background: /\d{10}$/.test(telefonoReceptor) ? "var(--color-brand)" : "#e0e0e0",
                       color: /\d{10}$/.test(telefonoReceptor) ? "#fff" : "#aaa",
                       fontSize: "1rem",
                       cursor: /\d{10}$/.test(telefonoReceptor) ? "pointer" : "not-allowed",
@@ -622,7 +633,7 @@ export default function OrdenarPage() {
                       type="button"
                       className="btn w-100 rounded-3 fw-semibold"
                       style={{
-                        background: horaEntrega === h ? "#ED4137" : "#f5f5f5",
+                        background: horaEntrega === h ? "var(--color-brand)" : "var(--color-bg)",
                         color: horaEntrega === h ? "#fff" : "#333",
                         border: "none",
                       }}
@@ -707,14 +718,14 @@ export default function OrdenarPage() {
               <div key={value} className="mb-2">
                 <label
                   className="d-flex align-items-center justify-content-between p-3 border rounded-3"
-                  style={{ cursor: "pointer", background: metodoPago === value ? "#fff5f5" : "#fff", borderColor: metodoPago === value ? "#ED4137" : "#dee2e6" }}
+                  style={{ cursor: "pointer", background: metodoPago === value ? "var(--color-green-light)" : "#fff", borderColor: metodoPago === value ? "var(--color-green)" : "#dee2e6" }}
                   onClick={() => { setMetodoPago(value); if (value === "transferencia") setSheetTransferencia(true); }}
                 >
                   <div className="d-flex align-items-center gap-2">
                     <span style={{ fontSize: "1.2rem" }}>{icon}</span>
                     <span className="fw-semibold">{label}</span>
                   </div>
-                  <div style={{ width: 22, height: 22, borderRadius: "50%", border: metodoPago === value ? "6px solid #ED4137" : "2px solid #ccc", flexShrink: 0 }} />
+                  <div style={{ width: 22, height: 22, borderRadius: "50%", border: metodoPago === value ? "6px solid var(--color-green)" : "2px solid #ccc", flexShrink: 0 }} />
                 </label>
 
                 {/* Comprobante cuando ya está seleccionada transferencia */}
@@ -816,7 +827,7 @@ export default function OrdenarPage() {
                 style={{
                   cursor: "pointer",
                   background: direccionSeleccionada?.id === d.id ? "#fff5f5" : "#fff",
-                  borderColor: direccionSeleccionada?.id === d.id ? "#ED4137" : "#dee2e6",
+                  borderColor: direccionSeleccionada?.id === d.id ? "var(--color-brand)" : "#dee2e6",
                 }}
                 onClick={() => { setDireccionSeleccionada(d); setSheetAbierto(false); }}
               >
@@ -881,7 +892,7 @@ export default function OrdenarPage() {
               <div
                 key={t.value}
                 className="d-flex align-items-center gap-3 p-3 border rounded-3 mb-2"
-                style={{ cursor: "pointer", background: nuevoTipo === t.value ? "#fff5f5" : "#fff", borderColor: nuevoTipo === t.value ? "#ED4137" : "#dee2e6" }}
+                style={{ cursor: "pointer", background: nuevoTipo === t.value ? "#fff5f5" : "#fff", borderColor: nuevoTipo === t.value ? "var(--color-brand)" : "#dee2e6" }}
                 onClick={() => setNuevoTipo(t.value)}
               >
                 <span style={{ fontSize: "1.3rem" }}>{t.icon}</span>
