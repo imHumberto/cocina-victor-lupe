@@ -29,7 +29,7 @@ export default function AdminLayout() {
               className={({ isActive }) =>
                 `d-flex align-items-center gap-2 px-3 py-2 mb-1 rounded text-decoration-none ${isActive ? "text-white fw-semibold" : "text-white-50"}`
               }
-              style={({ isActive }) => ({ background: isActive ? "#094D40" : "transparent", fontSize: "0.88rem", padding: "10px 16px" })}
+              style={({ isActive }) => ({ background: isActive ? "#094D40" : "transparent", fontSize: "0.88rem", height: 50, padding: "0 16px" })}
             >
               <i className={`bi ${icon}`} />
               {label}
