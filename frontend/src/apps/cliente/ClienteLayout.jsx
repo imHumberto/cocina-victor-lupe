@@ -2,6 +2,7 @@ import { Outlet, NavLink } from "react-router-dom";
 import { useEffect, useCallback } from "react";
 import useNotifStore from "../../store/notifStore";
 import { useSocketEvent } from "../../hooks/useSocket";
+import "./cliente.css";
 
 export default function ClienteLayout() {
   const { noLeidas, fetchCount, agregarNotificacion } = useNotifStore();

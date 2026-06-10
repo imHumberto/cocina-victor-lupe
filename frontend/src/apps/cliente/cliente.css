@@ -1,0 +1,182 @@
+/* ============================================================
+   Cliente Layout — estilos globales de la app del cliente
+   Edita aquí para cambiar colores, tamaños y espaciados.
+   ============================================================ */
+
+/* ── Bottom nav ───────────────────────────────────────────── */
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 64px;                         /* ← altura del nav */
+  background: #fff;
+  border-top: 1px solid #e9ecef;
+  display: flex;
+  z-index: 1000;
+}
+
+.bottom-nav a {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.65rem;
+  color: #9ca3af;                       /* ← color inactivo */
+  text-decoration: none;
+  gap: 3px;
+  transition: color 0.15s;
+}
+
+.bottom-nav a.active,
+.bottom-nav a:hover {
+  color: #094D40;                       /* ← color activo */
+}
+
+.bottom-nav i {
+  font-size: 1.35rem;                   /* ← tamaño íconos */
+}
+
+/* ── Página con nav ───────────────────────────────────────── */
+.page-with-nav {
+  padding-bottom: 72px;
+}
+
+/* ── Página de inicio ─────────────────────────────────────── */
+.cliente-page {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 28px 20px 100px;
+}
+
+.cliente-saludo {
+  font-weight: 900;
+  font-size: 1.9rem;
+  line-height: 1.15;
+  text-transform: uppercase;
+  color: var(--color-navy);
+  letter-spacing: 0.02em;
+  margin-bottom: 20px;
+}
+
+/* ── Hero imagen platillo ─────────────────────────────────── */
+.cliente-hero {
+  width: 100%;
+  aspect-ratio: 4/3;
+  background: #e0e0e0;
+  border-radius: 16px;                  /* ← radio de esquinas */
+  margin-bottom: 16px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cliente-hero img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* ── Info platillo del día ────────────────────────────────── */
+.cliente-platillo-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--color-brand);            /* ← color etiqueta */
+  margin-bottom: 4px;
+}
+
+.cliente-platillo-titulo {
+  font-weight: 900;
+  font-size: 1.5rem;
+  text-transform: uppercase;
+  color: var(--color-navy);
+  margin-bottom: 4px;
+  letter-spacing: 0.02em;
+}
+
+.cliente-platillo-desc {
+  color: var(--color-muted);
+  font-size: 0.88rem;
+  margin: 0 0 24px;
+}
+
+/* ── Botón principal + contador ───────────────────────────── */
+.cliente-ordenar-row {
+  display: flex;
+  gap: 10px;
+  align-items: stretch;
+}
+
+.cliente-btn-ordenar {
+  flex: 1;
+  padding: 14px 0;
+  background: var(--color-brand);      /* ← color botón ordenar */
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.cliente-btn-contador {
+  width: 48px;
+  background: #fff;
+  border: 1.5px solid #d1d5db;
+  border-radius: 12px;
+  font-size: 1.2rem;
+  font-weight: 700;
+  cursor: pointer;
+  color: var(--color-navy);
+}
+
+.cliente-btn-contador:disabled {
+  color: #ccc;
+  background: #f3f4f6;
+}
+
+.cliente-btn-contador-plus {
+  background: var(--color-brand);
+  border-color: var(--color-brand);
+  color: #fff;
+}
+
+.cliente-btn-contador-plus:disabled {
+  background: #e5e7eb;
+  border-color: #e5e7eb;
+  color: #aaa;
+}
+
+.cliente-contador-valor {
+  width: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: var(--color-navy);
+}
+
+/* ── Banners de estado ────────────────────────────────────── */
+.cliente-banner {
+  border-radius: 12px;
+  padding: 12px 16px;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.cliente-banner-pausado {
+  background: #fff7ed;
+  border: 1px solid #fed7aa;
+}
+
+.cliente-banner-carrito {
+  background: var(--color-brand-light);
+  border: 1px solid #a7c4be;
+}
