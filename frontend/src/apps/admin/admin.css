@@ -1,0 +1,111 @@
+/* ============================================================
+   Admin Layout — estilos globales del panel administrativo
+   Edita aquí para cambiar colores, tamaños y espaciados.
+   ============================================================ */
+
+/* ── Sidebar ─────────────────────────────────────────────── */
+.admin-sidebar {
+  width: 200px;
+  min-width: 200px;
+  background: #0F1925;
+  display: flex;
+  flex-direction: column;
+}
+
+.admin-sidebar-logo {
+  display: flex;
+  justify-content: center;
+  padding: 24px 12px 16px;
+}
+
+.admin-sidebar-logo img {
+  width: 110px;
+  height: 110px;
+}
+
+.admin-sidebar-nav {
+  flex: 1;
+  padding: 0 12px;
+}
+
+/* Nav item base */
+.admin-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 50px;           /* ← altura de cada tab */
+  padding: 0 16px;        /* ← padding horizontal */
+  margin-bottom: 4px;
+  border-radius: 8px;
+  text-decoration: none;
+  font-size: 0.88rem;
+  color: rgba(255,255,255,0.5);
+  background: transparent;
+  transition: background 0.15s, color 0.15s;
+}
+
+/* Nav item activo */
+.admin-nav-item.active,
+.admin-nav-item:hover {
+  background: #094D40;    /* ← color item activo */
+  color: #fff;
+  font-weight: 600;
+}
+
+/* Separador y botón salir */
+.admin-sidebar-footer {
+  padding: 12px;
+  border-top: 1px solid rgba(255,255,255,0.1);
+}
+
+.admin-sidebar-logout {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: none;
+  border: none;
+  color: rgba(255,255,255,0.5);
+  font-size: 0.85rem;
+  width: 100%;
+  cursor: pointer;
+  padding: 0;
+}
+
+.admin-sidebar-logout:hover {
+  color: rgba(255,255,255,0.85);
+}
+
+/* ── Main content ─────────────────────────────────────────── */
+.admin-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: #F9FBFC;
+  min-width: 0;
+  overflow: hidden;
+}
+
+/* ── Topbar ───────────────────────────────────────────────── */
+.admin-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 8px 24px;
+  gap: 12px;
+  flex-shrink: 0;
+  background: #fff;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.admin-topbar-avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: #E08080;    /* ← color avatar */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.8rem;
+  color: #fff;
+}
