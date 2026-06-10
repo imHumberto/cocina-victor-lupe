@@ -49,7 +49,7 @@ export default function LoginPage() {
         {/* Título */}
         <h1 style={{
           fontWeight: 900,
-          fontSize: "2.2rem",
+          fontSize: "3rem",
           letterSpacing: "0.04em",
           color: "var(--color-navy)",
           textTransform: "uppercase",
