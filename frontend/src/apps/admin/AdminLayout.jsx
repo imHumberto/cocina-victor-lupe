@@ -16,9 +16,9 @@ export default function AdminLayout() {
     <div className="d-flex" style={{ minHeight: "100vh" }}>
 
       {/* ── Sidebar ── */}
-      <aside style={{ width: 200, minWidth: 200, background: "#1a1a1a", display: "flex", flexDirection: "column" }}>
+      <aside style={{ width: 200, minWidth: 200, background: "#233345", display: "flex", flexDirection: "column" }}>
         <div className="d-flex justify-content-center pt-4 pb-3 px-3">
-          <img src={logo} alt="Logo" style={{ width: 120 , height: 120 }} />
+          <img src={logo} alt="Logo" style={{ width: 110, height: 110 }} />
         </div>
 
         <nav className="flex-grow-1 px-2">
@@ -29,7 +29,7 @@ export default function AdminLayout() {
               className={({ isActive }) =>
                 `d-flex align-items-center gap-2 px-3 py-2 mb-1 rounded text-decoration-none ${isActive ? "text-white fw-semibold" : "text-white-50"}`
               }
-              style={({ isActive }) => ({ background: isActive ? "#ED4137" : "transparent", fontSize: "0.88rem" })}
+              style={({ isActive }) => ({ background: isActive ? "#094D40" : "transparent", fontSize: "0.88rem" })}
             >
               <i className={`bi ${icon}`} />
               {label}
@@ -37,7 +37,7 @@ export default function AdminLayout() {
           ))}
         </nav>
 
-        <div className="px-3 py-3" style={{ borderTop: "1px solid #333" }}>
+        <div className="px-3 py-3" style={{ borderTop: "1px solid rgba(255,255,255,0.1)" }}>
           <button
             className="btn d-flex align-items-center gap-2 text-white-50 w-100 px-0"
             style={{ background: "none", border: "none", fontSize: "0.85rem" }}
@@ -51,12 +51,12 @@ export default function AdminLayout() {
       {/* ── Main ── */}
       <div className="flex-grow-1 d-flex flex-column" style={{ background: "#F9FBFC", minWidth: 0, overflow: "hidden" }}>
         {/* Topbar */}
-        <header className="d-flex align-items-center justify-content-end px-4 py-2 gap-3" style={{ flexShrink: 0, background: "#F9FBFC" }}>
+        <header className="d-flex align-items-center justify-content-end px-4 py-2 gap-3" style={{ flexShrink: 0, background: "#fff", borderBottom: "1px solid #f0f0f0" }}>
           <button className="btn btn-link p-1 text-muted"><i className="bi bi-bell fs-5" /></button>
           <div className="d-flex align-items-center gap-2" style={{ cursor: "pointer" }}>
             <div
               className="rounded-circle d-flex align-items-center justify-content-center fw-bold text-white"
-              style={{ width: 34, height: 34, background: "#ED4137", fontSize: "0.8rem" }}
+              style={{ width: 34, height: 34, background: "#E08080", fontSize: "0.8rem" }}
             >
               {user?.nombre?.split(" ").map(w => w[0]).slice(0, 2).join("").toUpperCase()}
             </div>

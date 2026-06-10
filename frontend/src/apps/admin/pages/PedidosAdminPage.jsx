@@ -76,7 +76,7 @@ function TimeBadge({ pedido }) {
       : <Badge color="#ef4444" text="Demorado" />;
   }
   if (estado === "listo") return <Badge color="#3b82f6" text="Listo" />;
-  if (estado === "en_camino") return <Badge color="#ED4137" text="En camino" />;
+  if (estado === "en_camino") return <Badge color="#094D40" text="En camino" />;
   if (estado === "entregado") return <Badge color="#10b981" text="Entregado" />;
   if (estado === "rechazado") return <Badge color="#ef4444" text="Rechazado" />;
   if (estado === "cancelado") return <Badge color="#6b7280" text="Cancelado" />;
@@ -149,7 +149,7 @@ function TimerWidget({ pedido }) {
     const base = updated_at || created_at;
     const elapsed = base ? (Date.now() - new Date(base).getTime()) / 1000 : 0;
     progress = Math.min(elapsed / 3600, 1);
-    color = "#ED4137";
+    color = "#094D40";
     titulo = "En camino";
     tiempo = secondsToMMSS(elapsed);
     subtitulo = `Con ${pedido.repartidor?.nombre ?? "repartidor"}`;
@@ -733,7 +733,7 @@ function PedidoNuevoPopup({ pedido, onVerOrden }) {
         <div style={{ fontSize: "3rem", marginBottom: 12 }}>🛎️</div>
         <div style={{
           fontSize: "0.7rem", fontWeight: 700, letterSpacing: "0.12em",
-          color: "#ED4137", textTransform: "uppercase", marginBottom: 8,
+          color: "#094D40", textTransform: "uppercase", marginBottom: 8,
         }}>Pedido nuevo entrante</div>
         <div style={{ fontWeight: 700, fontSize: "1.3rem", color: "#17181A", marginBottom: 4 }}>
           {nombre}
@@ -745,7 +745,7 @@ function PedidoNuevoPopup({ pedido, onVerOrden }) {
           onClick={handleVer}
           style={{
             width: "100%", padding: "14px 0",
-            background: "#ED4137", color: "#fff",
+            background: "#094D40", color: "#fff",
             border: "none", borderRadius: 12,
             fontWeight: 700, fontSize: "1rem", cursor: "pointer",
             letterSpacing: "0.02em",
@@ -1468,7 +1468,7 @@ export default function PedidosAdminPage() {
                       >
                         <div
                           className="rounded-circle d-flex align-items-center justify-content-center fw-bold text-white"
-                          style={{ width: 36, height: 36, background: "#ED4137", fontSize: "0.8rem", flexShrink: 0 }}
+                          style={{ width: 36, height: 36, background: "#094D40", fontSize: "0.8rem", flexShrink: 0 }}
                         >
                           {r.nombre?.split(" ").map(w => w[0]).slice(0, 2).join("").toUpperCase()}
                         </div>

@@ -245,7 +245,7 @@ export default function UsuariosPage() {
             Cancelar
           </button>
           <button onClick={guardar}
-            style={{ flex: 2, background: "#ED4137", color: "#fff", border: "none", borderRadius: 10, padding: "12px", fontWeight: 600, fontSize: "0.9rem", cursor: "pointer" }}>
+            style={{ flex: 2, background: "#094D40", color: "#fff", border: "none", borderRadius: 10, padding: "12px", fontWeight: 600, fontSize: "0.9rem", cursor: "pointer" }}>
             {drawer === "editar" ? "Guardar cambios" : "Crear usuario"}
           </button>
         </div>
@@ -263,7 +263,7 @@ export default function UsuariosPage() {
               <i className="bi bi-link-45deg me-1" />Invitar cliente
             </button>
             <button onClick={abrirNuevo}
-              style={{ background: "#ED4137", color: "#fff", border: "none", borderRadius: 10, padding: "10px 20px", fontWeight: 600, fontSize: "0.9rem", cursor: "pointer" }}>
+              style={{ background: "#094D40", color: "#fff", border: "none", borderRadius: 10, padding: "10px 20px", fontWeight: 600, fontSize: "0.9rem", cursor: "pointer" }}>
               + Nuevo usuario
             </button>
           </div>
@@ -331,7 +331,7 @@ export default function UsuariosPage() {
               >
                 {/* Nombre */}
                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <div style={{ width: 32, height: 32, borderRadius: "50%", background: "#ED4137", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.72rem", fontWeight: 700, flexShrink: 0 }}>
+                  <div style={{ width: 32, height: 32, borderRadius: "50%", background: "#094D40", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.72rem", fontWeight: 700, flexShrink: 0 }}>
                     {u.nombre?.split(" ").map(w => w[0]).slice(0, 2).join("").toUpperCase()}
                   </div>
                   <div>

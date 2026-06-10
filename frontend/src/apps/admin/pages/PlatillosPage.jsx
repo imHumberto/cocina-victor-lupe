@@ -264,7 +264,7 @@ export default function PlatillosPage() {
             type="submit"
             form="form-platillo"
             onClick={guardar}
-            style={{ flex: 2, background: "#ED4137", color: "#fff", border: "none", borderRadius: 10, padding: "12px", fontWeight: 600, fontSize: "0.9rem", cursor: "pointer" }}
+            style={{ flex: 2, background: "#094D40", color: "#fff", border: "none", borderRadius: 10, padding: "12px", fontWeight: 600, fontSize: "0.9rem", cursor: "pointer" }}
           >
             {drawer === "editar" ? "Guardar cambios" : "Crear platillo"}
           </button>
@@ -279,7 +279,7 @@ export default function PlatillosPage() {
           <h2 style={{ fontSize: "1.6rem", fontWeight: 700, color: "#17181A", margin: 0 }}>Platillos</h2>
           <button
             onClick={abrirNuevo}
-            style={{ background: "#ED4137", color: "#fff", border: "none", borderRadius: 10, padding: "10px 20px", fontWeight: 600, fontSize: "0.9rem", cursor: "pointer" }}
+            style={{ background: "#094D40", color: "#fff", border: "none", borderRadius: 10, padding: "10px 20px", fontWeight: 600, fontSize: "0.9rem", cursor: "pointer" }}
           >+ Nuevo platillo</button>
         </div>
 

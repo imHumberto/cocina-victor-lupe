@@ -55,7 +55,7 @@ function DotsCategorias({ d }) {
       {estados.map((ok, i) => (
         <div key={i} style={{
           width: 8, height: 8, borderRadius: "50%",
-          background: ok ? "#ED4137" : "#ccc",
+          background: ok ? "#094D40" : "#ccc",
         }} />
       ))}
     </div>
@@ -362,7 +362,7 @@ export default function MenuAdminPage() {
                 {saving ? <span className="spinner-border spinner-border-sm me-1" /> : null}
                 Guardar
               </button>
-              <button className="btn fw-semibold px-4" style={{ background: "#ED4137", color: "#fff" }} onClick={publicar}>
+              <button className="btn fw-semibold px-4" style={{ background: "#094D40", color: "#fff" }} onClick={publicar}>
                 Publicar
               </button>
             </>
@@ -399,8 +399,8 @@ export default function MenuAdminPage() {
                   onClick={() => { setTab(key); if (menusPorTab[key]?.length) cargarMenuCompleto(menusPorTab[key][0]); }}
                   className="btn btn-link text-decoration-none px-3 pb-2 fw-semibold"
                   style={{
-                    color: tab === key ? "#ED4137" : "#888",
-                    borderBottom: tab === key ? "2px solid #ED4137" : "2px solid transparent",
+                    color: tab === key ? "#094D40" : "#888",
+                    borderBottom: tab === key ? "2px solid #094D40" : "2px solid transparent",
                     borderRadius: 0,
                   }}
                 >
@@ -456,8 +456,8 @@ export default function MenuAdminPage() {
                 className="rounded-3 p-3 mb-2 bg-white border"
                 style={{
                   cursor: "pointer",
-                  borderColor: diaIdx === idx ? "#ED4137 !important" : undefined,
-                  outline: diaIdx === idx ? "2px solid #ED4137" : "none",
+                  borderColor: diaIdx === idx ? "#094D40 !important" : undefined,
+                  outline: diaIdx === idx ? "2px solid #094D40" : "none",
                   opacity: !dCard.activo ? 0.5 : 1,
                 }}
               >
