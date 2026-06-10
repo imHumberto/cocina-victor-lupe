@@ -16,7 +16,7 @@ export default function AdminLayout() {
     <div className="d-flex" style={{ minHeight: "100vh" }}>
 
       {/* ── Sidebar ── */}
-      <aside style={{ width: 200, minWidth: 200, background: "#233345", display: "flex", flexDirection: "column" }}>
+      <aside style={{ width: 200, minWidth: 200, background: "#0F1925", display: "flex", flexDirection: "column" }}>
         <div className="d-flex justify-content-center pt-4 pb-3 px-3">
           <img src={logo} alt="Logo" style={{ width: 110, height: 110 }} />
         </div>
