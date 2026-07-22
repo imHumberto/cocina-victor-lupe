@@ -38,10 +38,7 @@ def detalle_menu(menu_id):
 def dia_hoy():
     """DiaMenu correspondiente a hoy si hay menú publicado."""
     hoy = date.today()
-    dia_semana = hoy.weekday()  # 0=lunes … 4=viernes
-
-    if dia_semana > 4:
-        return jsonify({"error": "Hoy no hay menú (fin de semana)"}), 404
+    dia_semana = hoy.weekday()  # 0=lunes … 6=domingo
 
     menu = (
         MenuSemanal.query

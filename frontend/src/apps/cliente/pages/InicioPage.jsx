@@ -138,7 +138,7 @@ export default function InicioPage() {
 
   const nombre = user?.nombre?.split(" ")[0] ?? "";
   const hoy = dayjs();
-  const esFinDeSemana = hoy.day() === 0 || hoy.day() === 6;
+  const esFinDeSemana = !dia && loading === false; // solo si no hay menú configurado hoy
   const puedeOrdenar = !esFinDeSemana && !pedidosPausados; // TODO: descomentar horario para producción
   // const puedeOrdenar = !esFinDeSemana && !pedidosPausados && (hoy.hour() * 60 + hoy.minute()) < (15 * 60 + 40);
 

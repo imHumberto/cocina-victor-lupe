@@ -9,8 +9,8 @@ dayjs.extend(isoWeek);
 dayjs.extend(weekOfYear);
 dayjs.extend(isSameOrAfter);
 
-const DIAS_NOMBRES = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes"];
-const DIAS_CORTOS  = ["Lun", "Mar", "Mié", "Jue", "Vie"];
+const DIAS_NOMBRES = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
+const DIAS_CORTOS  = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
 
 const CATEGORIAS = ["entrada", "plato_fuerte", "guarnicion", "bebida", "postre"];
 
@@ -28,7 +28,7 @@ const diaVacio = (i) => ({
   alternativa_bebida_costo_extra: 0,
 });
 
-const diasVacios = () => Array.from({ length: 5 }, (_, i) => diaVacio(i));
+const diasVacios = () => Array.from({ length: 7 }, (_, i) => diaVacio(i));
 
 // Calcula cuántas categorías tiene llenas un día
 function categoriasLlenas(d) {
@@ -192,6 +192,8 @@ export default function MenuAdminPage() {
   const [fechaSeleccionada, setFechaSeleccionada] = useState("");
   const [errorModal, setErrorModal] = useState("");
   const [tab, setTab] = useState("menu"); // menu | proximos | historico
+  const [editandoNombre, setEditandoNombre] = useState(false);
+  const [nombreTemp, setNombreTemp] = useState("");
 
   const lunesMinimo = dayjs().isoWeekday(1).format("YYYY-MM-DD");
 
@@ -202,7 +204,6 @@ export default function MenuAdminPage() {
     ]).then(([menuRes, platRes]) => {
       setPlatillos(platRes.data);
       setMenus(menuRes.data);
-      if (menuRes.data.length > 0) cargarMenuCompleto(menuRes.data[0]);
     });
   }, []);
 
@@ -293,10 +294,18 @@ export default function MenuAdminPage() {
 
   const eliminarMenu = async (m, e) => {
     e.stopPropagation();
-    if (!confirm(`¿Eliminar semana del ${dayjs(m.fecha_inicio).format("DD/MM/YYYY")}?`)) return;
+    if (!confirm(`¿Eliminar "${m.nombre || "este menú"}"?`)) return;
     await api.delete(`/admin/menus/${m.id}`);
     setMenus((ms) => ms.filter((x) => x.id !== m.id));
     if (menuActivo?.id === m.id) { setMenuActivo(null); setDias(diasVacios()); }
+  };
+
+  const guardarNombre = async () => {
+    if (!nombreTemp.trim() || nombreTemp === menuActivo.nombre) { setEditandoNombre(false); return; }
+    const { data } = await api.patch(`/admin/menus/${menuActivo.id}`, { nombre: nombreTemp.trim() });
+    setMenuActivo(data);
+    setMenus((ms) => ms.map((m) => m.id === data.id ? data : m));
+    setEditandoNombre(false);
   };
 
   const crearMenu = async () => {
@@ -332,21 +341,39 @@ export default function MenuAdminPage() {
           {menuActivo ? (
             <>
               <div className="d-flex align-items-center gap-2 mb-1">
-                <h2 className="h3 fw-bold mb-0">Semana {dayjs(menuActivo.fecha_inicio).week()}</h2>
+                {editandoNombre ? (
+                  <input
+                    autoFocus
+                    className="form-control form-control-sm fw-bold"
+                    style={{ fontSize: "1.3rem", maxWidth: 280 }}
+                    value={nombreTemp}
+                    onChange={(e) => setNombreTemp(e.target.value)}
+                    onBlur={guardarNombre}
+                    onKeyDown={(e) => { if (e.key === "Enter") guardarNombre(); if (e.key === "Escape") setEditandoNombre(false); }}
+                  />
+                ) : (
+                  <h2
+                    className="h3 fw-bold mb-0"
+                    style={{ cursor: "pointer" }}
+                    title="Clic para editar nombre"
+                    onClick={() => { setNombreTemp(menuActivo.nombre); setEditandoNombre(true); }}
+                  >
+                    {menuActivo.nombre || `Semana ${dayjs(menuActivo.fecha_inicio).week()}`}
+                    <i className="bi bi-pencil ms-2 text-muted" style={{ fontSize: "0.9rem" }} />
+                  </h2>
+                )}
                 <span className={`badge ${publicado ? "bg-success" : "bg-secondary"}`}>
                   {publicado ? "Publicado" : "Borrador"}
                 </span>
               </div>
               <div className="d-flex align-items-center gap-2">
-                <button className="btn btn-sm btn-outline-secondary rounded-pill px-3">
+                <span className="text-muted small">
                   <i className="bi bi-calendar3 me-1" />
-                  {dayjs(menuActivo.fecha_inicio).format("D MMM")} – {dayjs(menuActivo.fecha_inicio).add(4, "day").format("D MMM")}
+                  {dayjs(menuActivo.fecha_inicio).format("D MMM")} – {dayjs(menuActivo.fecha_inicio).add(6, "day").format("D MMM")}
+                </span>
+                <button className="btn btn-sm btn-outline-danger rounded-pill px-2" onClick={(e) => eliminarMenu(menuActivo, e)}>
+                  <i className="bi bi-trash" />
                 </button>
-                {!publicado && (
-                  <button className="btn btn-sm btn-outline-danger rounded-pill px-2" onClick={(e) => eliminarMenu(menuActivo, e)}>
-                    <i className="bi bi-trash" />
-                  </button>
-                )}
               </div>
             </>
           ) : (
@@ -396,7 +423,7 @@ export default function MenuAdminPage() {
               ].map(({ key, label }) => (
                 <button
                   key={key}
-                  onClick={() => { setTab(key); if (menusPorTab[key]?.length) cargarMenuCompleto(menusPorTab[key][0]); }}
+                  onClick={() => { setTab(key); setMenuActivo(null); setDias(diasVacios()); }}
                   className="btn btn-link text-decoration-none px-3 pb-2 fw-semibold"
                   style={{
                     color: tab === key ? "#094D40" : "#888",
@@ -409,28 +436,45 @@ export default function MenuAdminPage() {
               ))}
             </div>
 
-            {/* Lista de semanas dentro de la pestaña (solo Próximos e Histórico con varios) */}
-            {listaTab.length > 1 && (
-              <div className="d-flex gap-2 mb-3 flex-wrap">
+            {/* Lista de menús como cards */}
+            {!menuActivo && listaTab.length > 0 && (
+              <div className="row g-3 mb-4">
                 {listaTab.map((m) => (
-                  <button
-                    key={m.id}
-                    onClick={() => cargarMenuCompleto(m)}
-                    className="btn btn-sm rounded-pill px-3"
-                    style={{
-                      background: menuActivo?.id === m.id ? "#809FB8" : "transparent",
-                      color: menuActivo?.id === m.id ? "#fff" : "#374151",
-                      border: "1px solid #d1d5db",
-                      transition: "background 0.15s",
-                    }}
-                    onMouseEnter={e => { if (menuActivo?.id !== m.id) e.currentTarget.style.background = "#F1F4F9"; }}
-                    onMouseLeave={e => { if (menuActivo?.id !== m.id) e.currentTarget.style.background = "transparent"; }}
-                  >
-                    {dayjs(m.fecha_inicio).format("MMM D")} a {dayjs(m.fecha_inicio).add(4,"day").format("MMM D")}
-                    {m.publicado && <i className="bi bi-check-circle-fill ms-1" style={{ color: "#2BB316" }} />}
-                  </button>
+                  <div key={m.id} className="col-md-4 col-sm-6">
+                    <div
+                      onClick={() => cargarMenuCompleto(m)}
+                      className="rounded-3 p-3 bg-white border"
+                      style={{ cursor: "pointer", borderColor: "#e5e7eb", transition: "box-shadow 0.15s" }}
+                      onMouseEnter={e => e.currentTarget.style.boxShadow = "0 2px 8px rgba(0,0,0,0.08)"}
+                      onMouseLeave={e => e.currentTarget.style.boxShadow = "none"}
+                    >
+                      <div className="d-flex justify-content-between align-items-start mb-1">
+                        <span className="fw-bold" style={{ fontSize: "0.95rem" }}>
+                          {m.nombre || `Semana ${dayjs(m.fecha_inicio).week()}`}
+                        </span>
+                        <span className={`badge ${m.publicado ? "bg-success" : "bg-secondary"}`} style={{ fontSize: "0.7rem" }}>
+                          {m.publicado ? "Publicado" : "Borrador"}
+                        </span>
+                      </div>
+                      <div className="text-muted small">
+                        <i className="bi bi-calendar3 me-1" />
+                        {dayjs(m.fecha_inicio).format("D MMM")} – {dayjs(m.fecha_inicio).add(6, "day").format("D MMM")}
+                      </div>
+                    </div>
+                  </div>
                 ))}
               </div>
+            )}
+
+            {/* Breadcrumb volver */}
+            {menuActivo && (
+              <button
+                className="btn btn-sm btn-link text-muted px-0 mb-3 d-flex align-items-center gap-1"
+                onClick={() => { setMenuActivo(null); setDias(diasVacios()); }}
+              >
+                <i className="bi bi-chevron-left" style={{ fontSize: "0.8rem" }} />
+                Todos los menús
+              </button>
             )}
 
             {listaTab.length === 0 && !menuActivo && (
@@ -713,7 +757,7 @@ function ModalNuevoMenu({ fechaSeleccionada, setFechaSeleccionada, setErrorModal
 // Sección de categoría
 function SeccionCategoria({ titulo, count, children, footer }) {
   return (
-    <div className="rounded-3 overflow-hidden" style={{ border: "1px solid #e5e7eb", background: "#fff" }}>
+    <div className="rounded-3" style={{ border: "1px solid #e5e7eb", background: "#fff" }}>
       {/* Header */}
       <div className="d-flex justify-content-between align-items-center px-4 py-3" style={{ background: "#f8f9fa" }}>
         <span className="fw-semibold" style={{ fontSize: "0.95rem" }}>{titulo}</span>

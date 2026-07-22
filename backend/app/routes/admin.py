@@ -98,10 +98,15 @@ def listar_menus():
 @jwt_required()
 @require_role("admin")
 def crear_menu():
+    from datetime import date as date_type
+    import datetime as dt
     data = request.get_json()
     if MenuSemanal.query.filter_by(fecha_inicio=data["fecha_inicio"]).first():
         return jsonify({"error": "Ya existe un menú para esa semana"}), 409
-    menu = MenuSemanal(fecha_inicio=data["fecha_inicio"])
+    fecha = dt.date.fromisoformat(data["fecha_inicio"])
+    semana = fecha.isocalendar()[1]
+    nombre = data.get("nombre") or f"Menú semana {semana}"
+    menu = MenuSemanal(fecha_inicio=data["fecha_inicio"], nombre=nombre)
     db.session.add(menu)
     db.session.commit()
     return jsonify(menu.to_dict()), 201
@@ -146,13 +151,23 @@ def guardar_dias_menu(menu_id):
     return jsonify(menu.to_dict(include_dias=True))
 
 
+@admin_bp.patch("/menus/<int:menu_id>")
+@jwt_required()
+@require_role("admin")
+def actualizar_menu(menu_id):
+    menu = MenuSemanal.query.get_or_404(menu_id)
+    data = request.get_json() or {}
+    if "nombre" in data:
+        menu.nombre = data["nombre"]
+    db.session.commit()
+    return jsonify(menu.to_dict())
+
+
 @admin_bp.delete("/menus/<int:menu_id>")
 @jwt_required()
 @require_role("admin")
 def eliminar_menu(menu_id):
     menu = MenuSemanal.query.get_or_404(menu_id)
-    if menu.publicado:
-        return jsonify({"error": "No se puede eliminar un menú ya publicado"}), 400
     db.session.delete(menu)
     db.session.commit()
     return jsonify({"ok": True})

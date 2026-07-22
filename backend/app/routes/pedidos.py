@@ -21,9 +21,7 @@ def crear_pedido():
     data = request.get_json()
 
     hoy = date.today()
-    dia_semana = hoy.weekday()
-    if dia_semana > 4:
-        return jsonify({"error": "Hoy no hay servicio (fin de semana)"}), 400
+    dia_semana = hoy.weekday()  # 0=lunes … 6=domingo
 
     menu = (
         MenuSemanal.query

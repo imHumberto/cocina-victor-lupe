@@ -19,8 +19,8 @@ export default function MenuPage() {
   const [pedidosPausados, setPedidosPausados] = useState(false);
   const navigate = useNavigate();
 
-  const hoyIdx = dayjs().day() === 0 ? -1 : dayjs().day() - 1; // 0=lunes
-  const [tab, setTab] = useState(hoyIdx >= 0 && hoyIdx <= 4 ? hoyIdx : 0);
+  const hoyIdx = dayjs().day() === 0 ? 6 : dayjs().day() - 1; // 0=lunes…6=domingo
+  const [tab, setTab] = useState(hoyIdx >= 0 && hoyIdx <= 6 ? hoyIdx : 0);
 
   useEffect(() => {
     api.get("/config/estado").then(({ data }) => setPedidosPausados(data.pedidos_pausados)).catch(() => {});

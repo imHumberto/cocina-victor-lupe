@@ -20,6 +20,7 @@ class MenuSemanal(db.Model):
     __tablename__ = "menus_semanales"
 
     id = db.Column(db.Integer, primary_key=True)
+    nombre = db.Column(db.String(128), nullable=False, default="")
     fecha_inicio = db.Column(db.Date, nullable=False, unique=True)
     publicado = db.Column(db.Boolean, default=False, nullable=False)
     created_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
@@ -29,6 +30,7 @@ class MenuSemanal(db.Model):
     def to_dict(self, include_dias=False):
         data = {
             "id": self.id,
+            "nombre": self.nombre,
             "fecha_inicio": self.fecha_inicio.isoformat(),
             "publicado": self.publicado,
         }
@@ -41,7 +43,7 @@ class DiaMenu(db.Model):
     __tablename__ = "dias_menu"
 
     id = db.Column(db.Integer, primary_key=True)
-    dia = db.Column(db.Integer, nullable=False)  # 0=lunes … 4=viernes
+    dia = db.Column(db.Integer, nullable=False)  # 0=lunes … 6=domingo
     menu_semanal_id = db.Column(db.Integer, db.ForeignKey("menus_semanales.id"), nullable=False)
     activo = db.Column(db.Boolean, default=True, nullable=False)
 
@@ -66,7 +68,7 @@ class DiaMenu(db.Model):
 
     __table_args__ = (db.UniqueConstraint("menu_semanal_id", "dia", name="uq_menu_dia"),)
 
-    DIAS_NOMBRES = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes"]
+    DIAS_NOMBRES = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"]
 
     def to_dict(self):
         from app.models.platillo import Platillo
@@ -76,7 +78,7 @@ class DiaMenu(db.Model):
             "id": self.id,
             "dia": self.dia,
             "activo": self.activo,
-            "dia_nombre": self.DIAS_NOMBRES[self.dia] if 0 <= self.dia <= 4 else "",
+            "dia_nombre": self.DIAS_NOMBRES[self.dia] if 0 <= self.dia <= 6 else "",
             "menu_semanal_id": self.menu_semanal_id,
             "entrada": self.entrada.to_dict() if self.entrada else None,
             "platos_fuertes": [p.to_dict() for p in self.platos_fuertes],
