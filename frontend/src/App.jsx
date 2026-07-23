@@ -13,6 +13,7 @@ import MenuPage from "./apps/cliente/pages/MenuPage";
 import OrdenarPage from "./apps/cliente/pages/OrdenarPage";
 import PerfilPage from "./apps/cliente/pages/PerfilPage";
 import MisPedidosPage from "./apps/cliente/pages/MisPedidosPage";
+import ConfiguracionPage from "./apps/cliente/pages/ConfiguracionPage";
 import NotificacionesPage from "./apps/cliente/pages/NotificacionesPage";
 
 // Repartidor
@@ -60,6 +61,7 @@ export default function App() {
         <Route path="menu" element={<MenuPage />} />
         <Route path="ordenar" element={<OrdenarPage />} />
         <Route path="mis-pedidos" element={<MisPedidosPage />} />
+        <Route path="configuracion" element={<ConfiguracionPage />} />
         <Route path="notificaciones" element={<NotificacionesPage />} />
         <Route path="perfil" element={<PerfilPage />} />
       </Route>

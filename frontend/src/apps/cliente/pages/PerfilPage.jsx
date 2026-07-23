@@ -307,7 +307,7 @@ export default function PerfilPage() {
             icono="bi-person"
             label="Nombre, teléfono y foto"
             sub={user.nombre}
-            onClick={() => { setConfigForm({ nombre: user.nombre, telefono_whatsapp: user.telefono_whatsapp ?? "" }); setConfigMsg(""); setSheetConfig(true); }}
+            onClick={() => navigate("/cliente/configuracion")}
           />
         </div>
 

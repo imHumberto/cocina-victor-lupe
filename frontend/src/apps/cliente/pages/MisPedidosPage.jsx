@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import api from "../../../services/api";
 import EstadoBadge from "../../../components/shared/EstadoBadge";
 import dayjs from "dayjs";
 
 export default function MisPedidosPage() {
+  const navigate = useNavigate();
   const [pedidos, setPedidos] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -27,7 +29,15 @@ export default function MisPedidosPage() {
 
   return (
     <div className="p-3">
-      <h2 className="h5 fw-bold mb-3">Mis pedidos</h2>
+      <div className="d-flex align-items-center gap-2 mb-3">
+        <button
+          onClick={() => navigate(-1)}
+          style={{ background: "none", border: "none", padding: 0, cursor: "pointer", color: "var(--color-navy)" }}
+        >
+          <i className="bi bi-chevron-left fs-5" />
+        </button>
+        <h2 className="h5 fw-bold mb-0">Mis pedidos</h2>
+      </div>
       {pedidos.length === 0 ? (
         <div className="text-center text-muted py-5">
           <i className="bi bi-bag-x fs-1 d-block mb-2" />
