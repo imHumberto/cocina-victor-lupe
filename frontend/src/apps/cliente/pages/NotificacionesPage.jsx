@@ -18,8 +18,8 @@ function parseNotif(mensaje) {
 
 function getIcono(mensaje) {
   const m = mensaje.toLowerCase();
-  if (m.includes("rechazado"))                            return { icon: "bi-x-circle-fill", cancelado: true };
-  if (m.includes("cancelado"))                            return { icon: "bi-x-circle-fill", cancelado: true };
+  if (m.includes("rechazado"))                            return { icon: "bi-x-octagon", cancelado: true };
+  if (m.includes("cancelado"))                            return { icon: "bi-x-octagon", cancelado: true };
   if (m.includes("confirmado"))                           return { icon: "bi-check-circle" };
   if (m.includes("entregado") || m.includes("provecho")) return { icon: "bi-bag-check" };
   if (m.includes("camino"))                               return { icon: "bi-scooter" };
