@@ -11,9 +11,9 @@ dayjs.locale("es");
 
 function saludo() {
   const h = dayjs().hour();
-  if (h < 12) return "¡Buenos días";
-  if (h < 19) return "¡Buenas tardes";
-  return "¡Buenas noches";
+  if (h < 12) return "Buenos días!";
+  if (h < 19) return "Buenas tardes!";
+  return "Buenas noches!";
 }
 
 const PASOS = [
@@ -207,6 +207,7 @@ export default function InicioPage() {
         </div>
       )}
 
+
       {/* Banner: carrito en progreso */}
       {!esFinDeSemana && carritoGuardado && !pedidoHoy && (
         <div className="banner-carrito">
@@ -263,25 +264,42 @@ export default function InicioPage() {
           <p className="cliente-platillo-desc">{descripcionMenu}</p>
 
           {puedeOrdenar && (
-            <div className="cliente-ordenar-row">
-              <button
-                className="cliente-btn-ordenar"
-                onClick={() => navigate("/cliente/ordenar", { state: { cantidad } })}
-              >
-                Ordenar · ${130 * cantidad}
-              </button>
-              <button
-                className="cliente-btn-contador"
-                onClick={() => setCantidad(c => Math.max(1, c - 1))}
-                disabled={cantidad <= 1}
-              >−</button>
-              <span className="cliente-contador-valor">{cantidad}</span>
-              <button
-                className="cliente-btn-contador cliente-btn-contador-plus"
-                onClick={() => setCantidad(c => Math.min(4, c + 1))}
-                disabled={cantidad >= 4}
-              >+</button>
-            </div>
+            carritoGuardado ? (
+              <>
+                <button
+                  className="carrito-continuar"
+                  onClick={() => navigate("/cliente/ordenar")}
+                >
+                  Continuar con mi orden
+                </button>
+                <button
+                  className="carrito-descartar"
+                  onClick={() => { clearCart(user.id); setCarritoGuardado(false); }}
+                >
+                  Descartar
+                </button>
+              </>
+            ) : (
+              <div className="cliente-ordenar-row">
+                <button
+                  className="cliente-btn-ordenar"
+                  onClick={() => navigate("/cliente/ordenar", { state: { cantidad } })}
+                >
+                  Ordenar · ${130 * cantidad}
+                </button>
+                <button
+                  className="cliente-btn-contador"
+                  onClick={() => setCantidad(c => Math.max(1, c - 1))}
+                  disabled={cantidad <= 1}
+                >−</button>
+                <span className="cliente-contador-valor">{cantidad}</span>
+                <button
+                  className="cliente-btn-contador cliente-btn-contador-plus"
+                  onClick={() => setCantidad(c => Math.min(4, c + 1))}
+                  disabled={cantidad >= 4}
+                >+</button>
+              </div>
+            )
           )}
           {!puedeOrdenar && !pedidosPausados && (
             <p className="text-muted text-center small mt-3">

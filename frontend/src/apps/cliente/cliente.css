@@ -94,6 +94,32 @@
   font-size: 0.78rem;
 }
 
+/* ── Carrito: botones sobre el menú del día ───────────────── */
+.carrito-continuar {
+  width: 100%;
+  padding: 18px;
+  background: #1e4035;
+  color: #fff;
+  border: none;
+  border-radius: 16px;
+  font-size: 1.05rem;
+  font-weight: 600;
+  cursor: pointer;
+  margin-bottom: 12px;
+}
+.carrito-descartar {
+  display: block;
+  width: 100%;
+  background: transparent;
+  border: none;
+  color: var(--color-muted);
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 4px 0 12px;
+  text-align: center;
+}
+
 /* ── Banner: carrito en progreso ──────────────────────────── */
 .banner-carrito {
   background: #e8edf0;
@@ -114,12 +140,11 @@
   flex-shrink: 0;
 }
 .banner-carrito__titulo {
-  font-weight: 800;
-  font-size: 1.35rem;
-  line-height: 1.15;
+  font-family: "Costa", sans-serif;
+  font-size: clamp(1.1rem, 5.5vw, 1.4rem);
+  line-height: 1.1;
   color: #1a2d3d;
   text-transform: uppercase;
-  letter-spacing: -0.01em;
   margin-bottom: 6px;
 }
 .banner-carrito__subtitulo {
@@ -144,6 +169,7 @@
   background: #F1F4F9;
   font-weight: 500;
   color: #1a2d3d;
+  border: 1.5px solid #D9E1E7;
 }
 .btn-pill--brand {
   background: #1e4035;

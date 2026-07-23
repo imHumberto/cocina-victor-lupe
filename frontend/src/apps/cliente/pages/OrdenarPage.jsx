@@ -309,7 +309,7 @@ export default function OrdenarPage() {
     <div className="cliente-page">
       <div className="text-center mb-4">
         <div style={{ fontSize: "4rem" }}>🎉</div>
-        <h2 className="fw-bold mt-2">¡Pedido confirmado!</h2>
+        <h2 className="fw-bold mt-2">Pedido confirmado</h2>
         <p className="text-muted small">Tu comida está siendo preparada</p>
       </div>
 
