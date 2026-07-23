@@ -178,23 +178,32 @@
 }
 
 /* ── Banner: fin de semana ────────────────────────────────── */
-.banner-fds {
-  background: #fff;
-  border-radius: 16px;
-  padding: 32px 24px;
+/* ── Home empty state ─────────────────────────────────────── */
+.home-empty {
   text-align: center;
+  padding: 24px 0 0;
 }
-.banner-fds__icon { font-size: 2.5rem; }
-.banner-fds__titulo { font-weight: 700; margin-top: 12px; margin-bottom: 4px; }
-.banner-fds__desc { color: var(--color-muted); font-size: 0.85rem; margin: 0; }
-
-/* ── Sin menú ─────────────────────────────────────────────── */
-.sin-menu {
-  text-align: center;
-  padding: 40px 0;
+.home-empty__img {
+  width: 100%;
+  max-width: 300px;
+  margin: 0 auto 20px;
+  display: block;
+}
+.home-empty__titulo {
+  font-family: "Costa", sans-serif;
+  font-size: 1.55rem;
+  text-transform: uppercase;
+  color: #1B2B3A;
+  line-height: 1.2;
+  margin-bottom: 10px;
+  text-wrap: balance;
+}
+.home-empty__desc {
   color: var(--color-muted);
+  font-size: 0.9rem;
+  margin: 0;
+  line-height: 1.5;
 }
-.sin-menu__icon { font-size: 2.5rem; }
 
 /* ── Tracker pedido ───────────────────────────────────────── */
 .tracker-card {
@@ -642,6 +651,10 @@
   color: #fff;
 }
 .menu-dia-btn--disabled { opacity: 0.4; cursor: not-allowed; }
+.menu-dia-btn--apagado .menu-dia__fecha,
+.menu-dia-btn--apagado .menu-dia__nombre {
+  color: #B0BAC5 !important;
+}
 .menu-dia__fecha {
   font-size: 1.1rem;
   font-weight: 800;

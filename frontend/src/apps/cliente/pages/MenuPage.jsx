@@ -101,11 +101,13 @@ export default function MenuPage() {
           const tieneDia = dias.some((d) => d.dia === i);
           const fecha = fechaInicio.add(i, "day").format("D");
           const activo = tab === i;
+          const esPasado = i < hoyIdx;
+          const apagado = esPasado || !tieneDia;
           return (
             <div key={i} className="menu-dia-wrap">
               {i === hoyIdx && <span className="menu-dia__hoy">Hoy</span>}
               <button
-                className={`menu-dia-btn${activo ? " menu-dia-btn--activo" : ""}${!tieneDia ? " menu-dia-btn--disabled" : ""}`}
+                className={`menu-dia-btn${activo ? " menu-dia-btn--activo" : ""}${apagado && !activo ? " menu-dia-btn--apagado" : ""}`}
                 onClick={() => tieneDia && setTab(i)}
                 disabled={!tieneDia}
               >

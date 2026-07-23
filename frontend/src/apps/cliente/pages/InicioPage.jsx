@@ -11,9 +11,9 @@ dayjs.locale("es");
 
 function saludo() {
   const h = dayjs().hour();
-  if (h < 12) return "Buenos días!";
-  if (h < 19) return "Buenas tardes!";
-  return "Buenas noches!";
+  if (h < 12) return "Buenos días,";
+  if (h < 19) return "Buenas tardes,";
+  return "Buenas noches,";
 }
 
 const PASOS = [
@@ -117,8 +117,9 @@ export default function InicioPage() {
 
   const nombre = user?.nombre?.split(" ")[0] ?? "";
   const hoy = dayjs();
-  const esFinDeSemana = !dia && loading === false;
-  const puedeOrdenar = !esFinDeSemana && !pedidosPausados;
+  const tieneContenido = (dia?.platos_fuertes?.length ?? 0) > 0;
+  const esVacio = !loading && (!dia || !tieneContenido);
+  const puedeOrdenar = !esVacio && !pedidosPausados;
 
   const DISMISS_KEY = "pedido_dismissed";
 
@@ -140,7 +141,6 @@ export default function InicioPage() {
 
   useEffect(() => {
     api.get("/config/estado").then(({ data }) => setPedidosPausados(data.pedidos_pausados)).catch(() => {});
-    if (esFinDeSemana) { setLoading(false); return; }
     Promise.all([
       api.get("/menu/dia-hoy").catch(() => null),
       api.get("/pedidos/mis-pedidos").catch(() => ({ data: [] })),
@@ -198,7 +198,7 @@ export default function InicioPage() {
       </h1>
 
       {/* Banner: pedidos pausados */}
-      {pedidosPausados && !esFinDeSemana && (
+      {pedidosPausados && !esVacio && (
         <div className="banner-pausado">
           <i className="bi bi-pause-circle-fill banner-pausado__icon" />
           <div>
@@ -210,7 +210,7 @@ export default function InicioPage() {
 
 
       {/* Banner: carrito en progreso */}
-      {!esFinDeSemana && carritoGuardado && !pedidoHoy && (
+      {!esVacio && carritoGuardado && !pedidoHoy && (
         <div className="banner-carrito">
           <div className="banner-carrito__header">
             <img src="/ilustraciones/pedido_en_progreso.png" alt="" className="banner-carrito__img" />
@@ -235,21 +235,28 @@ export default function InicioPage() {
       )}
 
       {/* Tracker de pedido */}
-      {!esFinDeSemana && pedidoHoy && (
+      {pedidoHoy && (
         <TrackerPedido pedido={pedidoHoy} onDismiss={() => dismissPedido(pedidoHoy)} />
       )}
 
-      {/* Fin de semana */}
-      {esFinDeSemana && (
-        <div className="banner-fds">
-          <span className="banner-fds__icon">🛋️</span>
-          <p className="banner-fds__titulo">Hoy no hay servicio</p>
-          <p className="banner-fds__desc">Descansa, nos vemos el lunes</p>
+      {/* Sin menú / fin de semana / día sin contenido */}
+      {esVacio && (
+        <div className="home-empty">
+          <img src="/ilustraciones/IMG-EmptyState.png" alt="" className="home-empty__img" />
+          <h2 className="home-empty__titulo">Ups, parece que no hay nada para mostrar</h2>
+          <p className="home-empty__desc">El día de hoy no tenemos servicio de comida, pero mañana sí. Sentimos las molestias.</p>
+          <button
+            className="cliente-btn-ordenar w-100 mt-3"
+            style={{ padding: "16px 0", borderRadius: 16 }}
+            onClick={() => navigate("/cliente/menu")}
+          >
+            Ver el menú semanal
+          </button>
         </div>
       )}
 
       {/* Hero menú del día */}
-      {!esFinDeSemana && dia && (
+      {!esVacio && (
         <>
           {(() => {
             const proteina = dia.platos_fuertes?.[0]?.proteina;
@@ -313,13 +320,6 @@ export default function InicioPage() {
         </>
       )}
 
-      {/* Sin menú */}
-      {!esFinDeSemana && !dia && (
-        <div className="sin-menu">
-          <span className="sin-menu__icon">🍽️</span>
-          <p className="mt-3">No hay menú publicado para hoy</p>
-        </div>
-      )}
     </div>
   );
 }
