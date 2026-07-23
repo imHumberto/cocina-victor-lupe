@@ -34,7 +34,7 @@ def crear_platillo():
     duplicado = Platillo.query.filter(db.func.lower(Platillo.nombre) == nombre.lower()).first()
     if duplicado:
         return jsonify({"error": f'Ya existe un platillo llamado "{duplicado.nombre}"'}), 409
-    p = Platillo(nombre=nombre, tipo=data["tipo"], descripcion=data.get("descripcion"), foto_url=data.get("foto_url"), activo=data.get("activo", True), es_alternativa=data.get("es_alternativa", False), proteina=data.get("proteina") or None)
+    p = Platillo(nombre=nombre, tipo=data["tipo"], descripcion=data.get("descripcion"), foto_url=data.get("foto_url"), activo=data.get("activo", True), es_alternativa=data.get("es_alternativa", False), proteina=data.get("proteina") or None, variante_proteina=data.get("variante_proteina", False))
     db.session.add(p)
     db.session.commit()
     return jsonify(p.to_dict()), 201
@@ -52,7 +52,7 @@ def editar_platillo(platillo_id):
         if duplicado:
             return jsonify({"error": f'Ya existe un platillo llamado "{duplicado.nombre}"'}), 409
         p.nombre = nombre
-    for campo in ("tipo", "descripcion", "foto_url", "activo", "es_alternativa", "proteina"):
+    for campo in ("tipo", "descripcion", "foto_url", "activo", "es_alternativa", "proteina", "variante_proteina"):
         if campo in data:
             setattr(p, campo, data[campo])
     db.session.commit()

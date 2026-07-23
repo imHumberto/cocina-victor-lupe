@@ -851,7 +851,7 @@ function AlertaEntregaPopup({ alerta, onEnPreparacion }) {
 export default function PedidosAdminPage() {
   const [pedidos, setPedidos] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [tab, setTab] = useState("pendiente");
+  const [tab, setTab] = useState("en_preparacion");
   const [seleccionado, setSeleccionado] = useState(null);
   const [busqueda, setBusqueda] = useState("");
   const [repartidores, setRepartidores] = useState([]);
@@ -914,6 +914,7 @@ export default function PedidosAdminPage() {
   const handlePedidoNuevo = useCallback((p) => {
     setPedidos(ps => [p, ...ps]);
     setPedidoEntrante(p);
+    setTab("pendiente");
   }, []);
   useSocketEvent("pedido_nuevo", handlePedidoNuevo);
 
@@ -1028,6 +1029,7 @@ export default function PedidosAdminPage() {
       const { data } = await api.post(`/admin/pedidos/${id}/confirmar`);
       setPedidos(ps => ps.map(x => x.id === data.id ? data : x));
       setSeleccionado(s => s?.id === data.id ? data : s);
+      setTab("en_preparacion");
     } catch (err) { alert(err.response?.data?.error ?? "Error"); }
   };
 
@@ -1228,30 +1230,22 @@ export default function PedidosAdminPage() {
         {/* Lista */}
         <div style={{ flex: 1, overflowY: "auto", padding: "0 12px 12px" }}>
           {/* Encabezado con filtro (solo finalizados) */}
-          {tab === "cerrado" ? (
-            <>
-              <div className="d-flex justify-content-between align-items-center mb-2" style={{ position: "relative" }}>
-                <span className="fw-semibold" style={{ fontSize: "1rem", color: "#17181A" }}>Pedidos finalizados</span>
-                <button
-                  className="btn btn-sm"
-                  style={{ background: filtroOpen ? "#e8edf5" : "transparent", border: "none", color: filtroOpen ? "#2563eb" : "#6b7280", borderRadius: 8 }}
-                  onClick={() => setFiltroOpen(o => !o)}
-                >
-                  <i className="bi bi-sort-down-alt" style={{ fontSize: "1.1rem" }} />
-                </button>
-                {filtroOpen && (
-                  <div style={{ position: "absolute", top: "calc(100% + 4px)", right: 0, zIndex: 50, width: 320 }}>
-                    <FiltrosPanel filtros={filtros} setFiltros={setFiltros} onClose={() => setFiltroOpen(false)} />
-                  </div>
-                )}
-              </div>
-            </>
-          ) : (
-            lista.length > 0 && (
-              <div className="fw-semibold mb-2" style={{ fontSize: "1rem", color: "#17181A" }}>
-                {tabActual.label} pedidos
-              </div>
-            )
+          {tab === "cerrado" && (
+            <div className="d-flex justify-content-between align-items-center mb-2" style={{ position: "relative" }}>
+              <span className="fw-semibold" style={{ fontSize: "1rem", color: "#17181A" }}>Pedidos finalizados</span>
+              <button
+                className="btn btn-sm"
+                style={{ background: filtroOpen ? "#e8edf5" : "transparent", border: "none", color: filtroOpen ? "#2563eb" : "#6b7280", borderRadius: 8 }}
+                onClick={() => setFiltroOpen(o => !o)}
+              >
+                <i className="bi bi-sort-down-alt" style={{ fontSize: "1.1rem" }} />
+              </button>
+              {filtroOpen && (
+                <div style={{ position: "absolute", top: "calc(100% + 4px)", right: 0, zIndex: 50, width: 320 }}>
+                  <FiltrosPanel filtros={filtros} setFiltros={setFiltros} onClose={() => setFiltroOpen(false)} />
+                </div>
+              )}
+            </div>
           )}
 
           {lista.length === 0 ? (
@@ -1265,7 +1259,46 @@ export default function PedidosAdminPage() {
                 onClick={() => setSeleccionado(ped)}
               />
             ))
-          ) : (
+          ) : tab === "en_preparacion" ? (() => {
+            const enPrep   = lista.filter(p => p.estado === "en_preparacion");
+            const enEspera = lista.filter(p => p.estado === "confirmado");
+            return (
+              <>
+                {enPrep.length > 0 && (
+                  <>
+                    <div className="d-flex align-items-center gap-2 mb-3" style={{ marginTop: 16 }}>
+                      <div style={{ width: 10, height: 10, borderRadius: "50%", background: "#22c55e", flexShrink: 0, boxShadow: "0 0 0 3px #dcfce7" }} />
+                      <span className="fw-bold" style={{ fontSize: "0.75rem", textTransform: "uppercase", letterSpacing: "0.09em", color: "#15803d" }}>
+                        En preparación
+                      </span>
+                      <span style={{ marginLeft: "auto", fontSize: "0.72rem", fontWeight: 600, color: "#15803d", background: "#dcfce7", borderRadius: 99, padding: "2px 8px" }}>
+                        {enPrep.length}
+                      </span>
+                    </div>
+                    {enPrep.map(ped => (
+                      <PedidoCard key={ped.id} pedido={ped} seleccionado={seleccionado?.id === ped.id} onClick={() => setSeleccionado(ped)} />
+                    ))}
+                  </>
+                )}
+                {enEspera.length > 0 && (
+                  <>
+                    <div className="d-flex align-items-center gap-2 mb-3" style={{ marginTop: enPrep.length > 0 ? 28 : 0 }}>
+                      <div style={{ width: 10, height: 10, borderRadius: "50%", background: "#f59e0b", flexShrink: 0, boxShadow: "0 0 0 3px #fef3c7" }} />
+                      <span className="fw-bold" style={{ fontSize: "0.75rem", textTransform: "uppercase", letterSpacing: "0.09em", color: "#b45309" }}>
+                        En espera
+                      </span>
+                      <span style={{ marginLeft: "auto", fontSize: "0.72rem", fontWeight: 600, color: "#b45309", background: "#fef3c7", borderRadius: 99, padding: "2px 8px" }}>
+                        {enEspera.length}
+                      </span>
+                    </div>
+                    {enEspera.map(ped => (
+                      <PedidoCard key={ped.id} pedido={ped} seleccionado={seleccionado?.id === ped.id} onClick={() => setSeleccionado(ped)} />
+                    ))}
+                  </>
+                )}
+              </>
+            );
+          })() : (
             lista.map(ped => (
               <PedidoCard
                 key={ped.id}

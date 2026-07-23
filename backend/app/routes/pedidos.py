@@ -69,10 +69,12 @@ def crear_pedido():
     plato_id = data.get("plato_id")
     bebida_id = data.get("bebida_id")
 
+    plato_variante = data.get("plato_variante")  # "pollo" | "res" | None
     plato_nombre = None
     if plato_elegido == "alternativa" and plato_id:
         p = Platillo.query.get(plato_id)
-        plato_nombre = p.nombre if p else None
+        if p:
+            plato_nombre = f"{p.nombre} · {plato_variante.capitalize()}" if plato_variante else p.nombre
     elif plato_id:
         p = Platillo.query.get(plato_id)
         plato_nombre = p.nombre if p else None
