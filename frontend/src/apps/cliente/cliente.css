@@ -1,6 +1,5 @@
 /* ============================================================
-   Cliente Layout — estilos globales de la app del cliente
-   Edita aquí para cambiar colores, tamaños y espaciados.
+   Cliente — estilos globales de la app del cliente
    ============================================================ */
 
 /* ── Bottom nav ───────────────────────────────────────────── */
@@ -9,7 +8,7 @@
   bottom: 0;
   left: 0;
   right: 0;
-  height: 64px;                         /* ← altura del nav */
+  height: 64px;
   background: #fff;
   border-top: 1px solid #e9ecef;
   display: flex;
@@ -23,7 +22,7 @@
   align-items: center;
   justify-content: center;
   font-size: 0.65rem;
-  color: #9ca3af;                       /* ← color inactivo */
+  color: #9ca3af;
   text-decoration: none;
   gap: 3px;
   transition: color 0.15s;
@@ -31,11 +30,11 @@
 
 .bottom-nav a.active,
 .bottom-nav a:hover {
-  color: #094D40;                       /* ← color activo */
+  color: #094D40;
 }
 
 .bottom-nav i {
-  font-size: 1.35rem;                   /* ← tamaño íconos */
+  font-size: 1.35rem;
 }
 
 /* ── Página con nav ───────────────────────────────────────── */
@@ -43,13 +42,22 @@
   padding-bottom: 72px;
 }
 
-/* ── Página de inicio ─────────────────────────────────────── */
+/* ── Contenedor base del cliente ──────────────────────────── */
 .cliente-page {
   max-width: 480px;
   margin: 0 auto;
   padding: 28px 20px 100px;
 }
 
+/* ── Loading ──────────────────────────────────────────────── */
+.cliente-loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 60vh;
+}
+
+/* ── Saludo ───────────────────────────────────────────────── */
 .cliente-saludo {
   font-weight: 900;
   font-size: 1.9rem;
@@ -60,35 +68,151 @@
   margin-bottom: 20px;
 }
 
-/* ── Hero imagen platillo ─────────────────────────────────── */
-.cliente-hero {
-  width: 100%;
-  aspect-ratio: 4/3;
-  background: #e0e0e0;
-  border-radius: 16px;                  /* ← radio de esquinas */
+/* ── Banner: pedidos pausados ─────────────────────────────── */
+.banner-pausado {
+  background: #fff7ed;
+  border: 1px solid #fed7aa;
+  border-radius: 12px;
+  padding: 12px 16px;
   margin-bottom: 16px;
-  overflow: hidden;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.banner-pausado__icon {
+  font-size: 1.4rem;
+  color: #ea580c;
+  flex-shrink: 0;
+}
+.banner-pausado__titulo {
+  font-weight: 600;
+  color: #9a3412;
+  font-size: 0.9rem;
+}
+.banner-pausado__desc {
+  color: var(--color-muted);
+  font-size: 0.78rem;
+}
+
+/* ── Banner: carrito en progreso ──────────────────────────── */
+.banner-carrito {
+  background: #e8edf0;
+  border-radius: 20px;
+  padding: 20px 20px 16px;
+  margin-bottom: 16px;
+}
+.banner-carrito__header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+.banner-carrito__img {
+  width: 90px;
+  height: 90px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+.banner-carrito__titulo {
+  font-weight: 800;
+  font-size: 1.35rem;
+  line-height: 1.15;
+  color: #1a2d3d;
+  text-transform: uppercase;
+  letter-spacing: -0.01em;
+  margin-bottom: 6px;
+}
+.banner-carrito__subtitulo {
+  color: #4a5568;
+  font-size: 0.95rem;
+}
+.banner-carrito__acciones {
+  display: flex;
+  gap: 10px;
+}
+
+/* ── Botones pill ─────────────────────────────────────────── */
+.btn-pill {
+  flex: 1;
+  border: none;
+  border-radius: 50px;
+  padding: 12px;
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+.btn-pill--ghost {
+  background: #F1F4F9;
+  font-weight: 500;
+  color: #1a2d3d;
+}
+.btn-pill--brand {
+  background: #1e4035;
+  font-weight: 600;
+  color: #fff;
+}
+
+/* ── Banner: fin de semana ────────────────────────────────── */
+.banner-fds {
+  background: #fff;
+  border-radius: 16px;
+  padding: 32px 24px;
+  text-align: center;
+}
+.banner-fds__icon { font-size: 2.5rem; }
+.banner-fds__titulo { font-weight: 700; margin-top: 12px; margin-bottom: 4px; }
+.banner-fds__desc { color: var(--color-muted); font-size: 0.85rem; margin: 0; }
+
+/* ── Sin menú ─────────────────────────────────────────────── */
+.sin-menu {
+  text-align: center;
+  padding: 40px 0;
+  color: var(--color-muted);
+}
+.sin-menu__icon { font-size: 2.5rem; }
+
+/* ── Tracker pedido ───────────────────────────────────────── */
+.tracker-card--rechazado { background: #fef2f2; border: 1px solid #fecaca; }
+.tracker-card--entregado { background: #f0fdf4; border: 1px solid #bbf7d0; }
+.tracker-progress-bar { height: 4px; background: #f0f0f0; border-radius: 2px; }
+.tracker-progress-fill {
+  height: 4px;
+  border-radius: 2px;
+  background: var(--color-brand);
+  transition: width 0.5s ease;
+}
+.tracker-pasos {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 8px;
+}
+.tracker-paso { flex: 1; text-align: center; }
+.tracker-paso__dot {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  margin: 0 auto 4px;
   display: flex;
   align-items: center;
   justify-content: center;
+  background: #e5e7eb;
+  font-size: 0.85rem;
 }
+.tracker-paso__dot--activo { background: var(--color-brand); }
+.tracker-paso__inactivo { color: #ccc; font-size: 0.7rem; }
+.tracker-paso__label { font-size: 0.65rem; color: #bbb; }
+.tracker-paso__label--activo { color: var(--color-brand); }
+.tracker-paso__label--actual { font-weight: 700; }
+.tracker-estado { color: var(--color-brand); }
 
-.cliente-hero img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-/* ── Info platillo del día ────────────────────────────────── */
+/* ── Platillo del día ─────────────────────────────────────── */
 .cliente-platillo-label {
   font-size: 0.7rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.1em;
-  color: var(--color-brand);            /* ← color etiqueta */
+  color: var(--color-brand);
   margin-bottom: 4px;
 }
-
 .cliente-platillo-titulo {
   font-weight: 900;
   font-size: 1.5rem;
@@ -97,12 +221,13 @@
   margin-bottom: 4px;
   letter-spacing: 0.02em;
 }
-
 .cliente-platillo-desc {
   color: var(--color-muted);
   font-size: 0.88rem;
   margin: 0 0 24px;
 }
+.platillo-hero-img { width: 100%; border-radius: 16px; display: block; margin-bottom: 16px; }
+.platillo-hero-placeholder { width: 100%; aspect-ratio: 4/3; background: #e0e0e0; border-radius: 16px; margin-bottom: 16px; }
 
 /* ── Botón principal + contador ───────────────────────────── */
 .cliente-ordenar-row {
@@ -110,11 +235,10 @@
   gap: 10px;
   align-items: stretch;
 }
-
 .cliente-btn-ordenar {
   flex: 1;
   padding: 14px 0;
-  background: var(--color-brand);      /* ← color botón ordenar */
+  background: var(--color-brand);
   color: #fff;
   border: none;
   border-radius: 12px;
@@ -122,7 +246,6 @@
   font-size: 1rem;
   cursor: pointer;
 }
-
 .cliente-btn-contador {
   width: 48px;
   background: #fff;
@@ -133,24 +256,13 @@
   cursor: pointer;
   color: var(--color-navy);
 }
-
-.cliente-btn-contador:disabled {
-  color: #ccc;
-  background: #f3f4f6;
-}
-
+.cliente-btn-contador:disabled { color: #ccc; background: #f3f4f6; }
 .cliente-btn-contador-plus {
   background: var(--color-brand);
   border-color: var(--color-brand);
   color: #fff;
 }
-
-.cliente-btn-contador-plus:disabled {
-  background: #e5e7eb;
-  border-color: #e5e7eb;
-  color: #aaa;
-}
-
+.cliente-btn-contador-plus:disabled { background: #e5e7eb; border-color: #e5e7eb; color: #aaa; }
 .cliente-contador-valor {
   width: 32px;
   display: flex;
@@ -170,13 +282,235 @@
   align-items: center;
   gap: 12px;
 }
-
 .cliente-banner-pausado {
   background: #fff7ed;
   border: 1px solid #fed7aa;
 }
-
 .cliente-banner-carrito {
   background: var(--color-brand-light);
   border: 1px solid #a7c4be;
+}
+
+/* ── Ordenar page ─────────────────────────────────────────── */
+.ordenar-container {
+  max-width: 480px;
+  margin: 0 auto;
+  padding-bottom: 160px;
+}
+.ordenar-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 20px 20px 8px;
+}
+.ordenar-header__back {
+  border: none;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+  color: var(--color-navy);
+}
+.ordenar-header__back i { font-size: 1.2rem; }
+.ordenar-header__eyebrow {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--color-brand);
+}
+.ordenar-header__sub { font-size: 0.78rem; color: var(--color-muted); }
+.ordenar-steps { display: flex; gap: 6px; padding: 6px 20px 16px; }
+.ordenar-step { height: 3px; flex: 1; border-radius: 2px; background: #e0e0e0; }
+.ordenar-step--activo { background: var(--color-green); }
+.ordenar-acordion-header { cursor: pointer; border-bottom: 1px solid #eee; }
+
+/* ── Radio opción ─────────────────────────────────────────── */
+.radio-opcion {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px;
+  border-radius: 12px;
+  margin-bottom: 8px;
+  cursor: pointer;
+  background: #fff;
+  border: 1.5px solid #e5e7eb;
+  transition: background 0.15s, border-color 0.15s;
+}
+.radio-opcion--activo {
+  background: var(--color-green-light);
+  border-color: var(--color-green);
+}
+.radio-opcion__texto { min-width: 0; }
+.radio-opcion__nombre { font-weight: 600; color: var(--color-navy); }
+.radio-opcion__desc { color: var(--color-muted); font-size: 0.8rem; }
+.radio-opcion__precio { font-size: 0.8rem; color: var(--color-green); font-weight: 600; }
+.radio-opcion__dot {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  margin-left: 8px;
+  background: #fff;
+  border: 2px solid #d1d5db;
+  transition: border 0.15s;
+}
+.radio-opcion__dot--activo { border: 6px solid var(--color-green); }
+
+/* ── Sección de opciones ──────────────────────────────────── */
+.seccion-titulo {
+  font-size: 1rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-navy);
+  margin-bottom: 10px;
+}
+
+/* ── Selector proteína ────────────────────────────────────── */
+.proteina-selector {
+  margin-top: 4px;
+  padding: 12px 14px;
+  background: #f8faf9;
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+}
+.proteina-selector__label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-brand);
+  margin-bottom: 8px;
+}
+.proteina-opciones { display: flex; gap: 8px; }
+.proteina-btn {
+  flex: 1;
+  padding: 10px 0;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  border: 2px solid #e5e7eb;
+  background: #fff;
+  color: var(--color-navy);
+  cursor: pointer;
+  transition: all 0.12s;
+}
+.proteina-btn--activo {
+  border-color: var(--color-brand);
+  background: var(--color-brand-light);
+  color: var(--color-brand);
+}
+
+/* ── Hora de entrega ──────────────────────────────────────── */
+.hora-btn {
+  width: 100%;
+  border-radius: 12px;
+  font-weight: 600;
+  background: var(--color-bg);
+  color: #333;
+  border: none;
+  padding: 8px 0;
+}
+.hora-btn--activo { background: var(--color-brand); color: #fff; }
+
+/* ── Label campo opcional ─────────────────────────────────── */
+.label-campo {
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 4px;
+}
+
+/* ── Footer fijo de ordenar ───────────────────────────────── */
+.ordenar-footer {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 60px;
+  padding: 12px;
+  background: #fff;
+  border-top: 1px solid #e9ecef;
+  max-width: 480px;
+  margin: 0 auto;
+  z-index: 100;
+}
+
+/* ── Confirmar teléfono ───────────────────────────────────── */
+.btn-confirmar-numero {
+  width: 100%;
+  padding: 12px;
+  margin-top: 12px;
+  font-size: 1rem;
+  font-weight: 600;
+  border: none;
+  border-radius: 12px;
+  cursor: not-allowed;
+  background: #e0e0e0;
+  color: #aaa;
+}
+.btn-confirmar-numero--activo { background: var(--color-brand); color: #fff; cursor: pointer; }
+
+/* ── Perfil page ──────────────────────────────────────────── */
+.perfil-page { max-width: 480px; margin: 0 auto; padding-bottom: 100px; }
+.perfil-avatar { position: relative; display: inline-block; width: 88px; }
+.perfil-avatar__img { width: 88px; height: 88px; border-radius: 50%; object-fit: cover; }
+.perfil-avatar__iniciales {
+  width: 88px;
+  height: 88px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  color: #fff;
+  background: #ED4137;
+  font-size: 2rem;
+}
+.perfil-avatar__camara {
+  width: 28px !important;
+  height: 28px !important;
+  bottom: 0;
+  right: 0;
+  background: #fff !important;
+  border: 2px solid #eee !important;
+  padding: 0 !important;
+}
+.perfil-avatar__camara i,
+.perfil-avatar__camara-icon { font-size: 0.75rem; color: #ED4137; }
+.perfil-quick-btn {
+  flex: 1;
+  background: #f5f5f5;
+  border: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 0;
+  border-radius: 12px;
+  cursor: pointer;
+}
+.perfil-quick-btn i { font-size: 1.4rem; }
+.perfil-quick-btn__sub { font-size: 0.7rem; color: var(--color-muted); }
+.perfil-seccion-label {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-muted);
+  margin-bottom: 4px;
+}
+.perfil-item__sub { font-size: 0.75rem; color: var(--color-muted); }
+.btn-cerrar-sesion { background: #f5f5f5; border: none; color: #333; }
+
+/* ── MenuPage: banner pausa ───────────────────────────────── */
+.banner-pausado-menu {
+  background: #fff7ed;
+  border: 1px solid #fed7aa;
+  border-radius: 12px;
+  padding: 8px 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
 }

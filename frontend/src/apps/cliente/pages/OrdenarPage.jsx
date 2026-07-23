@@ -16,53 +16,39 @@ const TIPOS_VIVIENDA = [
 ];
 
 const PRECIO_BASE = 130;
-const EXTRA_PLATO = 20;   // Milanesa empanizada o a la plancha
-const EXTRA_BEBIDA = 10;  // Refresco
+const EXTRA_PLATO = 20;
+const EXTRA_BEBIDA = 10;
 const HORAS = ["13:00","13:30","14:00","14:30","15:00","15:30","16:00","16:30","17:00"];
 
-// ── Radio option ──
 function RadioOpcion({ nombre, precio, seleccionado, onSelect, descripcion }) {
   return (
     <label
-      className="d-flex align-items-center justify-content-between p-3 rounded-3 mb-2"
-      style={{
-        cursor: "pointer",
-        background: seleccionado ? "var(--color-green-light)" : "#fff",
-        border: seleccionado ? "1.5px solid var(--color-green)" : "1.5px solid #e5e7eb",
-        transition: "background 0.15s, border-color 0.15s",
-      }}
+      className={`radio-opcion${seleccionado ? " radio-opcion--activo" : ""}`}
       onClick={onSelect}
     >
-      <div style={{ minWidth: 0 }}>
-        <div style={{ fontWeight: 600, color: "var(--color-navy)" }}>{nombre}</div>
-        {descripcion && <div style={{ color: "var(--color-muted)", fontSize: "0.8rem" }}>{descripcion}</div>}
-        {precio > 0 && <div style={{ fontSize: "0.8rem", color: "var(--color-green)", fontWeight: 600 }}>+${precio}</div>}
+      <div className="radio-opcion__texto">
+        <div className="radio-opcion__nombre">{nombre}</div>
+        {descripcion && <div className="radio-opcion__desc">{descripcion}</div>}
+        {precio > 0 && <div className="radio-opcion__precio">+${precio}</div>}
       </div>
-      <div style={{
-        width: 22, height: 22, borderRadius: "50%", flexShrink: 0, marginLeft: 8,
-        border: seleccionado ? "6px solid var(--color-green)" : "2px solid #d1d5db",
-        background: "#fff",
-        transition: "border 0.15s",
-      }} />
+      <div className={`radio-opcion__dot${seleccionado ? " radio-opcion__dot--activo" : ""}`} />
     </label>
   );
 }
 
-// ── Sección obligatoria ──
 function Seccion({ titulo, children }) {
   return (
     <div className="mb-4">
-      <h3 style={{ fontSize: "1rem", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--color-navy)", marginBottom: 10 }}>{titulo}</h3>
+      <h3 className="seccion-titulo">{titulo}</h3>
       {children}
     </div>
   );
 }
 
-// ── Sección opcional — el "Sin X" es una opción de radio más ──
 function SeccionOpcional({ titulo, activo, onToggle, children }) {
   return (
     <div className="mb-4">
-      <h3 style={{ fontSize: "1rem", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--color-navy)", marginBottom: 10 }}>{titulo}</h3>
+      <h3 className="seccion-titulo">{titulo}</h3>
       {children}
       <RadioOpcion
         nombre={`Sin ${titulo.toLowerCase()}`}
@@ -71,13 +57,6 @@ function SeccionOpcional({ titulo, activo, onToggle, children }) {
         onSelect={onToggle}
       />
     </div>
-  );
-}
-
-// ── Item fijo como radio seleccionado (sin elección) ──
-function ItemFijo({ nombre, descripcion, seleccionado, onSelect }) {
-  return (
-    <RadioOpcion nombre={nombre} precio={0} descripcion={descripcion} seleccionado={seleccionado} onSelect={onSelect} />
   );
 }
 
@@ -118,6 +97,7 @@ function DatoTransferencia({ label, valor, copiable }) {
 const comidaVacia = (dia) => ({
   platoId: dia?.platos_fuertes?.[0]?.id ?? null,
   esAltPlato: false,
+  platoVariante: null,
   conEntrada: true,
   guarnicionId: dia?.guarniciones?.[0]?.id ?? null,
   conGuarnicion: true,
@@ -140,7 +120,6 @@ export default function OrdenarPage() {
   const [paso, setPaso] = useState(1);
   const [submitting, setSubmitting] = useState(false);
 
-  // Paso 1: array de comidas
   const [comidas, setComidas] = useState(Array.from({ length: cantidadInicial }, () => comidaVacia(null)));
   const [comidasAbiertas, setComidasAbiertas] = useState(new Set(Array.from({ length: cantidadInicial }, (_, i) => i)));
 
@@ -150,15 +129,13 @@ export default function OrdenarPage() {
     return next;
   });
 
-  // Paso 2
   const [receptor, setReceptor] = useState(user?.nombre ?? "");
   const [telefonoReceptor, setTelefonoReceptor] = useState(user?.telefono_whatsapp ?? "");
   const [editandoTelefono, setEditandoTelefono] = useState(false);
-  const [direccionSeleccionada, setDireccionSeleccionada] = useState(null); // DireccionCliente elegida
+  const [direccionSeleccionada, setDireccionSeleccionada] = useState(null);
   const [direccionesGuardadas, setDireccionesGuardadas] = useState([]);
   const [sheetAbierto, setSheetAbierto] = useState(false);
-  // Estado para agregar nueva dirección dentro del sheet
-  const [sheetPaso, setSheetPaso] = useState("lista"); // lista | buscar | tipo
+  const [sheetPaso, setSheetPaso] = useState("lista");
   const [busquedaDir, setBusquedaDir] = useState("");
   const [resultadosDir, setResultadosDir] = useState([]);
   const [buscandoDir, setBuscandoDir] = useState(false);
@@ -168,7 +145,6 @@ export default function OrdenarPage() {
   const [nuevaReferencia, setNuevaReferencia] = useState("");
   const [horaEntrega, setHoraEntrega] = useState("13:00");
 
-  // Paso 3
   const [metodoPago, setMetodoPago] = useState("efectivo");
   const [comprobante, setComprobante] = useState(null);
   const [notas, setNotas] = useState("");
@@ -185,7 +161,6 @@ export default function OrdenarPage() {
       const dirs = dirsRes.data;
       setDireccionesGuardadas(dirs);
 
-      // Restaurar carrito guardado si existe
       const saved = loadCart(user.id);
       if (saved) {
         setComidas(saved.comidas ?? Array.from({ length: cantidadInicial }, () => comidaVacia(data)));
@@ -209,7 +184,6 @@ export default function OrdenarPage() {
       .finally(() => setLoading(false));
   }, []);
 
-  // Persistir carrito cuando cambia cualquier dato relevante
   useEffect(() => {
     if (loading || !dia) return;
     saveCart(user.id, {
@@ -224,23 +198,18 @@ export default function OrdenarPage() {
   const totalComida = (c) => PRECIO_BASE + (c.esAltPlato ? EXTRA_PLATO : 0) + (c.esAltBebida ? EXTRA_BEBIDA : 0);
   const total = comidas.reduce((sum, c) => sum + totalComida(c), 0);
 
-  // compat helpers que usaba el viejo código (para confirmación)
   const esAltPlato = comidas[0]?.esAltPlato;
   const esAltBebida = comidas[0]?.esAltBebida;
-  const conEntrada = comidas[0]?.conEntrada;
-  const conGuarnicion = comidas[0]?.conGuarnicion;
-  const guarnicionId = comidas[0]?.guarnicionId;
-  const conBebida = comidas[0]?.conBebida;
-  const conPostre = comidas[0]?.conPostre;
   const platoId = comidas[0]?.platoId;
   const bebidaId = comidas[0]?.bebidaId;
-  const platilloElegido = esAltPlato ? dia?.alternativas_plato?.find(p => p.id === platoId) : dia?.platos_fuertes?.find(p => p.id === platoId);
-  const bebidaElegida = esAltBebida ? dia?.alternativas_bebida?.find(p => p.id === bebidaId) : dia?.bebida;
-
 
   const debounceRef = useRef(null);
 
-  const abrirSheet = () => { setSheetPaso("lista"); setSheetAbierto(true); setBusquedaDir(""); setResultadosDir([]); setNuevaDireccion(null); setNuevoTipo(""); setNuevoAlias(""); setNuevaReferencia(""); };
+  const abrirSheet = () => {
+    setSheetPaso("lista"); setSheetAbierto(true);
+    setBusquedaDir(""); setResultadosDir([]);
+    setNuevaDireccion(null); setNuevoTipo(""); setNuevoAlias(""); setNuevaReferencia("");
+  };
 
   const onBusquedaChange = (valor) => {
     setBusquedaDir(valor);
@@ -277,7 +246,6 @@ export default function OrdenarPage() {
 
   const usarNuevaDireccion = () => {
     const alias = nuevoAlias.trim() || TIPOS_VIVIENDA.find(t => t.value === nuevoTipo)?.label || "Nueva dirección";
-    // Dirección de uso único — no se guarda en el perfil
     setDireccionSeleccionada({
       id: null,
       alias,
@@ -294,7 +262,6 @@ export default function OrdenarPage() {
     try {
       let comprobante_url = "";
       if (metodoPago === "transferencia" && comprobante) {
-        // Por ahora solo guardamos el nombre del archivo
         comprobante_url = comprobante.name;
       }
 
@@ -304,6 +271,7 @@ export default function OrdenarPage() {
         plato_elegido: esAltPlato ? "alternativa" : "principal",
         bebida_elegida: esAltBebida ? "alternativa" : "principal",
         plato_id: platoId,
+        plato_variante: comidas[0]?.platoVariante ?? null,
         bebida_id: bebidaId,
         metodo_pago: metodoPago,
         comprobante_url: comprobante_url || null,
@@ -323,7 +291,7 @@ export default function OrdenarPage() {
   };
 
   if (loading) return (
-    <div className="d-flex justify-content-center align-items-center" style={{ minHeight: "60vh" }}>
+    <div className="cliente-loading">
       <div className="spinner-border text-brand" />
     </div>
   );
@@ -338,7 +306,7 @@ export default function OrdenarPage() {
 
   // ── Paso 4: Confirmado ──
   if (paso === 4) return (
-    <div className="p-4" style={{ maxWidth: 480, margin: "0 auto", paddingBottom: 100 }}>
+    <div className="cliente-page">
       <div className="text-center mb-4">
         <div style={{ fontSize: "4rem" }}>🎉</div>
         <h2 className="fw-bold mt-2">¡Pedido confirmado!</h2>
@@ -346,7 +314,6 @@ export default function OrdenarPage() {
       </div>
 
       <div className="rounded-3 p-4 bg-white border mb-3">
-        {/* Quién recibe */}
         <p className="fw-bold mb-3" style={{ fontSize: "0.85rem", textTransform: "uppercase", letterSpacing: "0.05em", color: "#aaa" }}>Entrega</p>
         <FilaResumen label="Recibe" valor={receptor} />
         <FilaResumen label="Hora" valor={horaEntrega} />
@@ -354,7 +321,6 @@ export default function OrdenarPage() {
 
         <hr className="my-3" />
 
-        {/* Platos */}
         <p className="fw-bold mb-3" style={{ fontSize: "0.85rem", textTransform: "uppercase", letterSpacing: "0.05em", color: "#aaa" }}>Tu pedido</p>
         {comidas.map((c, idx) => {
           const pEleg = c.esAltPlato ? dia?.alternativas_plato?.find(p => p.id === c.platoId) : dia?.platos_fuertes?.find(p => p.id === c.platoId);
@@ -377,7 +343,6 @@ export default function OrdenarPage() {
 
         <hr className="my-3" />
 
-        {/* Precios */}
         <div className="d-flex justify-content-between mb-1">
           <span className="small">Comida del día × {comidas.length}</span>
           <span className="small">${PRECIO_BASE * comidas.length}</span>
@@ -409,34 +374,35 @@ export default function OrdenarPage() {
         />
       </div>
 
-      <button className="btn btn-brand w-100 py-3 fw-bold rounded-3" style={{ fontSize: "1rem" }} onClick={() => navigate("/cliente/inicio")}>
+      <button className="btn btn-brand w-100 py-3 fw-bold rounded-3" onClick={() => navigate("/cliente/inicio")}>
         Volver al inicio
       </button>
     </div>
   );
 
   return (
-    <div style={{ maxWidth: 480, margin: "0 auto", paddingBottom: 160 }}>
+    <div className="ordenar-container">
+
       {/* Header */}
-      <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "20px 20px 8px" }}>
+      <div className="ordenar-header">
         <button
-          style={{ border: "none", background: "transparent", padding: 0, cursor: "pointer", color: "var(--color-navy)" }}
+          className="ordenar-header__back"
           onClick={() => paso > 1 ? setPaso(p => p - 1) : navigate(-1)}
         >
-          <i className="bi bi-arrow-left" style={{ fontSize: "1.2rem" }} />
+          <i className="bi bi-arrow-left" />
         </button>
         <div>
-          <div style={{ fontSize: "0.65rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: "var(--color-brand)" }}>
+          <div className="ordenar-header__eyebrow">
             {paso === 1 ? "Personaliza tu comida" : paso === 2 ? "Datos de entrega" : "Resumen y pago"}
           </div>
-          <div style={{ fontSize: "0.78rem", color: "var(--color-muted)" }}>Paso {paso} de 3</div>
+          <div className="ordenar-header__sub">Paso {paso} de 3</div>
         </div>
       </div>
 
       {/* Indicador de pasos */}
-      <div style={{ display: "flex", gap: 6, padding: "6px 20px 16px" }}>
+      <div className="ordenar-steps">
         {[1,2,3].map((n) => (
-          <div key={n} style={{ height: 3, flex: 1, borderRadius: 2, background: n <= paso ? "var(--color-green)" : "#e0e0e0" }} />
+          <div key={n} className={`ordenar-step${n <= paso ? " ordenar-step--activo" : ""}`} />
         ))}
       </div>
 
@@ -445,10 +411,8 @@ export default function OrdenarPage() {
         {/* ── Paso 1: Personalizar ── */}
         {paso === 1 && comidas.map((c, idx) => (
           <div key={idx} className="mb-2">
-            {/* Header accordion */}
             <div
-              className="d-flex align-items-center justify-content-between px-1 py-3"
-              style={{ cursor: "pointer", borderBottom: "1px solid #eee" }}
+              className="d-flex align-items-center justify-content-between px-1 py-3 ordenar-acordion-header"
               onClick={() => toggleComida(idx)}
             >
               <div style={{ minWidth: 0, flex: 1 }}>
@@ -474,7 +438,6 @@ export default function OrdenarPage() {
               <i className={`bi ${comidasAbiertas.has(idx) ? "bi-chevron-up" : "bi-chevron-down"} text-muted`} />
             </div>
 
-            {/* Contenido */}
             {comidasAbiertas.has(idx) && (
               <div className="pt-3">
                 {dia.entrada && (
@@ -493,8 +456,32 @@ export default function OrdenarPage() {
                   {dia.alternativa_plato_disponible && dia.alternativas_plato?.map((p) => (
                     <RadioOpcion key={p.id} nombre={p.nombre} precio={EXTRA_PLATO} descripcion={p.descripcion}
                       seleccionado={c.esAltPlato && c.platoId === p.id}
-                      onSelect={() => { setComida(idx, "platoId", p.id); setComida(idx, "esAltPlato", true); }} />
+                      onSelect={() => {
+                        setComida(idx, "platoId", p.id);
+                        setComida(idx, "esAltPlato", true);
+                        setComida(idx, "platoVariante", null);
+                      }} />
                   ))}
+                  {/* Sub-selector de proteína */}
+                  {c.esAltPlato && (() => {
+                    const altSel = dia.alternativas_plato?.find(p => p.id === c.platoId);
+                    if (!altSel?.variante_proteina) return null;
+                    return (
+                      <div className="proteina-selector">
+                        <div className="proteina-selector__label">¿De qué proteína?</div>
+                        <div className="proteina-opciones">
+                          {[{ value: "pollo", label: "🐔 Pollo" }, { value: "res", label: "🥩 Res" }].map(({ value, label }) => (
+                            <button
+                              key={value}
+                              type="button"
+                              className={`proteina-btn${c.platoVariante === value ? " proteina-btn--activo" : ""}`}
+                              onClick={() => setComida(idx, "platoVariante", c.platoVariante === value ? null : value)}
+                            >{label}</button>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })()}
                 </Seccion>
 
                 {dia.guarniciones?.length > 0 && (
@@ -528,7 +515,9 @@ export default function OrdenarPage() {
                 )}
 
                 <div className="mb-2">
-                  <label className="fw-semibold mb-1 text-muted" style={{ fontSize: "0.8rem", textTransform: "uppercase", letterSpacing: "0.06em" }}>Comentario <span className="fw-normal">(opcional)</span></label>
+                  <label className="label-campo text-muted fw-semibold mb-1">
+                    Comentario <span className="fw-normal">(opcional)</span>
+                  </label>
                   <textarea
                     className="form-control form-control-sm"
                     rows={2}
@@ -545,7 +534,6 @@ export default function OrdenarPage() {
         {/* ── Paso 2: Datos de entrega ── */}
         {paso === 2 && (
           <div>
-            {/* Quién recibe */}
             <div className="mb-4">
               <label className="form-label fw-semibold">¿Quién recibe el pedido?</label>
               <input
@@ -557,7 +545,6 @@ export default function OrdenarPage() {
               />
             </div>
 
-            {/* Dirección */}
             <div className="mb-4">
               <div className="d-flex align-items-center justify-content-between mb-1">
                 <label className="form-label fw-semibold mb-0">Dirección de entrega</label>
@@ -580,7 +567,6 @@ export default function OrdenarPage() {
               )}
             </div>
 
-            {/* Teléfono */}
             <div className="mb-4">
               <div className="d-flex align-items-center justify-content-between mb-1">
                 <label className="form-label fw-semibold mb-0">Teléfono de contacto</label>
@@ -608,14 +594,7 @@ export default function OrdenarPage() {
                   <PhoneInput value={telefonoReceptor} onChange={(v) => setTelefonoReceptor(v)} />
                   <button
                     type="button"
-                    className="btn w-100 mt-3 py-3 fw-semibold rounded-3"
-                    style={{
-                      background: /\d{10}$/.test(telefonoReceptor) ? "var(--color-brand)" : "#e0e0e0",
-                      color: /\d{10}$/.test(telefonoReceptor) ? "#fff" : "#aaa",
-                      fontSize: "1rem",
-                      cursor: /\d{10}$/.test(telefonoReceptor) ? "pointer" : "not-allowed",
-                      border: "none",
-                    }}
+                    className={`btn-confirmar-numero${/\d{10}$/.test(telefonoReceptor) ? " btn-confirmar-numero--activo" : ""}`}
                     disabled={!/\d{10}$/.test(telefonoReceptor)}
                     onClick={() => setEditandoTelefono(false)}
                   >
@@ -624,6 +603,7 @@ export default function OrdenarPage() {
                 </div>
               )}
             </div>
+
             <div className="mb-3">
               <label className="form-label fw-semibold">Hora de entrega</label>
               <div className="row g-2">
@@ -631,12 +611,7 @@ export default function OrdenarPage() {
                   <div className="col-4" key={h}>
                     <button
                       type="button"
-                      className="btn w-100 rounded-3 fw-semibold"
-                      style={{
-                        background: horaEntrega === h ? "var(--color-brand)" : "var(--color-bg)",
-                        color: horaEntrega === h ? "#fff" : "#333",
-                        border: "none",
-                      }}
+                      className={`hora-btn${horaEntrega === h ? " hora-btn--activo" : ""}`}
                       onClick={() => setHoraEntrega(h)}
                     >
                       {h}
@@ -651,10 +626,8 @@ export default function OrdenarPage() {
         {/* ── Paso 3: Resumen y pago ── */}
         {paso === 3 && (
           <div>
-            {/* Resumen */}
             <div className="rounded-3 p-4 bg-white border mb-4">
               <h6 className="fw-bold mb-3">Confirmación</h6>
-              {/* Datos del receptor */}
               <div className="d-flex justify-content-between mb-1">
                 <span className="text-muted small">Nombre</span>
                 <span style={{ fontWeight: 600, fontSize: "0.95rem" }}>{receptor}</span>
@@ -680,12 +653,14 @@ export default function OrdenarPage() {
                     {(() => {
                       const cambios = [];
                       if (!c.conEntrada && dia?.entrada) cambios.push({ label: "Sin entrada" });
-                      if (c.esAltPlato && pElegido)      cambios.push({ label: pElegido.nombre, precio: `+$${EXTRA_PLATO}` });
+                      if (c.esAltPlato && pElegido) {
+                        const variante = c.platoVariante === "pollo" ? " · 🐔 Pollo" : c.platoVariante === "res" ? " · 🥩 Res" : "";
+                        cambios.push({ label: `${pElegido.nombre}${variante}`, precio: `+$${EXTRA_PLATO}` });
+                      }
                       if (!c.conGuarnicion && dia?.guarniciones?.length) cambios.push({ label: "Sin guarnición" });
                       if (!c.conBebida && dia?.bebida)    cambios.push({ label: "Sin bebida" });
                       else if (c.esAltBebida && bElegida) cambios.push({ label: bElegida.nombre, precio: `+$${EXTRA_BEBIDA}` });
                       if (!c.conPostre && dia?.postre)    cambios.push({ label: "Sin postre" });
-
                       if (c.notas) cambios.push({ label: `"${c.notas}"` });
                       return cambios.length === 0
                         ? null
@@ -701,14 +676,12 @@ export default function OrdenarPage() {
               })}
 
               <hr className="my-3" />
-
-              <div className="d-flex justify-content-between">
-                <span className="fw-bold">Total</span>
-                <span className="fw-bold">${total}</span>
+              <div className="d-flex justify-content-between fw-bold">
+                <span>Total</span>
+                <span>${total}</span>
               </div>
             </div>
 
-            {/* Método de pago */}
             <h6 className="fw-bold mb-3">Método de pago</h6>
             {[
               { value: "efectivo",      icon: "💵", label: "Efectivo" },
@@ -717,18 +690,16 @@ export default function OrdenarPage() {
             ].map(({ value, icon, label }) => (
               <div key={value} className="mb-2">
                 <label
-                  className="d-flex align-items-center justify-content-between p-3 border rounded-3"
-                  style={{ cursor: "pointer", background: metodoPago === value ? "var(--color-green-light)" : "#fff", borderColor: metodoPago === value ? "var(--color-green)" : "#dee2e6" }}
+                  className={`radio-opcion${metodoPago === value ? " radio-opcion--activo" : ""}`}
                   onClick={() => { setMetodoPago(value); if (value === "transferencia") setSheetTransferencia(true); }}
                 >
                   <div className="d-flex align-items-center gap-2">
                     <span style={{ fontSize: "1.2rem" }}>{icon}</span>
                     <span className="fw-semibold">{label}</span>
                   </div>
-                  <div style={{ width: 22, height: 22, borderRadius: "50%", border: metodoPago === value ? "6px solid var(--color-green)" : "2px solid #ccc", flexShrink: 0 }} />
+                  <div className={`radio-opcion__dot${metodoPago === value ? " radio-opcion__dot--activo" : ""}`} />
                 </label>
 
-                {/* Comprobante cuando ya está seleccionada transferencia */}
                 {value === "transferencia" && metodoPago === "transferencia" && (
                   <div className="mt-2 p-3 rounded-3 d-flex align-items-center justify-content-between" style={{ background: "#f9f9f9", border: "1px solid #eee" }}>
                     <div>
@@ -752,16 +723,19 @@ export default function OrdenarPage() {
       </div>
 
       {/* ── Botón fijo abajo ── */}
-      <div
-        className="position-fixed start-0 end-0 p-3 bg-white border-top"
-        style={{ bottom: 60, zIndex: 100, maxWidth: 480, margin: "0 auto" }}
-      >
+      <div className="ordenar-footer">
         {paso < 3 ? (
           <button
             className="btn btn-brand w-100 py-3 fw-bold rounded-3"
-            style={{ fontSize: "1rem" }}
             onClick={() => setPaso(p => p + 1)}
-            disabled={paso === 1 && comidas.some(c => !c.platoId)}
+            disabled={paso === 1 && comidas.some(c => {
+              if (!c.platoId) return true;
+              if (c.esAltPlato) {
+                const alt = dia?.alternativas_plato?.find(p => p.id === c.platoId);
+                if (alt?.variante_proteina && !c.platoVariante) return true;
+              }
+              return false;
+            })}
           >
             Continuar
             {paso === 1 && <span className="ms-2 opacity-75">· ${total}</span>}
@@ -769,7 +743,6 @@ export default function OrdenarPage() {
         ) : (
           <button
             className="btn btn-brand w-100 py-3 fw-bold rounded-3"
-            style={{ fontSize: "1rem" }}
             onClick={confirmar}
             disabled={submitting}
           >
@@ -802,11 +775,7 @@ export default function OrdenarPage() {
           }
         </div>
 
-        <button
-          className="btn btn-brand w-100 py-3 fw-bold rounded-3"
-          style={{ fontSize: "1rem" }}
-          onClick={() => setSheetTransferencia(false)}
-        >
+        <button className="btn btn-brand w-100 py-3 fw-bold rounded-3" onClick={() => setSheetTransferencia(false)}>
           Listo
         </button>
       </BottomSheet>
@@ -817,13 +786,12 @@ export default function OrdenarPage() {
         onCerrar={() => setSheetAbierto(false)}
         titulo={sheetPaso === "lista" ? "¿Dónde te entregamos?" : sheetPaso === "buscar" ? "Nueva dirección" : "Tipo de lugar"}
       >
-        {/* Paso: lista de direcciones guardadas */}
         {sheetPaso === "lista" && (
           <div>
             {direccionesGuardadas.map((d) => (
               <div
                 key={d.id}
-                className="d-flex align-items-center gap-3 p-3 border rounded-3 mb-2"
+                className={`d-flex align-items-center gap-3 p-3 border rounded-3 mb-2${direccionSeleccionada?.id === d.id ? " border-brand" : ""}`}
                 style={{
                   cursor: "pointer",
                   background: direccionSeleccionada?.id === d.id ? "#fff5f5" : "#fff",
@@ -848,7 +816,6 @@ export default function OrdenarPage() {
           </div>
         )}
 
-        {/* Paso: buscar nueva dirección */}
         {sheetPaso === "buscar" && (
           <div>
             <div className="input-group mb-3">
@@ -881,7 +848,6 @@ export default function OrdenarPage() {
           </div>
         )}
 
-        {/* Paso: tipo de vivienda + alias */}
         {sheetPaso === "tipo" && nuevaDireccion && (
           <div>
             <div className="p-3 rounded-3 mb-3" style={{ background: "#f5f5f5" }}>

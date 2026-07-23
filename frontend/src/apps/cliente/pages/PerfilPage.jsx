@@ -35,25 +35,19 @@ function Avatar({ nombre, userId, editable, onFotoChange }) {
   };
 
   return (
-    <div className="position-relative d-inline-block mx-auto" style={{ width: 88 }}>
+    <div className="perfil-avatar">
       {foto
-        ? <img src={foto} alt="foto" className="rounded-circle" style={{ width: 88, height: 88, objectFit: "cover" }} />
-        : (
-          <div className="rounded-circle d-flex align-items-center justify-content-center fw-bold text-white"
-            style={{ width: 88, height: 88, background: "#ED4137", fontSize: "2rem" }}>
-            {letras}
-          </div>
-        )
+        ? <img src={foto} alt="foto" className="perfil-avatar__img" />
+        : <div className="perfil-avatar__iniciales">{letras}</div>
       }
       {editable && (
         <>
           <button
             type="button"
-            className="btn btn-sm rounded-circle position-absolute d-flex align-items-center justify-content-center"
-            style={{ width: 28, height: 28, bottom: 0, right: 0, background: "#fff", border: "2px solid #eee", padding: 0 }}
+            className="btn btn-sm rounded-circle position-absolute d-flex align-items-center justify-content-center perfil-avatar__camara"
             onClick={() => fotoRef.current.click()}
           >
-            <i className="bi bi-camera-fill" style={{ fontSize: "0.75rem", color: "#ED4137" }} />
+            <i className="bi bi-camera-fill perfil-avatar__camara-icon" />
           </button>
           <input ref={fotoRef} type="file" accept="image/*" style={{ display: "none" }} onChange={handleFile} />
         </>
@@ -268,7 +262,7 @@ export default function PerfilPage() {
   const primerNombre = nombre.split(" ")[0];
 
   return (
-    <div style={{ maxWidth: 480, margin: "0 auto", paddingBottom: 100 }}>
+    <div className="perfil-page">
 
       {/* ── Header ── */}
       <div className="text-center px-4 pt-5 pb-4">
@@ -291,14 +285,14 @@ export default function PerfilPage() {
         ].map(({ icono, label, sub, disabled, onClick }) => (
           <button
             key={label}
-            className="btn flex-fill d-flex flex-column align-items-center justify-content-center py-3 rounded-3"
-            style={{ background: "#f5f5f5", border: "none", opacity: disabled ? 0.45 : 1 }}
+            className="perfil-quick-btn"
+            style={{ opacity: disabled ? 0.45 : 1 }}
             onClick={onClick}
             disabled={disabled}
           >
-            <i className={`bi ${icono}`} style={{ fontSize: "1.4rem" }} />
+            <i className={`bi ${icono}`} />
             <div className="fw-semibold small mt-1">{label}</div>
-            <div className="text-muted" style={{ fontSize: "0.7rem" }}>{sub}</div>
+            <div className="perfil-quick-btn__sub">{sub}</div>
           </button>
         ))}
       </div>
@@ -307,7 +301,7 @@ export default function PerfilPage() {
       <div className="px-4">
 
         {/* Configuración */}
-        <p className="text-muted mb-1" style={{ fontSize: "0.72rem", textTransform: "uppercase", letterSpacing: "0.06em" }}>Configuración</p>
+        <p className="perfil-seccion-label">Configuración</p>
         <div className="mb-4">
           <ItemMenu
             icono="bi-person"
@@ -318,7 +312,7 @@ export default function PerfilPage() {
         </div>
 
         {/* Notificaciones */}
-        <p className="text-muted mb-1" style={{ fontSize: "0.72rem", textTransform: "uppercase", letterSpacing: "0.06em" }}>Notificaciones</p>
+        <p className="perfil-seccion-label">Notificaciones</p>
         <div className="mb-4">
           <ItemMenu
             icono="bi-bell" label="Notificaciones en la app" sub="Alertas de tu pedido"
@@ -333,7 +327,7 @@ export default function PerfilPage() {
         </div>
 
         {/* Seguridad */}
-        <p className="text-muted mb-1" style={{ fontSize: "0.72rem", textTransform: "uppercase", letterSpacing: "0.06em" }}>Seguridad</p>
+        <p className="perfil-seccion-label">Seguridad</p>
         <div className="mb-4">
           <ItemMenu icono="bi-lock" label="Cambiar contraseña" onClick={() => { setPassForm({ actual: "", nueva: "", confirmar: "" }); setPassMsg({ texto: "", tipo: "danger" }); setSheetSeguridad(true); }} />
           {/* HIDDEN: eliminar cuenta — descomentar cuando esté listo */}
@@ -342,8 +336,7 @@ export default function PerfilPage() {
 
         {/* Log out */}
         <button
-          className="btn w-100 py-3 fw-semibold rounded-3 d-flex align-items-center justify-content-center gap-2"
-          style={{ background: "#f5f5f5", border: "none", color: "#333" }}
+          className="btn btn-cerrar-sesion w-100 py-3 fw-semibold rounded-3 d-flex align-items-center justify-content-center gap-2"
           onClick={() => setSheetLogout(true)}
         >
           <i className="bi bi-box-arrow-right" />

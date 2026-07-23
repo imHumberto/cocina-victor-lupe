@@ -110,8 +110,8 @@ export default function MenuPage() {
             </button>
           )}
           {esHoy && !puedeOrdenar && pedidosPausados && (
-            <div className="d-flex align-items-center gap-2 mt-3 rounded-3 p-2" style={{ background: "#fff7ed", border: "1px solid #fed7aa" }}>
-              <i className="bi bi-pause-circle-fill" style={{ color: "#ea580c" }} />
+            <div className="banner-pausado-menu">
+              <i className="bi bi-pause-circle-fill banner-pausado__icon" />
               <p className="text-muted small mb-0">No estamos aceptando pedidos por el momento. Intenta más tarde.</p>
             </div>
           )}
