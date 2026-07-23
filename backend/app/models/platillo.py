@@ -14,6 +14,7 @@ class Platillo(db.Model):
     foto_url = db.Column(db.String(512))
     activo = db.Column(db.Boolean, default=True, nullable=False)
     es_alternativa = db.Column(db.Boolean, default=False, nullable=False)
+    proteina = db.Column(db.String(20))  # pollo | res | cerdo | vegetariano | None
 
     def to_dict(self):
         return {
@@ -24,4 +25,5 @@ class Platillo(db.Model):
             "foto_url": self.foto_url,
             "activo": self.activo,
             "es_alternativa": self.es_alternativa,
+            "proteina": self.proteina,
         }

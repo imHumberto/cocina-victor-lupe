@@ -62,12 +62,36 @@ def crear_pedido():
         if not dir_obj:
             direccion_id = None
 
+    # Resolver nombres de plato y bebida elegidos
+    from app.models.platillo import Platillo
+    plato_elegido = data.get("plato_elegido", "principal")
+    bebida_elegida = data.get("bebida_elegida", "principal")
+    plato_id = data.get("plato_id")
+    bebida_id = data.get("bebida_id")
+
+    plato_nombre = None
+    if plato_elegido == "alternativa" and plato_id:
+        p = Platillo.query.get(plato_id)
+        plato_nombre = p.nombre if p else None
+    elif plato_id:
+        p = Platillo.query.get(plato_id)
+        plato_nombre = p.nombre if p else None
+
+    bebida_nombre = None
+    if bebida_elegida == "alternativa" and bebida_id:
+        b = Platillo.query.get(bebida_id)
+        bebida_nombre = b.nombre if b else None
+    elif dia_menu.bebida:
+        bebida_nombre = dia_menu.bebida.nombre
+
     pedido = Pedido(
         cliente_id=user_id,
         dia_menu_id=dia_menu.id,
         hora_entrega=hora_entrega,
-        plato_elegido=data.get("plato_elegido", "principal"),
-        bebida_elegida=data.get("bebida_elegida", "principal"),
+        plato_elegido=plato_elegido,
+        plato_nombre=plato_nombre,
+        bebida_elegida=bebida_elegida,
+        bebida_nombre=bebida_nombre,
         metodo_pago=data["metodo_pago"],
         comprobante_url=data.get("comprobante_url") or None,
         notas=data.get("notas"),

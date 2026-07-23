@@ -12,8 +12,10 @@ class Pedido(db.Model):
     hora_entrega = db.Column(db.Time, nullable=False)
     # "principal" | "alternativa"
     plato_elegido = db.Column(db.String(20), nullable=False, default="principal")
+    plato_nombre = db.Column(db.String(120))
     # "principal" | "alternativa"
     bebida_elegida = db.Column(db.String(20), nullable=False, default="principal")
+    bebida_nombre = db.Column(db.String(120))
 
     estado = db.Column(
         db.Enum("pendiente", "confirmado", "rechazado", "en_preparacion", "listo", "en_camino", "entregado", "cancelado", name="estado_pedido_enum"),
@@ -50,7 +52,9 @@ class Pedido(db.Model):
             "dia_menu_id": self.dia_menu_id,
             "hora_entrega": self.hora_entrega.strftime("%H:%M") if self.hora_entrega else None,
             "plato_elegido": self.plato_elegido,
+            "plato_nombre": self.plato_nombre,
             "bebida_elegida": self.bebida_elegida,
+            "bebida_nombre": self.bebida_nombre,
             "estado": self.estado,
             "metodo_pago": self.metodo_pago,
             "comprobante_url": self.comprobante_url,

@@ -290,8 +290,13 @@ function MapaEntrega({ pedido }) {
 // ── Resumen del pedido ───────────────────────────────────────────────────────
 
 function ResumenPedido({ pedido }) {
-  const plato = pedido.plato_elegido === "alternativa" ? "Plato alternativo" : "Plato del día";
-  const bebida = pedido.bebida_elegida === "alternativa" ? "Bebida alternativa" : "Bebida del día";
+  const PRECIO_BASE = 130;
+  const EXTRA_PLATO = 20;
+  const EXTRA_BEBIDA = 10;
+  const total = PRECIO_BASE + (pedido.plato_elegido === "alternativa" ? EXTRA_PLATO : 0) + (pedido.bebida_elegida === "alternativa" ? EXTRA_BEBIDA : 0);
+
+  const plato = pedido.plato_nombre || (pedido.plato_elegido === "alternativa" ? "Plato alternativo" : "Plato del día");
+  const bebida = pedido.bebida_nombre || (pedido.bebida_elegida === "alternativa" ? "Bebida alternativa" : "Bebida del día");
   const txt = { fontSize: "1rem", color: "#545454" };
   const sub = { fontSize: "1rem", fontWeight: 400, color: "#809FB8" };
   const bold = { fontSize: "1rem", fontWeight: 700, color: "#545454" };
@@ -320,10 +325,13 @@ function ResumenPedido({ pedido }) {
         {/* Total / método de pago */}
         <div className="d-flex justify-content-between align-items-center pt-3 mt-1" style={{ borderTop: "2px solid #e5e7eb" }}>
           <span style={bold}>Total</span>
-          <span style={{ ...bold, color: "#809FB8", fontWeight: 500, fontSize: "0.9rem" }}>
-            {pedido.metodo_pago ? `Pago con ${pedido.metodo_pago}` : "—"}
-          </span>
+          <span style={bold}>${total}</span>
         </div>
+        {pedido.metodo_pago && (
+          <div className="d-flex justify-content-between align-items-center pt-1">
+            <span style={{ ...sub, color: "#9ca3af" }}>Pago con {pedido.metodo_pago}</span>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -581,8 +589,13 @@ function DetalleFinalizado({ pedido: p }) {
     ? new Date(p.updated_at).toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" })
     : null;
 
-  const plato = p.plato_elegido === "alternativa" ? "Plato alternativo" : "Comida del día";
-  const bebida = p.bebida_elegida === "alternativa" ? "Bebida alternativa" : "Bebida del día";
+  const PRECIO_BASE = 130;
+  const EXTRA_PLATO = 20;
+  const EXTRA_BEBIDA = 10;
+  const total = PRECIO_BASE + (p.plato_elegido === "alternativa" ? EXTRA_PLATO : 0) + (p.bebida_elegida === "alternativa" ? EXTRA_BEBIDA : 0);
+
+  const plato = p.plato_nombre || (p.plato_elegido === "alternativa" ? "Plato alternativo" : "Comida del día");
+  const bebida = p.bebida_nombre || (p.bebida_elegida === "alternativa" ? "Bebida alternativa" : "Bebida del día");
 
   const rowStyle = { display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 0", borderBottom: "1px solid #f3f4f6" };
   const labelStyle = { fontSize: "0.9rem", color: "#545454" };
@@ -653,7 +666,7 @@ function DetalleFinalizado({ pedido: p }) {
         {/* Total */}
         <div style={{ ...rowStyle, borderTop: "2px solid #e5e7eb", borderBottom: "none", marginTop: 4 }}>
           <span style={{ ...valueStyle, fontSize: "1rem" }}>Total</span>
-          <span style={{ ...valueStyle, fontSize: "1rem" }}>—</span>
+          <span style={{ ...valueStyle, fontSize: "1rem" }}>${total}</span>
         </div>
 
         {/* Forma de pago o motivo de rechazo */}

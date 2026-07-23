@@ -17,7 +17,7 @@ const TIPO_COLORS = {
   bebida:       { bg: "#e0f2fe", color: "#075985" },
 };
 
-const FORM_VACIO = { nombre: "", tipo: "", descripcion: "", foto_url: "", es_alternativa: false };
+const FORM_VACIO = { nombre: "", tipo: "", descripcion: "", foto_url: "", es_alternativa: false, proteina: "" };
 
 export default function PlatillosPage() {
   const [platillos, setPlatillos] = useState([]);
@@ -48,7 +48,7 @@ export default function PlatillosPage() {
   };
 
   const abrirEditar = (p) => {
-    setForm({ nombre: p.nombre, tipo: p.tipo, descripcion: p.descripcion ?? "", foto_url: p.foto_url ?? "", es_alternativa: p.es_alternativa ?? false });
+    setForm({ nombre: p.nombre, tipo: p.tipo, descripcion: p.descripcion ?? "", foto_url: p.foto_url ?? "", es_alternativa: p.es_alternativa ?? false, proteina: p.proteina ?? "" });
     setEditId(p.id);
     setMsg("");
     setDrawer("editar");
@@ -220,6 +220,37 @@ export default function PlatillosPage() {
               />
             </div>
           </div>
+
+          {/* Proteína */}
+          {(form.tipo === "plato_fuerte") && (
+            <div style={{ padding: "14px 0", borderTop: "1px solid #f3f4f6" }}>
+              <div style={{ fontSize: "0.9rem", fontWeight: 600, color: "#17181A", marginBottom: 8 }}>Tipo de proteína</div>
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                {[
+                  { value: "pollo",        label: "🐔 Pollo" },
+                  { value: "res",          label: "🥩 Res" },
+                  { value: "cerdo",        label: "🐷 Cerdo" },
+                  { value: "pescado",      label: "🐟 Mariscos" },
+                  { value: "vegetariano",  label: "🥦 Vegetariano" },
+                ].map(({ value, label }) => (
+                  <button
+                    key={value}
+                    type="button"
+                    onClick={() => setForm(f => ({ ...f, proteina: f.proteina === value ? "" : value }))}
+                    style={{
+                      padding: "6px 14px", borderRadius: 999, fontSize: "0.82rem", fontWeight: 600, cursor: "pointer",
+                      border: `1.5px solid ${form.proteina === value ? "#094D40" : "#e5e7eb"}`,
+                      background: form.proteina === value ? "#094D40" : "#f9fafb",
+                      color: form.proteina === value ? "#fff" : "#374151",
+                      transition: "all 0.12s",
+                    }}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Es alternativa */}
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 0", borderTop: "1px solid #f3f4f6" }}>

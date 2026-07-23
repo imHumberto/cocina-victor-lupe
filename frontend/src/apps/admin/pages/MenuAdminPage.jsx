@@ -211,16 +211,26 @@ export default function MenuAdminPage() {
     platillos.filter((p) => p.tipo === tipo && p.activo && (soloAlternativas ? p.es_alternativa : !p.es_alternativa));
 
   // ── Cargar menú ──
-  const seleccionar = (menu) => {
+  const seleccionar = (menu, { soloHoy = false } = {}) => {
+    const hoy = dayjs().startOf("day");
+    const ini = dayjs(menu.fecha_inicio);
+    const esActual = ini.isoWeek() === hoy.isoWeek() && ini.year() === hoy.year();
+    // 0=Lun … 6=Dom
+    const todayIdx = hoy.day() === 0 ? 6 : hoy.day() - 1;
+
     setMenuActivo(menu);
     setMsg("");
-    if (menu.dias?.length) {
-      const completos = diasVacios().map((vacio) => {
-        const d = menu.dias.find((x) => x.dia === vacio.dia);
-        if (!d) return { ...vacio, activo: false };
+
+    const buildDias = () => {
+      return diasVacios().map((vacio, i) => {
+        const fechaDia = ini.add(i, "day");
+        const esPasado = esActual && fechaDia.isBefore(hoy);
+        const esFuturo = soloHoy && i !== todayIdx;
+        const d = menu.dias?.find((x) => x.dia === i);
+        if (!d) return { ...vacio, activo: !esPasado && !esFuturo };
         return {
           dia: d.dia,
-          activo: d.activo ?? true,
+          activo: (esPasado || esFuturo) ? false : (d.activo ?? true),
           platos_fuertes_ids: (d.platos_fuertes ?? []).map((p) => p.id),
           guarniciones_ids: (d.guarniciones ?? []).map((p) => p.id),
           entrada_id: d.entrada?.id ?? null,
@@ -232,16 +242,34 @@ export default function MenuAdminPage() {
           alternativa_bebida_costo_extra: d.alternativa_bebida_costo_extra ?? 0,
         };
       });
-      setDias(completos);
-    } else {
-      setDias(diasVacios());
-    }
-    setDiaIdx(0);
+    };
+
+    setDias(buildDias());
+    setDiaIdx(esActual ? todayIdx : 0);
   };
 
-  const cargarMenuCompleto = async (menu) => {
+  const cargarMenuCompleto = async (menu, opts = {}) => {
     const { data } = await api.get(`/menu/${menu.id}`);
-    seleccionar(data);
+    seleccionar(data, opts);
+  };
+
+  const crearMenuDeHoy = async () => {
+    const lunes = dayjs().isoWeekday(1).format("YYYY-MM-DD");
+    const todayIdx = dayjs().day() === 0 ? 6 : dayjs().day() - 1;
+    const nombre = `Test – ${DIAS_NOMBRES[todayIdx]} ${dayjs().format("D [de] MMM")}`;
+    // Si ya existe un menú esta semana, abrirlo en modo solo-hoy
+    const existing = menus.find((m) => m.fecha_inicio === lunes);
+    if (existing) {
+      cargarMenuCompleto(existing, { soloHoy: true });
+      return;
+    }
+    try {
+      const { data } = await api.post("/admin/menus", { fecha_inicio: lunes, nombre });
+      setMenus([data, ...menus]);
+      seleccionar(data, { soloHoy: true });
+    } catch (err) {
+      alert(err.response?.data?.error ?? "Error al crear el menú");
+    }
   };
 
   // ── Helpers de edición ──
@@ -394,8 +422,11 @@ export default function MenuAdminPage() {
               </button>
             </>
           )}
+          <button className="btn btn-brand fw-semibold px-3" onClick={crearMenuDeHoy}>
+            Menú de hoy
+          </button>
           <button className="btn btn-outline-secondary fw-semibold px-3" onClick={() => { setFechaSeleccionada(lunesMinimo); setModalFecha(true); }}>
-            + Nuevo menú
+            + Semana completa
           </button>
         </div>
       </div>
@@ -493,29 +524,34 @@ export default function MenuAdminPage() {
         <div className="row g-3">
           {/* ── Lista de días ── */}
           <div className="col-md-3">
-            {dias.map((dCard, idx) => (
-              <div
-                key={idx}
-                onClick={() => setDiaIdx(idx)}
-                className="rounded-3 p-3 mb-2 bg-white border"
-                style={{
-                  cursor: "pointer",
-                  borderColor: diaIdx === idx ? "#094D40 !important" : undefined,
-                  outline: diaIdx === idx ? "2px solid #094D40" : "none",
-                  opacity: !dCard.activo ? 0.5 : 1,
-                }}
-              >
-                <div className="fw-bold fs-5">{DIAS_CORTOS[idx]}</div>
-                {dCard.activo ? (
-                  <>
-                    <div className="text-muted small">{categoriasLlenas(dCard)} de 5 categorías</div>
-                    <DotsCategorias d={dCard} />
-                  </>
-                ) : (
-                  <div className="text-muted small fst-italic">Día inactivo</div>
-                )}
-              </div>
-            ))}
+            {dias.map((dCard, idx) => {
+              const fechaDia = dayjs(menuActivo.fecha_inicio).add(idx, "day");
+              return (
+                <div
+                  key={idx}
+                  onClick={() => setDiaIdx(idx)}
+                  className="rounded-3 p-3 mb-2 bg-white border"
+                  style={{
+                    cursor: "pointer",
+                    outline: diaIdx === idx ? "2px solid #094D40" : "none",
+                    opacity: !dCard.activo ? 0.45 : 1,
+                  }}
+                >
+                  <div className="fw-bold">{DIAS_CORTOS[idx]}</div>
+                  <div className="text-muted" style={{ fontSize: "0.75rem" }}>
+                    {fechaDia.format("D [de] MMM")}
+                  </div>
+                  {dCard.activo ? (
+                    <>
+                      <div className="text-muted small mt-1">{categoriasLlenas(dCard)} de 5</div>
+                      <DotsCategorias d={dCard} />
+                    </>
+                  ) : (
+                    <div className="text-muted small fst-italic mt-1">Inactivo</div>
+                  )}
+                </div>
+              );
+            })}
           </div>
 
           {/* ── Editor del día ── */}

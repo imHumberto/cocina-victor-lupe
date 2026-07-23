@@ -278,17 +278,19 @@ export default function InicioPage() {
       {!esFinDeSemana && dia && !pedidoHoy && (
         <>
           {/* Imagen hero */}
-          <div style={{
-            width: "100%", aspectRatio: "4/3",
-            background: "#e0e0e0", borderRadius: 16,
-            marginBottom: 16, overflow: "hidden",
-            display: "flex", alignItems: "center", justifyContent: "center",
-          }}>
-            {dia.imagen_url
-              ? <img src={dia.imagen_url} alt={platilloDia} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-              : <span style={{ color: "#aaa", fontSize: "0.8rem", fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase" }}>IMG Placeholder</span>
-            }
-          </div>
+          {(() => {
+            const proteina = dia.platos_fuertes?.[0]?.proteina;
+            const ilustracion = proteina ? `/ilustraciones/${proteina}.png` : null;
+            const src = dia.imagen_url || ilustracion;
+            return (
+              <div style={{ width: "100%", marginBottom: 16 }}>
+                {src
+                  ? <img src={src} alt={platilloDia} style={{ width: "100%", borderRadius: 16, display: "block" }} />
+                  : <div style={{ width: "100%", aspectRatio: "4/3", background: "#e0e0e0", borderRadius: 16 }} />
+                }
+              </div>
+            );
+          })()}
 
           {/* Info platillo */}
           <div style={{ marginBottom: 24 }}>
