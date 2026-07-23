@@ -1059,6 +1059,7 @@ export default function PedidosAdminPage() {
       setPedidos(ps => ps.map(x => x.id === data.id ? data : x));
       setSeleccionado(s => s?.id === data.id ? data : s);
       setModalRepartidor(null);
+      setTab("en_camino");
     } catch (err) { alert(err.response?.data?.error ?? "Error"); }
   };
 

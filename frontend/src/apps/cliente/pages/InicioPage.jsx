@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, Fragment } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../../../services/api";
 import useAuthStore from "../../../store/authStore";
@@ -17,20 +17,31 @@ function saludo() {
 }
 
 const PASOS = [
-  { estado: "pendiente",      icon: "📋", label: "Recibido" },
-  { estado: "confirmado",     icon: "✅", label: "Confirmado" },
-  { estado: "en_preparacion", icon: "👨‍🍳", label: "Preparando" },
-  { estado: "en_camino",      icon: "🛵", label: "En camino" },
-  { estado: "entregado",      icon: "🎉", label: "Entregado" },
+  { estado: "pendiente" },
+  { estado: "confirmado" },
+  { estado: "en_preparacion" },
+  { estado: "en_camino" },
+  { estado: "entregado" },
 ];
+
+// "listo" se trata igual que "en_preparacion" en la vista del cliente
+const ESTADO_VISIBLE = { listo: "en_preparacion" };
+
+const STATUS_INFO = {
+  pendiente:      { label: "Pedido recibido",       desc: "Recibimos tu pedido, en breve te confirmaremos." },
+  confirmado:     { label: "Pedido confirmado",     desc: "Tu pedido ha sido confirmado, te notificaremos cuando esté en preparación." },
+  en_preparacion: { label: "Pedido en preparación", desc: "Estamos cocinando tu pedido, pronto estará en camino a tu dirección." },
+  en_camino:      { label: "En camino",             desc: "Tu pedido ha salido de nuestra cocina y va rumbo a tu dirección, esperamos estar por llegar." },
+  entregado:      { label: "Pedido entregado",      desc: "Buen provecho, disfruta de tu comida, la hicimos con amor, esperamos verte mañana." },
+};
 
 function TrackerPedido({ pedido, onDismiss }) {
   if (pedido.estado === "rechazado") {
     return (
-      <div className="rounded-3 p-4 mb-4 tracker-card--rechazado">
+      <div className="tracker-card tracker-card--rechazado">
         <div className="d-flex align-items-center justify-content-between mb-2">
           <div className="d-flex align-items-center gap-2">
-            <span style={{ fontSize: "1.5rem" }}>❌</span>
+            <span style={{ fontSize: "1.4rem" }}>❌</span>
             <span className="fw-bold text-danger">Pedido rechazado</span>
           </div>
           <button className="btn btn-sm btn-outline-danger rounded-pill" onClick={onDismiss}>
@@ -44,62 +55,52 @@ function TrackerPedido({ pedido, onDismiss }) {
     );
   }
 
-  if (pedido.estado === "entregado") {
-    return (
-      <div className="rounded-3 p-4 mb-4 tracker-card--entregado">
-        <div className="d-flex align-items-center justify-content-between mb-2">
-          <div className="d-flex align-items-center gap-2">
-            <i className="bi bi-check-circle-fill text-success" style={{ fontSize: "1.5rem" }} />
-            <span className="fw-bold text-success">¡Pedido entregado!</span>
-          </div>
-          <button className="btn btn-sm btn-outline-success rounded-pill" onClick={onDismiss}>
-            Listo
-          </button>
-        </div>
-        <p className="small text-muted mb-0">Buen provecho 🙌 Esperamos verte mañana.</p>
-      </div>
-    );
-  }
-
-  const idxActual = PASOS.findIndex(p => p.estado === pedido.estado);
+  const estadoVisible = ESTADO_VISIBLE[pedido.estado] ?? pedido.estado;
+  const idxActual = PASOS.findIndex(p => p.estado === estadoVisible);
+  const ilustracion = pedido.estado === "entregado"
+    ? "/ilustraciones/pedido-ilustracion02.png"
+    : "/ilustraciones/pedido-ilustracion01.png";
+  const info = STATUS_INFO[estadoVisible] ?? STATUS_INFO.pendiente;
 
   return (
-    <div className="rounded-3 p-4 mb-4 bg-white border">
-      <div className="d-flex align-items-center justify-content-between mb-4">
+    <div className="tracker-card">
+      <div className="tracker-card__header">
+        <img src={ilustracion} alt="" className="tracker-card__img" />
         <div>
-          <span className="fw-bold">Tu pedido de hoy</span>
-          <div className="text-muted small">Entrega a las {pedido.hora_entrega}</div>
+          <div className="tracker-card__titulo">Pedido de hoy</div>
+          <div className="tracker-card__subtitulo">Entrega programada a las {pedido.hora_entrega}</div>
         </div>
-        <span style={{ fontSize: "1.8rem" }}>{PASOS[idxActual]?.icon ?? "📋"}</span>
       </div>
 
-      <div className="position-relative mb-3">
-        <div className="tracker-progress-bar">
-          <div
-            className="tracker-progress-fill"
-            style={{ width: `${Math.min(100, (idxActual / (PASOS.length - 1)) * 100)}%` }}
-          />
-        </div>
-        <div className="tracker-pasos">
-          {PASOS.map((p, i) => (
-            <div key={p.estado} className="tracker-paso">
-              <div className={`tracker-paso__dot${i <= idxActual ? " tracker-paso__dot--activo" : ""}`}>
-                {i <= idxActual
-                  ? <span>{p.icon}</span>
-                  : <span className="tracker-paso__inactivo">●</span>
-                }
-              </div>
-              <div className={`tracker-paso__label${i <= idxActual ? " tracker-paso__label--activo" : ""}${i === idxActual ? " tracker-paso__label--actual" : ""}`}>
-                {p.label}
-              </div>
+      <div className="tracker-barra">
+        {PASOS.map((p, i) => (
+          <Fragment key={p.estado}>
+            <div className={`tracker-barra__dot${i <= idxActual ? " tracker-barra__dot--activo" : ""}`}>
+              {i <= idxActual
+                ? <i className="bi bi-check tracker-barra__check" />
+                : <span className="tracker-barra__excl">!</span>
+              }
             </div>
-          ))}
-        </div>
+            {i < PASOS.length - 1 && (
+              <div className={`tracker-barra__linea${i < idxActual ? " tracker-barra__linea--activa" : ""}`} />
+            )}
+          </Fragment>
+        ))}
       </div>
 
-      <div className="text-center mt-3">
-        <span className="fw-semibold tracker-estado">{PASOS[idxActual]?.label}</span>
-      </div>
+      <div className="tracker-card__estado-label">{info.label}</div>
+      <div className="tracker-card__estado-desc">{info.desc}</div>
+
+      <button className="tracker-card__btn-contacto">Contactanos</button>
+
+      {pedido.estado === "entregado" && (
+        <button
+          className="btn btn-sm btn-link text-muted mt-2 w-100"
+          onClick={onDismiss}
+        >
+          Marcar como visto
+        </button>
+      )}
     </div>
   );
 }
@@ -248,7 +249,7 @@ export default function InicioPage() {
       )}
 
       {/* Hero menú del día */}
-      {!esFinDeSemana && dia && !pedidoHoy && (
+      {!esFinDeSemana && dia && (
         <>
           {(() => {
             const proteina = dia.platos_fuertes?.[0]?.proteina;
@@ -263,7 +264,9 @@ export default function InicioPage() {
           <h2 className="cliente-platillo-titulo">{platilloDia}</h2>
           <p className="cliente-platillo-desc">{descripcionMenu}</p>
 
-          {puedeOrdenar && (
+          {pedidoHoy && pedidoHoy.estado !== "entregado" ? (
+            <button className="btn-pedido-en-curso" disabled>Pedido en curso</button>
+          ) : puedeOrdenar ? (
             carritoGuardado ? (
               <>
                 <button
@@ -300,11 +303,12 @@ export default function InicioPage() {
                 >+</button>
               </div>
             )
-          )}
-          {!puedeOrdenar && !pedidosPausados && (
-            <p className="text-muted text-center small mt-3">
-              El tiempo para ordenar hoy ya pasó (límite 3:40 PM)
-            </p>
+          ) : (
+            !pedidosPausados && (
+              <p className="text-muted text-center small mt-3">
+                El tiempo para ordenar hoy ya pasó (límite 3:40 PM)
+              </p>
+            )
           )}
         </>
       )}

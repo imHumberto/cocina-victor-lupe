@@ -398,6 +398,10 @@ def asignar_repartidor(pedido_id):
     pedido = Pedido.query.get_or_404(pedido_id)
     data = request.get_json() or {}
     pedido.repartidor_id = data.get("repartidor_id")
+    if pedido.repartidor_id:
+        pedido.estado = "en_camino"
+        crear_notificacion(pedido.cliente_id, "🛵 ¡Tu pedido va en camino!")
     db.session.commit()
     socketio.emit("pedido_actualizado", pedido.to_dict(include_cliente=True, include_repartidor=True), room="admin")
+    socketio.emit("pedido_actualizado", pedido.to_dict(), room=f"user_{pedido.cliente_id}")
     return jsonify(pedido.to_dict(include_cliente=True, include_repartidor=True))

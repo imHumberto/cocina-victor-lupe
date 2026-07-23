@@ -6,10 +6,42 @@ import "dayjs/locale/es";
 
 dayjs.locale("es");
 
-const DIAS = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes"];
+const DIAS = ["Lun", "Mar", "Mié", "Jue", "Vie"];
 
 function platilloNombre(p) {
   return p?.nombre ?? "—";
+}
+
+function getMenuImg(nombre) {
+  if (!nombre || nombre === "—") return null;
+  const n = nombre.toLowerCase();
+
+  // Entradas / guarniciones
+  if (n.includes("sopa") || n.includes("caldo") || n.includes("consomé") || n.includes("consome") || n.includes("crema de"))
+    return "/platillos/sopas.png";
+  if (n.includes("ensalada"))
+    return "/platillos/ensaladas.png";
+  if (n.includes("puré") || n.includes("pure"))
+    return "/platillos/pures.png";
+  if (n.includes("arroz rojo"))
+    return "/platillos/arroz-rojo.png";
+  if (n.includes("arroz"))
+    return "/platillos/arroz-blanco.png";
+
+  // Bebidas
+  if (n.includes("jamaica"))   return "/platillos/agua-jamaica.png";
+  if (n.includes("horchata"))  return "/platillos/agua-horchata.png";
+  if (n.includes("limón") || n.includes("limon")) return "/platillos/agua-limon.png";
+  if (n.includes("sandía") || n.includes("sandia")) return "/platillos/agua-sandia.png";
+
+  // Postres
+  if (n.includes("gelatina"))  return "/platillos/gelatinas.png";
+  if (n.includes("pastel") || n.includes("pay") || n.includes("cheesecake") || n.includes("pie") || n.includes("brownie"))
+    return "/platillos/pasteles.png";
+  if (n.includes("fruta") || n.includes("durazno") || n.includes("con crema"))
+    return "/platillos/frutas.png";
+
+  return null;
 }
 
 export default function MenuPage() {
@@ -19,7 +51,7 @@ export default function MenuPage() {
   const [pedidosPausados, setPedidosPausados] = useState(false);
   const navigate = useNavigate();
 
-  const hoyIdx = dayjs().day() === 0 ? 6 : dayjs().day() - 1; // 0=lunes…6=domingo
+  const hoyIdx = dayjs().day() === 0 ? 6 : dayjs().day() - 1;
   const [tab, setTab] = useState(hoyIdx >= 0 && hoyIdx <= 6 ? hoyIdx : 0);
 
   useEffect(() => {
@@ -45,64 +77,73 @@ export default function MenuPage() {
 
   const dias = menu?.dias ?? [];
   const diaActivo = dias.find((d) => d.dia === tab);
+  const tieneContenido = (diaActivo?.platos_fuertes?.length ?? 0) > 0;
   const esHoy = tab === hoyIdx;
-  const puedeOrdenar = esHoy && !pedidosPausados; // TODO: descomentar horario para producción
-  // const puedeOrdenar = esHoy && !pedidosPausados && dayjs().hour() * 60 + dayjs().minute() < 15 * 60 + 40;
+  const puedeOrdenar = esHoy && !pedidosPausados;
+
+  const fechaInicio = dayjs(menu.fecha_inicio);
+  const fechaFin = fechaInicio.add(4, "day");
+  const subtitulo = `Semana del ${fechaInicio.format("D [de] MMMM")} al ${fechaFin.format("D [de] MMMM")}`;
+
+  const platilloDia = diaActivo?.platos_fuertes?.[0]?.nombre ?? "";
+  const proteina = diaActivo?.platos_fuertes?.[0]?.proteina;
+  const ilustracion = proteina ? `/ilustraciones/${proteina}.png` : null;
+  const heroSrc = diaActivo?.imagen_url || ilustracion;
 
   return (
-    <div className="p-3">
-      <h2 className="h5 fw-bold mb-1">Menú semanal</h2>
-      <p className="text-muted small mb-3">
-        Semana del {dayjs(menu.fecha_inicio).format("D [de] MMMM")}
-      </p>
+    <div className="cliente-page">
+      <h1 className="cliente-saludo" style={{ marginBottom: 4 }}>Menu Semanal</h1>
+      <p className="menu-subtitulo">{subtitulo}</p>
 
-      {/* Tabs días */}
-      <ul className="nav nav-pills mb-3 flex-nowrap overflow-auto" style={{ gap: "6px" }}>
+      {/* Selector de días */}
+      <div className="menu-dias">
         {DIAS.map((nombre, i) => {
           const tieneDia = dias.some((d) => d.dia === i);
+          const fecha = fechaInicio.add(i, "day").format("D");
+          const activo = tab === i;
           return (
-            <li className="nav-item" key={i}>
+            <div key={i} className="menu-dia-wrap">
+              {i === hoyIdx && <span className="menu-dia__hoy">Hoy</span>}
               <button
-                className={`nav-link px-3 py-1 ${tab === i ? "active bg-brand" : "text-brand"} ${!tieneDia ? "opacity-50" : ""}`}
+                className={`menu-dia-btn${activo ? " menu-dia-btn--activo" : ""}${!tieneDia ? " menu-dia-btn--disabled" : ""}`}
                 onClick={() => tieneDia && setTab(i)}
                 disabled={!tieneDia}
               >
-                {nombre.slice(0, 3)}
-                {i === hoyIdx && <span className="ms-1 badge bg-warning text-dark" style={{ fontSize: ".6rem" }}>Hoy</span>}
+                <span className="menu-dia__fecha">{fecha}</span>
+                <span className="menu-dia__nombre">{nombre}</span>
               </button>
-            </li>
+            </div>
           );
         })}
-      </ul>
+      </div>
 
-      {diaActivo ? (
-        <div className="card card-sazon p-3">
-          <h3 className="h6 fw-bold text-brand mb-3">{DIAS[tab]}</h3>
-          <MenuRow icon="bi-egg-fried" label="Entrada" valor={platilloNombre(diaActivo.entrada)} />
-          <MenuRow icon="bi-bowl-hot" label="Plato fuerte" valor={diaActivo.platos_fuertes?.map(p => p.nombre).join(" / ") || "—"} />
-          {diaActivo.alternativa_plato_disponible && diaActivo.alternativas_plato?.length > 0 && (
-            <MenuRow
-              icon="bi-arrow-repeat"
-              label="Alternativa"
-              valor={`${diaActivo.alternativas_plato.map(p => p.nombre).join(" o ")}${diaActivo.alternativa_plato_costo_extra > 0 ? ` (+$${diaActivo.alternativa_plato_costo_extra})` : ""}`}
-              muted
-            />
-          )}
-          <MenuRow icon="bi-grid-3x3-gap" label="Guarnición" valor={diaActivo.guarniciones?.map(p => p.nombre).join(" / ") || "—"} />
-          <MenuRow icon="bi-cup-straw" label="Bebida" valor={platilloNombre(diaActivo.bebida)} />
-          {diaActivo.alternativa_bebida_disponible && diaActivo.alternativas_bebida?.length > 0 && (
-            <MenuRow
-              icon="bi-cup"
-              label="Alt. bebida"
-              valor={`${diaActivo.alternativas_bebida.map(p => p.nombre).join(" o ")}${diaActivo.alternativa_bebida_costo_extra > 0 ? ` (+$${diaActivo.alternativa_bebida_costo_extra})` : ""}`}
-              muted
-            />
-          )}
-          <MenuRow icon="bi-cake2" label="Postre" valor={platilloNombre(diaActivo.postre)} />
+      {diaActivo && tieneContenido ? (
+        <>
+          {/* Hero ilustración */}
+          {heroSrc
+            ? <img src={heroSrc} alt={platilloDia} className="platillo-hero-img" />
+            : <div className="platillo-hero-placeholder" />
+          }
 
+          {/* Platillo del día */}
+          <div className="cliente-platillo-label">Platillo del día</div>
+          <h2 className="cliente-platillo-titulo">{platilloDia}</h2>
+
+          {/* Detalle */}
+          <div className="menu-detalle">
+            <MenuRow icon="bi-egg-fried" label="Entrada" valor={platilloNombre(diaActivo.entrada)} />
+            <MenuRow icon="bi-grid-3x3-gap" label="Guarnición" valor={diaActivo.guarniciones?.map(p => p.nombre).join(" / ") || "—"} />
+            <MenuRow icon="bi-cup-straw" label="Bebida" valor={platilloNombre(diaActivo.bebida)} />
+            <MenuRow icon="bi-cake2" label="Postre" valor={platilloNombre(diaActivo.postre)} />
+          </div>
+
+          {!esHoy && tab < hoyIdx && (
+            <button className="btn-pedido-en-curso mt-3" disabled>Menú no disponible</button>
+          )}
           {puedeOrdenar && (
             <button
-              className="btn btn-brand w-100 mt-3 py-2 fw-semibold"
+              className="cliente-btn-ordenar w-100 mt-3"
+              style={{ padding: "16px 0", borderRadius: 16 }}
               onClick={() => navigate("/cliente/ordenar")}
             >
               <i className="bi bi-bag-plus me-2" />
@@ -110,29 +151,36 @@ export default function MenuPage() {
             </button>
           )}
           {esHoy && !puedeOrdenar && pedidosPausados && (
-            <div className="banner-pausado-menu">
+            <div className="banner-pausado-menu mt-3">
               <i className="bi bi-pause-circle-fill banner-pausado__icon" />
               <p className="text-muted small mb-0">No estamos aceptando pedidos por el momento. Intenta más tarde.</p>
             </div>
           )}
           {esHoy && !puedeOrdenar && !pedidosPausados && (
-            <p className="text-muted text-center small mt-3">El tiempo para ordenar hoy ya pasó (límite 3:40 PM)</p>
+            <button className="btn-pedido-en-curso mt-3" disabled>No disponible</button>
           )}
-        </div>
+        </>
       ) : (
-        <div className="text-center text-muted py-5">No hay menú para este día</div>
+        <div className="menu-empty">
+          <h2 className="menu-empty__titulo">No hay nada para mostrar hoy</h2>
+          <img src="/ilustraciones/IMG-EmptyState.png" alt="" className="menu-empty__img" />
+        </div>
       )}
     </div>
   );
 }
 
 function MenuRow({ icon, label, valor, muted }) {
+  const imgSrc = getMenuImg(valor);
   return (
-    <div className={`d-flex align-items-start py-2 border-bottom ${muted ? "opacity-75" : ""}`}>
-      <i className={`bi ${icon} text-brand me-3 fs-5 mt-1`} />
+    <div className={`menu-row${muted ? " menu-row--muted" : ""}`}>
+      {imgSrc
+        ? <img src={imgSrc} alt="" className="menu-row__img" />
+        : <i className={`bi ${icon} text-brand menu-row__icon`} />
+      }
       <div>
-        <div className="text-muted small">{label}</div>
-        <div className="fw-semibold">{valor}</div>
+        <div className="menu-row__label">{label}</div>
+        <div className="menu-row__valor">{valor}</div>
       </div>
     </div>
   );

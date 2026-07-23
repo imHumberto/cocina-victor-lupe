@@ -323,9 +323,13 @@ export default function MenuAdminPage() {
   const eliminarMenu = async (m, e) => {
     e.stopPropagation();
     if (!confirm(`¿Eliminar "${m.nombre || "este menú"}"?`)) return;
-    await api.delete(`/admin/menus/${m.id}`);
-    setMenus((ms) => ms.filter((x) => x.id !== m.id));
-    if (menuActivo?.id === m.id) { setMenuActivo(null); setDias(diasVacios()); }
+    try {
+      await api.delete(`/admin/menus/${m.id}`);
+      setMenus((ms) => ms.filter((x) => x.id !== m.id));
+      if (menuActivo?.id === m.id) { setMenuActivo(null); setDias(diasVacios()); }
+    } catch (err) {
+      alert(err.response?.data?.error ?? "No se pudo eliminar el menú");
+    }
   };
 
   const guardarNombre = async () => {
