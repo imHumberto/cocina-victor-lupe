@@ -46,3 +46,12 @@ def leer_todas():
     Notificacion.query.filter_by(user_id=user_id, leido=False).update({"leido": True})
     db.session.commit()
     return jsonify({"ok": True})
+
+
+@notif_bp.delete("/borrar-todas")
+@jwt_required()
+def borrar_todas():
+    user_id = int(get_jwt_identity())
+    Notificacion.query.filter_by(user_id=user_id).delete()
+    db.session.commit()
+    return jsonify({"ok": True})

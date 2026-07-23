@@ -26,17 +26,13 @@ export default function ClienteLayout() {
           Inicio
         </NavLink>
         <NavLink to="/cliente/menu">
-          <i className="bi bi-calendar-week" />
+          <i className="bi bi-calendar2" />
           Menú
         </NavLink>
         <NavLink to="/cliente/notificaciones">
-          <span className="position-relative d-inline-block">
+          <span className="notif-nav-wrap">
             <i className="bi bi-bell" />
-            {noLeidas > 0 && (
-              <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style={{ fontSize: "0.55rem" }}>
-                {noLeidas > 9 ? "9+" : noLeidas}
-              </span>
-            )}
+            {noLeidas > 0 && <span className="notif-nav-dot" />}
           </span>
           Notificaciones
         </NavLink>

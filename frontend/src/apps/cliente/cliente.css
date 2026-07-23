@@ -22,6 +22,7 @@
   align-items: center;
   justify-content: center;
   font-size: 0.65rem;
+  font-weight: 700;
   color: #9ca3af;
   text-decoration: none;
   gap: 3px;
@@ -35,6 +36,24 @@
 
 .bottom-nav i {
   font-size: 1.35rem;
+}
+
+/* ── Notif dot en nav ─────────────────────────────────────── */
+.notif-nav-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.notif-nav-dot {
+  position: absolute;
+  top: -2px;
+  right: -4px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #E53E3E;
+  border: 1.5px solid #fff;
 }
 
 /* ── Página con nav ───────────────────────────────────────── */
@@ -720,4 +739,112 @@
   align-items: center;
   gap: 8px;
   margin-top: 12px;
+}
+
+/* ── Notificaciones ───────────────────────────────────────── */
+.notif-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 16px;
+  margin-bottom: 20px;
+  margin-left: -20px;
+  margin-right: -20px;
+  padding-left: 20px;
+  padding-right: 20px;
+  border-bottom: 1px solid #D9E1E7;
+}
+.notif-titulo {
+  font-family: "Costa", sans-serif;
+  font-size: 1.7rem;
+  text-transform: uppercase;
+  color: var(--color-navy);
+  margin: 0;
+}
+.notif-badge {
+  background: #14A377;
+  color: #fff;
+  font-size: 0.78rem;
+  font-weight: 700;
+  min-width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 6px;
+}
+.notif-borrar {
+  background: none;
+  border: none;
+  color: #14A377;
+  font-size: 0.9rem;
+  padding: 0;
+  cursor: pointer;
+}
+.notif-grupo {
+  margin-bottom: 20px;
+}
+.notif-grupo__label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #233345;
+  margin-bottom: 10px;
+}
+.notif-card {
+  background: #fff;
+  border-radius: 14px;
+  padding: 14px 16px;
+  min-height: 70px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+.notif-card--leida {
+  background: transparent;
+  box-shadow: none;
+}
+.notif-card__icono-wrap {
+  width: 46px;
+  height: 46px;
+  border-radius: 12px;
+  background: #EDF1F5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 1.3rem;
+  color: #809FB8;
+}
+.notif-card__icono-wrap--cancelado {
+  color: #FF3737;
+}
+.notif-card__body {
+  flex: 1;
+  min-width: 0;
+}
+.notif-card__titulo {
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--color-navy);
+  line-height: 1.3;
+}
+.notif-card__subtitulo {
+  font-size: 0.8rem;
+  color: var(--color-muted);
+  margin-top: 2px;
+}
+.notif-card__tiempo {
+  font-size: 0.78rem;
+  color: #809FB8;
+  margin-top: 4px;
+}
+.notif-card__dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #14A377;
+  flex-shrink: 0;
+  margin-top: 5px;
 }

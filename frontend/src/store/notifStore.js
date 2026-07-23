@@ -40,6 +40,11 @@ const useNotifStore = create((set, get) => ({
       noLeidas: 0,
     }));
   },
+
+  borrarTodas: async () => {
+    await api.delete("/notificaciones/borrar-todas");
+    set({ notificaciones: [], noLeidas: 0 });
+  },
 }));
 
 export default useNotifStore;
