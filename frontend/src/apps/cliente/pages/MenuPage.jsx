@@ -148,7 +148,7 @@ export default function MenuPage() {
               style={{ padding: "16px 0", borderRadius: 16 }}
               onClick={() => navigate("/cliente/ordenar")}
             >
-              <i className="bi bi-cart-fill me-2" />
+              <i className="bi bi-cart4 me-2" />
               Ordenar
             </button>
           )}
