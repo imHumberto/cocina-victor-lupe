@@ -21,7 +21,8 @@ def create_app(env="default"):
     migrate.init_app(app, db)
     jwt.init_app(app)
     CORS(app, origins=[app.config["FRONTEND_URL"]])
-    socketio.init_app(app, cors_allowed_origins=app.config["FRONTEND_URL"], async_mode="threading")
+    async_mode = "eventlet" if not app.debug else "threading"
+    socketio.init_app(app, cors_allowed_origins=app.config["FRONTEND_URL"], async_mode=async_mode)
 
     from app.routes.auth import auth_bp
     from app.routes.menu import menu_bp
