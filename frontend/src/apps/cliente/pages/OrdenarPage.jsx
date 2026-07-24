@@ -20,6 +20,17 @@ const EXTRA_PLATO = 20;
 const EXTRA_BEBIDA = 10;
 const HORAS = ["13:00","13:30","14:00","14:30","15:00","15:30","16:00","16:30","17:00"];
 
+function minutosDeHora(h) {
+  const [hh, mm] = h.split(":").map(Number);
+  return hh * 60 + mm;
+}
+
+function primeraHoraDisponible() {
+  const ahora = dayjs();
+  const minutosAhora = ahora.hour() * 60 + ahora.minute();
+  return HORAS.find(h => minutosDeHora(h) > minutosAhora) ?? null;
+}
+
 function RadioOpcion({ nombre, precio, seleccionado, onSelect, descripcion }) {
   return (
     <label
@@ -143,7 +154,7 @@ export default function OrdenarPage() {
   const [nuevoTipo, setNuevoTipo] = useState("");
   const [nuevoAlias, setNuevoAlias] = useState("");
   const [nuevaReferencia, setNuevaReferencia] = useState("");
-  const [horaEntrega, setHoraEntrega] = useState("13:00");
+  const [horaEntrega, setHoraEntrega] = useState(() => primeraHoraDisponible() ?? "13:00");
 
   const [metodoPago, setMetodoPago] = useState("efectivo");
   const [comprobante, setComprobante] = useState(null);
@@ -165,7 +176,11 @@ export default function OrdenarPage() {
       if (saved) {
         setComidas(saved.comidas ?? Array.from({ length: cantidadInicial }, () => comidaVacia(data)));
         setPaso(saved.paso ?? 1);
-        setHoraEntrega(saved.horaEntrega ?? "13:00");
+        const minAhora = dayjs().hour() * 60 + dayjs().minute();
+        const horaGuardada = saved.horaEntrega;
+        const horaValida = horaGuardada && minutosDeHora(horaGuardada) > minAhora
+          ? horaGuardada : (primeraHoraDisponible() ?? "13:00");
+        setHoraEntrega(horaValida);
         setMetodoPago(saved.metodoPago ?? "efectivo");
         setReceptor(saved.receptor ?? user?.nombre ?? "");
         setTelefonoReceptor(saved.telefonoReceptor ?? user?.telefono_whatsapp ?? "");
@@ -606,19 +621,31 @@ export default function OrdenarPage() {
 
             <div className="mb-3">
               <label className="form-label fw-semibold">Hora de entrega</label>
-              <div className="row g-2">
-                {HORAS.map((h) => (
-                  <div className="col-4" key={h}>
-                    <button
-                      type="button"
-                      className={`hora-btn${horaEntrega === h ? " hora-btn--activo" : ""}`}
-                      onClick={() => setHoraEntrega(h)}
-                    >
-                      {h}
-                    </button>
-                  </div>
-                ))}
-              </div>
+              {primeraHoraDisponible() === null ? (
+                <div className="rounded-3 p-3 text-center" style={{ background: "#fef2f2", color: "#991b1b", fontSize: "0.9rem" }}>
+                  <i className="bi bi-clock me-2" />
+                  El horario de entregas ya cerró por hoy (13:00–17:00)
+                </div>
+              ) : (
+                <div className="row g-2">
+                  {HORAS.map((h) => {
+                    const minAhora = dayjs().hour() * 60 + dayjs().minute();
+                    const pasada = minutosDeHora(h) <= minAhora;
+                    return (
+                      <div className="col-4" key={h}>
+                        <button
+                          type="button"
+                          className={`hora-btn${horaEntrega === h ? " hora-btn--activo" : ""}${pasada ? " hora-btn--pasada" : ""}`}
+                          onClick={() => !pasada && setHoraEntrega(h)}
+                          disabled={pasada}
+                        >
+                          {h}
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           </div>
         )}

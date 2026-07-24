@@ -534,6 +534,7 @@
   padding: 8px 0;
 }
 .hora-btn--activo { background: var(--color-brand); color: #fff; }
+.hora-btn--pasada { opacity: 0.35; cursor: not-allowed; text-decoration: line-through; }
 
 /* ── Label campo opcional ─────────────────────────────────── */
 .label-campo {
