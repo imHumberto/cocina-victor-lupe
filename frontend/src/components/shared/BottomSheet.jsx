@@ -1,10 +1,29 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 
 export default function BottomSheet({ abierto, onCerrar, titulo, children }) {
-  // Bloquea scroll del body mientras está abierto
+  const panelRef = useRef(null);
+
   useEffect(() => {
     document.body.style.overflow = abierto ? "hidden" : "";
     return () => { document.body.style.overflow = ""; };
+  }, [abierto]);
+
+  // Reajusta altura cuando aparece el teclado virtual en iOS
+  useEffect(() => {
+    if (!abierto || !window.visualViewport) return;
+    const ajustar = () => {
+      if (panelRef.current) {
+        const vh = window.visualViewport.height;
+        panelRef.current.style.height = `${Math.min(vh * 0.92, vh - 20)}px`;
+      }
+    };
+    ajustar();
+    window.visualViewport.addEventListener("resize", ajustar);
+    window.visualViewport.addEventListener("scroll", ajustar);
+    return () => {
+      window.visualViewport.removeEventListener("resize", ajustar);
+      window.visualViewport.removeEventListener("scroll", ajustar);
+    };
   }, [abierto]);
 
   if (!abierto) return null;
@@ -21,6 +40,7 @@ export default function BottomSheet({ abierto, onCerrar, titulo, children }) {
       />
       {/* Panel */}
       <div
+        ref={panelRef}
         style={{
           position: "fixed", bottom: 0, left: 0, right: 0,
           background: "#fff", borderRadius: "16px 16px 0 0",

@@ -386,8 +386,8 @@ export default function PerfilPage() {
                 className="form-control"
                 placeholder="Busca tu calle, colonia..."
                 value={busquedaDir}
-                autoFocus
                 onChange={(e) => onBusquedaChange(e.target.value)}
+                onFocus={(e) => setTimeout(() => e.target.scrollIntoView({ behavior: "smooth", block: "start" }), 100)}
                 onKeyDown={(e) => e.key === "Enter" && buscarDir()}
               />
               <button className="btn btn-brand px-3" onClick={() => buscarDir()} disabled={buscandoDir}>
