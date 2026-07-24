@@ -1,3 +1,6 @@
+import eventlet
+eventlet.monkey_patch()
+
 import os
 from app import create_app, socketio
 from flask_socketio import join_room
