@@ -2,7 +2,6 @@ databases:
   - name: sazon-db
     databaseName: sazon_del_vic
     user: sazon
-    plan: free
 
 services:
   - type: web
@@ -38,7 +37,6 @@ services:
     rootDir: frontend
     buildCommand: npm install && npm run build
     staticPublishPath: dist
-    plan: free
     envVars:
       - key: VITE_API_URL
         sync: false
