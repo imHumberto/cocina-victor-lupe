@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
@@ -23,6 +23,14 @@ async function buscarDirecciones(query) {
   return await res.json();
 }
 
+async function obtenerCoordenadasPlace(place_id) {
+  const res = await fetch(`/api/geo/detalle?place_id=${encodeURIComponent(place_id)}`);
+  if (!res.ok) return null;
+  const data = await res.json();
+  if (data.lat && data.lng) return { lat: data.lat, lng: data.lng };
+  return null;
+}
+
 export default function MapaPicker({ onDireccion }) {
   const contenedor = useRef(null);
   const mapaRef = useRef(null);
@@ -33,6 +41,7 @@ export default function MapaPicker({ onDireccion }) {
   const [resultados, setResultados] = useState([]);
   const [buscando, setBuscando] = useState(false);
   const [errorBusqueda, setErrorBusqueda] = useState("");
+  const debounceRef = useRef(null);
 
   const moverPin = async (latlng) => {
     const mapa = mapaRef.current;
@@ -76,16 +85,16 @@ export default function MapaPicker({ onDireccion }) {
       () => {}
     );
 
-    return () => { mapa.remove(); mapaRef.current = null; markerRef.current = null; };
+    return () => { mapa.remove(); mapaRef.current = null; markerRef.current = null; clearTimeout(debounceRef.current); };
   }, []);
 
-  const handleBuscar = async () => {
-    if (!busqueda.trim() || busqueda.length < 3) return;
+  const ejecutarBusqueda = useCallback(async (query) => {
+    if (!query.trim() || query.length < 3) { setResultados([]); return; }
     setBuscando(true);
     setErrorBusqueda("");
     setResultados([]);
     try {
-      const data = await buscarDirecciones(busqueda);
+      const data = await buscarDirecciones(query);
       if (data.length === 0) setErrorBusqueda("Sin resultados, intenta con otra dirección");
       else setResultados(data);
     } catch {
@@ -93,12 +102,35 @@ export default function MapaPicker({ onDireccion }) {
     } finally {
       setBuscando(false);
     }
+  }, []);
+
+  const handleBuscar = () => ejecutarBusqueda(busqueda);
+
+  const handleInputChange = (e) => {
+    const val = e.target.value;
+    setBusqueda(val);
+    setResultados([]);
+    setErrorBusqueda("");
+    clearTimeout(debounceRef.current);
+    if (val.length >= 3) {
+      debounceRef.current = setTimeout(() => ejecutarBusqueda(val), 400);
+    }
   };
 
-  const seleccionarResultado = (r) => {
+  const seleccionarResultado = async (r) => {
     setBusqueda(r.display_name);
     setResultados([]);
-    moverPin({ lat: parseFloat(r.lat), lng: parseFloat(r.lon) });
+    if (r.lat && r.lon) {
+      moverPin({ lat: parseFloat(r.lat), lng: parseFloat(r.lon) });
+    } else if (r.place_id) {
+      setCargando(true);
+      try {
+        const coords = await obtenerCoordenadasPlace(r.place_id);
+        if (coords) moverPin(coords);
+      } finally {
+        setCargando(false);
+      }
+    }
   };
 
   return (
@@ -111,7 +143,7 @@ export default function MapaPicker({ onDireccion }) {
             className="form-control"
             placeholder="Busca tu colonia, calle o referencia..."
             value={busqueda}
-            onChange={(e) => { setBusqueda(e.target.value); setResultados([]); setErrorBusqueda(""); }}
+            onChange={handleInputChange}
             onKeyDown={(e) => e.key === "Enter" && handleBuscar()}
             autoComplete="off"
           />
