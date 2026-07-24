@@ -1,6 +1,6 @@
 import { Outlet, NavLink } from "react-router-dom";
 import useAuthStore from "../../store/authStore";
-import logo from "../../assets/logo.svg";
+const logo = "/logo-sazon.svg";
 import "./admin.css";
 
 const NAV = [

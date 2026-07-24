@@ -41,7 +41,7 @@ export default function LoginPage() {
 
         {/* Logo */}
         <img
-          src="/logo.svg"
+          src="/logo-sazon.svg"
           alt="Sazón Mexa"
           style={{ width: 160, marginBottom: 20 }}
         />
