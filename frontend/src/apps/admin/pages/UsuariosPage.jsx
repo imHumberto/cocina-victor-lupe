@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import api from "../../../services/api";
 import PhoneInput from "../../../components/shared/PhoneInput";
 import PasswordInput from "../../../components/shared/PasswordInput";
@@ -34,6 +34,11 @@ export default function UsuariosPage() {
   const [form, setForm]       = useState(FORM_VACIO);
   const [msg, setMsg]         = useState("");
 
+  // Autocomplete dirección
+  const [dirResultados, setDirResultados] = useState([]);
+  const [dirBuscando, setDirBuscando]     = useState(false);
+  const dirDebounce = useRef(null);
+
   // Modal invitar
   const [modalInvite, setModalInvite]   = useState(false);
   const [inviteGenerado, setInviteGenerado] = useState(null);
@@ -46,6 +51,33 @@ export default function UsuariosPage() {
   const set = (k) => (e) => {
     const v = e.target.type === "checkbox" ? e.target.checked : e.target.value;
     setForm(f => ({ ...f, [k]: v }));
+  };
+
+  const onDirChange = (val) => {
+    setForm(f => ({ ...f, direccion_entrega: val }));
+    setDirResultados([]);
+    clearTimeout(dirDebounce.current);
+    if (val.length >= 3) {
+      dirDebounce.current = setTimeout(async () => {
+        setDirBuscando(true);
+        try {
+          const { data } = await api.get(`/geo/buscar?q=${encodeURIComponent(val)}`);
+          setDirResultados(data);
+        } catch { /* silencioso */ } finally { setDirBuscando(false); }
+      }, 400);
+    }
+  };
+
+  const seleccionarDir = async (r) => {
+    let direccion = r.display_name;
+    if (!r.lat && r.place_id) {
+      try {
+        const { data } = await api.get(`/geo/detalle?place_id=${r.place_id}`);
+        if (data.direccion) direccion = data.direccion;
+      } catch { /* silencioso */ }
+    }
+    setForm(f => ({ ...f, direccion_entrega: direccion }));
+    setDirResultados([]);
   };
 
   const abrirNuevo = () => {
@@ -208,10 +240,33 @@ export default function UsuariosPage() {
           {/* Campos de cliente */}
           {esCliente && (
             <>
-              <div style={{ borderTop: "1px solid #f3f4f6", paddingTop: 16 }}>
+              <div style={{ borderTop: "1px solid #f3f4f6", paddingTop: 16, position: "relative" }}>
                 <label style={labelStyle}>Dirección de entrega *</label>
-                <input type="text" value={form.direccion_entrega} onChange={set("direccion_entrega")} placeholder="Calle, número, colonia..." style={inputStyle}
-                  onFocus={e => e.target.style.borderColor = "#1255F0"} onBlur={e => e.target.style.borderColor = "#e5e7eb"} />
+                <div style={{ display: "flex", gap: 6 }}>
+                  <input
+                    type="text"
+                    value={form.direccion_entrega}
+                    onChange={e => onDirChange(e.target.value)}
+                    placeholder="Busca calle, colonia..."
+                    style={inputStyle}
+                    autoComplete="off"
+                    onFocus={e => e.target.style.borderColor = "#1255F0"}
+                    onBlur={e => { e.target.style.borderColor = "#e5e7eb"; setTimeout(() => setDirResultados([]), 150); }}
+                  />
+                  {dirBuscando && <span style={{ display: "flex", alignItems: "center" }}><span className="spinner-border spinner-border-sm text-secondary" /></span>}
+                </div>
+                {dirResultados.length > 0 && (
+                  <ul style={{ position: "absolute", top: "100%", left: 0, right: 0, background: "#fff", border: "1px solid #e5e7eb", borderRadius: 8, boxShadow: "0 4px 12px rgba(0,0,0,0.1)", zIndex: 999, margin: 0, padding: 0, listStyle: "none", maxHeight: 220, overflowY: "auto" }}>
+                    {dirResultados.map((r, i) => (
+                      <li key={i} onMouseDown={() => seleccionarDir(r)}
+                        style={{ padding: "10px 14px", cursor: "pointer", fontSize: "0.82rem", borderBottom: "1px solid #f3f4f6" }}
+                        onMouseEnter={e => e.currentTarget.style.background = "#f8faff"}
+                        onMouseLeave={e => e.currentTarget.style.background = ""}>
+                        <i className="bi bi-geo-alt me-2" style={{ color: "#1255F0" }} />{r.display_name}
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </div>
               <div>
                 <label style={labelStyle}>Tipo de vivienda <span style={{ fontWeight: 400, textTransform: "none", fontSize: "0.75rem" }}>(opcional)</span></label>
