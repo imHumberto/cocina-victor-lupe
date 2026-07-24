@@ -86,8 +86,7 @@ export default function RegistroPage() {
     setResultados([]);
     setError("");
     try {
-      const res = await fetch(`/api/geo/buscar?q=${encodeURIComponent(query)}`);
-      const data = await res.json();
+      const { data } = await api.get(`/geo/buscar?q=${encodeURIComponent(query)}`);
       setResultados(data);
       if (data.length === 0) setError("Sin resultados, intenta con otra dirección o más detalles");
     } catch {
@@ -115,8 +114,7 @@ export default function RegistroPage() {
     // Si no tiene lat/lng (viene de Google), pedimos el detalle
     if (!r.lat) {
       try {
-        const res = await fetch(`/api/geo/detalle?place_id=${r.place_id}`);
-        const data = await res.json();
+        const { data } = await api.get(`/geo/detalle?place_id=${r.place_id}`);
         setDireccionSeleccionada({ ...r, lat: String(data.lat), lon: String(data.lng) });
       } catch {
         setDireccionSeleccionada(r);

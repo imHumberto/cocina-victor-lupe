@@ -156,16 +156,15 @@ export default function PerfilPage() {
     if (!query.trim()) return;
     setBuscandoDir(true);
     try {
-      const res = await fetch(`/api/geo/buscar?q=${encodeURIComponent(query)}`);
-      setResultadosDir(await res.json());
+      const { data } = await api.get(`/geo/buscar?q=${encodeURIComponent(query)}`);
+      setResultadosDir(data);
     } finally { setBuscandoDir(false); }
   };
 
   const seleccionarResultadoDir = async (r) => {
     let lat = r.lat, lng = r.lon;
     if (!lat) {
-      const res = await fetch(`/api/geo/detalle?place_id=${r.place_id}`);
-      const d = await res.json();
+      const { data: d } = await api.get(`/geo/detalle?place_id=${r.place_id}`);
       lat = d.lat; lng = d.lng;
     }
     setNuevaDireccion({ ...r, lat, lng });
