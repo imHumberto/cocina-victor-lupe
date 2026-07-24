@@ -276,8 +276,8 @@ export default function PlatillosPage() {
             </div>
           </div>
 
-          {/* Variante de proteína — solo para alternativas de plato fuerte */}
-          {form.es_alternativa && form.tipo === "plato_fuerte" && (
+          {/* Variante de proteína — para cualquier plato fuerte (principal o alternativa) */}
+          {form.tipo === "plato_fuerte" && (
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 0", borderTop: "1px solid #f3f4f6" }}>
               <div>
                 <div style={{ fontSize: "0.9rem", fontWeight: 600, color: "#17181A" }}>Pide variante de proteína</div>

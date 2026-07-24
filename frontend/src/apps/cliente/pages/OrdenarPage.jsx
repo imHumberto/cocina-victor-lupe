@@ -466,7 +466,7 @@ export default function OrdenarPage() {
                   {dia.platos_fuertes?.map((p) => (
                     <RadioOpcion key={p.id} nombre={p.nombre} precio={0} descripcion={p.descripcion}
                       seleccionado={!c.esAltPlato && c.platoId === p.id}
-                      onSelect={() => { setComida(idx, "platoId", p.id); setComida(idx, "esAltPlato", false); }} />
+                      onSelect={() => { setComida(idx, "platoId", p.id); setComida(idx, "esAltPlato", false); setComida(idx, "platoVariante", null); }} />
                   ))}
                   {dia.alternativa_plato_disponible && dia.alternativas_plato?.map((p) => (
                     <RadioOpcion key={p.id} nombre={p.nombre} precio={EXTRA_PLATO} descripcion={p.descripcion}
@@ -477,10 +477,12 @@ export default function OrdenarPage() {
                         setComida(idx, "platoVariante", null);
                       }} />
                   ))}
-                  {/* Sub-selector de proteína */}
-                  {c.esAltPlato && (() => {
-                    const altSel = dia.alternativas_plato?.find(p => p.id === c.platoId);
-                    if (!altSel?.variante_proteina) return null;
+                  {/* Sub-selector de proteína (plato principal o alternativa) */}
+                  {(() => {
+                    const platoPrincipal = dia.platos_fuertes?.find(p => p.id === c.platoId);
+                    const platoAlt = dia.alternativas_plato?.find(p => p.id === c.platoId);
+                    const platoSel = c.esAltPlato ? platoAlt : platoPrincipal;
+                    if (!platoSel?.variante_proteina) return null;
                     return (
                       <div className="proteina-selector">
                         <div className="proteina-selector__label">¿De qué proteína?</div>
