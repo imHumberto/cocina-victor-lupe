@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import useNotifStore from "../../../store/notifStore";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
@@ -28,6 +29,12 @@ function getIcono(mensaje) {
   return { icon: "bi-bell-fill" };
 }
 
+function getDestino(mensaje) {
+  const m = mensaje.toLowerCase();
+  if (m.includes("men") || m.includes("semana"))         return "/cliente/menu";
+  return "/cliente/inicio";
+}
+
 function agrupar(notificaciones) {
   const hoy = dayjs().format("YYYY-MM-DD");
   const ayer = dayjs().subtract(1, "day").format("YYYY-MM-DD");
@@ -45,6 +52,7 @@ function agrupar(notificaciones) {
 }
 
 export default function NotificacionesPage() {
+  const navigate = useNavigate();
   const { notificaciones, fetchNotificaciones, leerTodas, borrarTodas } = useNotifStore();
 
   useEffect(() => {
@@ -78,8 +86,14 @@ export default function NotificacionesPage() {
               {items.map((n) => {
                 const { titulo, subtitulo } = parseNotif(n.mensaje);
                 const { icon, cancelado } = getIcono(n.mensaje);
+                const destino = getDestino(n.mensaje);
                 return (
-                  <div key={n.id} className={`notif-card${n.leido ? " notif-card--leida" : ""}`}>
+                  <div
+                    key={n.id}
+                    className={`notif-card${n.leido ? " notif-card--leida" : ""}`}
+                    onClick={() => navigate(destino)}
+                    style={{ cursor: "pointer" }}
+                  >
                     <div className={`notif-card__icono-wrap${cancelado ? " notif-card__icono-wrap--cancelado" : ""}`}>
                       <i className={`bi ${icon}`} />
                     </div>

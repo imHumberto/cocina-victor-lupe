@@ -34,7 +34,12 @@ function getMenuImg(nombre) {
   if (n.includes("limón") || n.includes("limon")) return "/platillos/agua-limon.png";
   if (n.includes("sandía") || n.includes("sandia")) return "/platillos/agua-sandia.png";
 
+  // Pastas
+  if (n.includes("espagueti") || n.includes("espaguetti") || n.includes("pasta") || n.includes("fettuccine") || n.includes("tallarín") || n.includes("tallarin"))
+    return "/platillos/espagueti.png";
+
   // Postres
+  if (n.includes("flan"))      return "/platillos/flan.png";
   if (n.includes("gelatina"))  return "/platillos/gelatinas.png";
   if (n.includes("pastel") || n.includes("pay") || n.includes("cheesecake") || n.includes("pie") || n.includes("brownie"))
     return "/platillos/pasteles.png";

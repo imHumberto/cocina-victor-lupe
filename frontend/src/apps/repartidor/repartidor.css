@@ -1,0 +1,443 @@
+/* ============================================================
+   Repartidor — estilos alineados con La Cocina de Víctor y Lupe
+   ============================================================ */
+
+/* ── Layout ───────────────────────────────────────────────── */
+.rep-page {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 24px 16px 48px;
+}
+
+/* ── Header ───────────────────────────────────────────────── */
+.rep-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+.rep-header__saludo {
+  font-family: "Costa", sans-serif;
+  font-size: 2rem;
+  text-transform: uppercase;
+  color: var(--color-navy);
+  line-height: 1.05;
+  margin: 0;
+}
+.rep-header__salir {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #F1F4F9;
+  border: none;
+  border-radius: 10px;
+  padding: 7px 12px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--color-navy);
+  cursor: pointer;
+  white-space: nowrap;
+  margin-top: 4px;
+}
+
+/* ── Búsqueda ─────────────────────────────────────────────── */
+.rep-search {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #F1F4F9;
+  border-radius: 12px;
+  padding: 12px 16px;
+  margin-bottom: 20px;
+}
+.rep-search i { color: var(--color-muted); font-size: 1rem; }
+.rep-search input {
+  border: none;
+  background: transparent;
+  outline: none;
+  font-size: 0.9rem;
+  color: var(--color-navy);
+  width: 100%;
+}
+.rep-search input::placeholder { color: var(--color-muted); }
+
+/* ── Stat cards ───────────────────────────────────────────── */
+.rep-stats {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+.rep-stat-card {
+  flex: 1;
+  padding: 16px;
+  border-radius: 14px;
+  background: #F1F4F9;
+}
+.rep-stat-card__value {
+  font-family: "Costa", sans-serif;
+  font-size: 2.6rem;
+  line-height: 1;
+  color: var(--color-navy);
+  margin-bottom: 4px;
+}
+.rep-stat-card__label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-navy);
+  margin-bottom: 2px;
+}
+.rep-stat-card__sub {
+  font-size: 0.72rem;
+  color: var(--color-muted);
+}
+
+/* ── Tab cards de navegación ──────────────────────────────── */
+.rep-nav-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+.rep-nav-tab {
+  flex: 1;
+  position: relative;
+  background: #F1F4F9;
+  border: 2px solid transparent;
+  border-radius: 14px;
+  padding: 10px 8px 12px;
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 0.15s;
+  display: flex;
+  flex-direction: column;
+}
+.rep-nav-tab--activo {
+  border-color: var(--color-brand);
+}
+.rep-nav-tab__badge {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background: var(--color-navy);
+  color: #fff;
+  font-size: 0.65rem;
+  font-weight: 700;
+  min-width: 20px;
+  height: 20px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 5px;
+}
+.rep-nav-tab__img {
+  width: 100%;
+  height: 72px;
+  object-fit: contain;
+  margin-bottom: 8px;
+}
+.rep-nav-tab__nombre {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--color-navy);
+  line-height: 1.2;
+}
+.rep-nav-tab__sub {
+  font-size: 0.68rem;
+  color: var(--color-muted);
+  margin-top: 2px;
+}
+
+/* ── Sección últimos pedidos ──────────────────────────────── */
+.rep-ultimos-label {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--color-navy);
+  margin-bottom: 12px;
+}
+
+/* ── Card de pedido (home + cola) ────────────────────────── */
+.rep-pedido-card {
+  background: #fff;
+  border-radius: 16px;
+  padding: 16px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.07);
+  margin-bottom: 12px;
+}
+.rep-pedido-card__top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+.rep-pedido-card__id {
+  font-family: "Costa", sans-serif;
+  font-size: 1.5rem;
+  color: var(--color-navy);
+  line-height: 1;
+}
+.rep-pedido-card__nombre {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--color-navy);
+  margin-top: 2px;
+}
+.rep-pedido-card__toggle {
+  background: none;
+  border: none;
+  font-size: 1.1rem;
+  color: var(--color-muted);
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+}
+.rep-pedido-card__meta {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-bottom: 12px;
+}
+.rep-pedido-card__meta-row {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 0.85rem;
+  color: var(--color-navy);
+}
+.rep-pedido-card__meta-row i {
+  color: var(--color-muted);
+  font-size: 0.9rem;
+  flex-shrink: 0;
+}
+.rep-pedido-card__nota {
+  margin-bottom: 12px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  background: #fefce8;
+  border: 1px solid #fde68a;
+  color: #713f12;
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+}
+.rep-pedido-card__nota i { flex-shrink: 0; margin-top: 1px; }
+
+/* ── Mapa en card ─────────────────────────────────────────── */
+.rep-mapa-wrap {
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid #e5e7eb;
+  margin-bottom: 12px;
+}
+.rep-mapa-img {
+  width: 100%;
+  display: block;
+  height: 160px;
+  object-fit: cover;
+}
+.rep-mapa-leyenda {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  font-size: 0.72rem;
+  color: var(--color-muted);
+  background: #f9fafb;
+  border-top: 1px solid #e5e7eb;
+}
+.rep-mapa-pin {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  font-size: 0.6rem;
+  font-weight: 700;
+  color: #fff;
+  flex-shrink: 0;
+}
+.rep-mapa-pin--sazon { background: var(--color-brand); }
+.rep-mapa-pin--dest  { background: #ED4137; }
+
+/* ── Badge de estado ──────────────────────────────────────── */
+.rep-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+.rep-badge--nuevo    { background: #fef9c3; color: #854d0e; }
+.rep-badge--cola     { background: #fef9c3; color: #854d0e; }
+.rep-badge--camino   { background: #dbeafe; color: #1e40af; }
+.rep-badge--entregado{ background: #dcfce7; color: #166534; }
+.rep-badge--rechazado{ background: #fee2e2; color: #991b1b; }
+
+/* ── Botones de acción ────────────────────────────────────── */
+.rep-btn-primary {
+  width: 100%;
+  padding: 13px;
+  background: var(--color-brand);
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: background 0.15s;
+}
+.rep-btn-primary:hover { background: var(--color-brand-dark); }
+
+.rep-btn-secondary {
+  flex: 1;
+  padding: 11px;
+  background: #F1F4F9;
+  color: var(--color-navy);
+  border: none;
+  border-radius: 12px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+.rep-btn-entregar {
+  flex: 1;
+  padding: 11px;
+  background: #22c55e;
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+.rep-btn-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+/* ── Empty state ──────────────────────────────────────────── */
+.rep-empty {
+  text-align: center;
+  padding: 40px 0;
+}
+.rep-empty__img {
+  width: 160px;
+  margin: 0 auto 16px;
+  display: block;
+}
+.rep-empty__text {
+  font-size: 0.9rem;
+  color: var(--color-muted);
+  margin: 0;
+}
+
+/* ── Historial meta ───────────────────────────────────────── */
+.rep-historial-meta {
+  font-size: 0.82rem;
+  color: var(--color-muted);
+  margin-bottom: 14px;
+}
+
+/* ── Página interior (cola, historial) ────────────────────── */
+.rep-page-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+.rep-page-header__back {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  color: var(--color-navy);
+  font-size: 1.2rem;
+  line-height: 1;
+}
+.rep-page-header__titulo {
+  font-family: "Costa", sans-serif;
+  font-size: 1.7rem;
+  text-transform: uppercase;
+  color: var(--color-navy);
+  line-height: 1.05;
+  margin: 0;
+}
+
+/* ── Spinner ──────────────────────────────────────────────── */
+.rep-spinner {
+  display: flex;
+  justify-content: center;
+  padding: 48px 0;
+}
+
+/* ── Modal pago ───────────────────────────────────────────── */
+.rep-pago-opcion {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border-radius: var(--radius);
+  cursor: pointer;
+  border: 1.5px solid #e5e7eb;
+  background: #f9fafb;
+  transition: all 0.12s;
+}
+.rep-pago-opcion--sel {
+  background: var(--color-brand-light);
+  border-color: var(--color-brand);
+}
+.rep-pago-opcion__icon { font-size: 1.3rem; }
+.rep-pago-opcion__label {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--color-navy);
+  flex: 1;
+}
+.rep-pago-radio {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  border: 2px solid #d1d5db;
+  transition: all 0.12s;
+}
+.rep-pago-radio--sel { border: 5px solid var(--color-brand); }
+.rep-btn-modal-ok {
+  flex: 1;
+  padding: 10px;
+  border-radius: var(--radius);
+  border: none;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  background: #22c55e;
+  color: #fff;
+}
+.rep-btn-modal-cancel {
+  flex: 1;
+  padding: 10px;
+  border-radius: var(--radius);
+  border: none;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  background: #F1F4F9;
+  color: var(--color-navy);
+}

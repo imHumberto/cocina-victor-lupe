@@ -18,7 +18,9 @@ import NotificacionesPage from "./apps/cliente/pages/NotificacionesPage";
 
 // Repartidor
 import RepartidorLayout from "./apps/repartidor/RepartidorLayout";
-import PedidosRepartidorPage from "./apps/repartidor/pages/PedidosRepartidorPage";
+import InicioRepartidorPage from "./apps/repartidor/pages/InicioRepartidorPage";
+import EnColaPage from "./apps/repartidor/pages/EnColaPage";
+import HistorialRepartidorPage from "./apps/repartidor/pages/HistorialRepartidorPage";
 
 // Admin
 import AdminLayout from "./apps/admin/AdminLayout";
@@ -40,7 +42,7 @@ function RoleRedirect() {
   if (loading) return null;
   if (!user) return <Navigate to="/login" replace />;
   if (user.rol === "admin") return <Navigate to="/admin/pedidos" replace />;
-  if (user.rol === "repartidor") return <Navigate to="/repartidor/pedidos" replace />;
+  if (user.rol === "repartidor") return <Navigate to="/repartidor" replace />;
   return <Navigate to="/cliente/inicio" replace />;
 }
 
@@ -68,8 +70,9 @@ export default function App() {
 
       {/* Repartidor */}
       <Route path="/repartidor" element={<RequireAuth roles={["repartidor"]}><RepartidorLayout /></RequireAuth>}>
-        <Route index element={<Navigate to="pedidos" replace />} />
-        <Route path="pedidos" element={<PedidosRepartidorPage />} />
+        <Route index element={<InicioRepartidorPage />} />
+        <Route path="cola" element={<EnColaPage />} />
+        <Route path="historial" element={<HistorialRepartidorPage />} />
       </Route>
 
       {/* Admin */}

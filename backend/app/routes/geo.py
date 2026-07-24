@@ -11,6 +11,9 @@ NOMINATIM_HEADERS = {"User-Agent": "SazonDeVic/1.0 (im.humberto@gmail.com)"}
 GDL_LAT = 20.6597
 GDL_LNG = -103.3496
 
+# Coordenadas fijas del Sazón Mexa
+SAZON_ADDR = "Herrera y Cairo 1659, Ladrón de Guevara, Guadalajara, Jalisco, México"
+
 
 @geo_bp.get("/buscar")
 def buscar():
@@ -114,3 +117,35 @@ def inverso():
     except Exception:
         pass
     return jsonify({"display_name": f"{lat}, {lng}"})
+
+
+@geo_bp.get("/mapa")
+def mapa_estatico():
+    """Proxy para Google Maps Static API — evita exponer la key en el frontend."""
+    from flask import Response
+    address = request.args.get("address", "").strip()
+    if not address or not GOOGLE_KEY:
+        return Response(status=400)
+
+    resp = requests.get(
+        "https://maps.googleapis.com/maps/api/staticmap",
+        params={
+            "size": "400x180",
+            "scale": "2",
+            "maptype": "roadmap",
+            "markers": [
+                f"color:0x094D40|size:mid|label:S|{SAZON_ADDR}",
+                f"color:0xED4137|size:mid|label:D|{address}",
+            ],
+            "key": GOOGLE_KEY,
+        },
+        timeout=8,
+    )
+    if not resp.ok:
+        return Response(status=502)
+
+    return Response(
+        resp.content,
+        content_type=resp.headers.get("Content-Type", "image/png"),
+        headers={"Cache-Control": "public, max-age=86400"},
+    )

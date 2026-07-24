@@ -1007,7 +1007,10 @@ export default function PedidosAdminPage() {
       if (filtros.pago !== "todos") return p.metodo_pago === filtros.pago;
       return true;
     })
-    .sort((a, b) => a.hora_entrega?.localeCompare(b.hora_entrega));
+    .sort((a, b) => tab === "cerrado"
+      ? new Date(b.updated_at) - new Date(a.updated_at)
+      : a.hora_entrega?.localeCompare(b.hora_entrega)
+    );
 
   // Auto-seleccionar primero al cambiar tab
   useEffect(() => {
