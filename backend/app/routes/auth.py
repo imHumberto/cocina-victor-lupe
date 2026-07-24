@@ -49,6 +49,8 @@ def registro(invite_token):
             direccion=data["direccion_entrega"],
             referencias=data.get("referencias_entrega"),
             es_principal=True,
+            lat=data.get("lat"),
+            lng=data.get("lng"),
         )
         db.session.add(direccion)
 

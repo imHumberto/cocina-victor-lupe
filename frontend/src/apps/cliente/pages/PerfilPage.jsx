@@ -181,6 +181,8 @@ export default function PerfilPage() {
         tipo_vivienda: nuevoTipo,
         direccion: nuevaDireccion.display_name,
         referencias: nuevaReferencia,
+        lat: nuevaDireccion.lat ?? null,
+        lng: nuevaDireccion.lng ?? null,
       });
       setDirecciones(prev => [...prev, data]);
       setSheetAgregarDir(false);

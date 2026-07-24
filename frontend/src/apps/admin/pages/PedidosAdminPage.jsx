@@ -876,6 +876,12 @@ export default function PedidosAdminPage() {
   const [togglingPausa, setTogglingPausa] = useState(false);
   const [modalPausa, setModalPausa] = useState(false);
 
+  // Radio de entrega
+  const [radioKm, setRadioKm] = useState(null);
+  const [radioEditando, setRadioEditando] = useState(false);
+  const [radioInput, setRadioInput] = useState("");
+  const [guardandoRadio, setGuardandoRadio] = useState(false);
+
   const confirmarTogglePausa = () => setModalPausa(true);
 
   const togglePausa = async () => {
@@ -891,6 +897,21 @@ export default function PedidosAdminPage() {
     }
   };
 
+  const guardarRadio = async () => {
+    const val = parseFloat(radioInput);
+    if (isNaN(val) || val <= 0) return;
+    setGuardandoRadio(true);
+    try {
+      const { data } = await api.post("/config/radio-entrega", { radio_km: val });
+      setRadioKm(data.radio_km);
+      setRadioEditando(false);
+    } catch {
+      alert("Error al guardar radio");
+    } finally {
+      setGuardandoRadio(false);
+    }
+  };
+
   const cargar = () => {
     api.get("/admin/pedidos-hoy")
       .then(({ data }) => setPedidos(data))
@@ -901,6 +922,7 @@ export default function PedidosAdminPage() {
     cargar();
     api.get("/admin/repartidores").then(({ data }) => setRepartidores(data)).catch(() => {});
     api.get("/config/estado").then(({ data }) => setPausado(data.pedidos_pausados)).catch(() => {});
+    api.get("/config/radio-entrega").then(({ data }) => setRadioKm(data.radio_km)).catch(() => {});
     getSocket()?.emit("join_admin");
   }, []);
 
@@ -1202,6 +1224,51 @@ export default function PedidosAdminPage() {
               {togglingPausa ? "…" : pausado ? "Pausado" : "Activo"}
             </button>
           </div>
+
+          {/* Radio de entrega */}
+          <div className="d-flex align-items-center gap-2 mb-3" style={{ fontSize: "0.82rem" }}>
+            <i className="bi bi-geo-alt-fill" style={{ color: "#6366f1" }} />
+            <span style={{ color: "#6b7280" }}>Zona de entrega:</span>
+            {radioEditando ? (
+              <>
+                <input
+                  type="number"
+                  min="0.1"
+                  step="0.1"
+                  value={radioInput}
+                  onChange={e => setRadioInput(e.target.value)}
+                  onKeyDown={e => { if (e.key === "Enter") guardarRadio(); if (e.key === "Escape") setRadioEditando(false); }}
+                  autoFocus
+                  style={{ width: 70, padding: "2px 6px", border: "1px solid #6366f1", borderRadius: 6, fontSize: "0.82rem" }}
+                />
+                <span style={{ color: "#6b7280" }}>km</span>
+                <button
+                  onClick={guardarRadio}
+                  disabled={guardandoRadio}
+                  style={{ background: "#6366f1", color: "#fff", border: "none", borderRadius: 6, padding: "2px 10px", fontSize: "0.78rem", cursor: "pointer" }}
+                >
+                  {guardandoRadio ? "…" : "Guardar"}
+                </button>
+                <button
+                  onClick={() => setRadioEditando(false)}
+                  style={{ background: "none", border: "none", color: "#9ca3af", fontSize: "0.78rem", cursor: "pointer", padding: "2px 4px" }}
+                >
+                  Cancelar
+                </button>
+              </>
+            ) : (
+              <>
+                <strong style={{ color: "#111" }}>{radioKm != null ? `${radioKm} km` : "…"}</strong>
+                <button
+                  onClick={() => { setRadioInput(radioKm ?? ""); setRadioEditando(true); }}
+                  style={{ background: "none", border: "none", color: "#6366f1", fontSize: "0.78rem", cursor: "pointer", padding: "2px 4px", textDecoration: "underline" }}
+                >
+                  Editar
+                </button>
+              </>
+            )}
+          </div>
+
           {/* 🧪 BOTONES DE PRUEBA — quitar antes de producción */}
           <div className="d-flex gap-2 mb-3 p-2 rounded-2" style={{ background: "#fafafa", border: "1px dashed #d1d5db" }}>
             <span style={{ fontSize: "0.7rem", color: "#9ca3af", alignSelf: "center", whiteSpace: "nowrap" }}>🧪 test:</span>

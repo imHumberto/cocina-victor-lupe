@@ -11,6 +11,8 @@ class DireccionCliente(db.Model):
     direccion = db.Column(db.Text, nullable=False)
     referencias = db.Column(db.Text)
     es_principal = db.Column(db.Boolean, default=False, nullable=False)
+    lat = db.Column(db.Numeric(10, 7))
+    lng = db.Column(db.Numeric(10, 7))
 
     def to_dict(self):
         return {
@@ -20,4 +22,6 @@ class DireccionCliente(db.Model):
             "direccion": self.direccion,
             "referencias": self.referencias,
             "es_principal": self.es_principal,
+            "lat": float(self.lat) if self.lat else None,
+            "lng": float(self.lng) if self.lng else None,
         }

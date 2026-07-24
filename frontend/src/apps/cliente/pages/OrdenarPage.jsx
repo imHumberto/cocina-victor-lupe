@@ -160,6 +160,7 @@ export default function OrdenarPage() {
   const [comprobante, setComprobante] = useState(null);
   const [notas, setNotas] = useState("");
   const [sheetTransferencia, setSheetTransferencia] = useState(false);
+  const [zonaError, setZonaError] = useState(null); // { distancia_km, radio_km } | null
 
   useEffect(() => {
     Promise.all([
@@ -206,6 +207,13 @@ export default function OrdenarPage() {
       receptor, telefonoReceptor, direccionSeleccionada,
     });
   }, [comidas, paso, horaEntrega, metodoPago, receptor, telefonoReceptor, direccionSeleccionada]);
+
+  useEffect(() => {
+    if (!direccionSeleccionada?.lat || !direccionSeleccionada?.lng) { setZonaError(null); return; }
+    api.post("/config/validar-zona", { lat: direccionSeleccionada.lat, lng: direccionSeleccionada.lng })
+      .then(({ data }) => setZonaError(data.dentro ? null : data))
+      .catch(() => setZonaError(null));
+  }, [direccionSeleccionada]);
 
   const setComida = (idx, key, val) =>
     setComidas(cs => cs.map((c, i) => i === idx ? { ...c, [key]: val } : c));
@@ -570,13 +578,24 @@ export default function OrdenarPage() {
                 </button>
               </div>
               {direccionSeleccionada ? (
-                <div className="p-3 rounded-3 border d-flex align-items-center gap-2" style={{ background: "#fafafa" }}>
-                  <i className="bi bi-geo-alt text-brand" style={{ flexShrink: 0 }} />
-                  <div style={{ minWidth: 0 }}>
-                    <div className="fw-semibold small">{direccionSeleccionada.alias}</div>
-                    <div className="text-muted text-truncate" style={{ fontSize: "0.78rem" }}>{direccionSeleccionada.direccion}</div>
+                <>
+                  <div className="p-3 rounded-3 border d-flex align-items-center gap-2" style={{ background: "#fafafa" }}>
+                    <i className="bi bi-geo-alt text-brand" style={{ flexShrink: 0 }} />
+                    <div style={{ minWidth: 0 }}>
+                      <div className="fw-semibold small">{direccionSeleccionada.alias}</div>
+                      <div className="text-muted text-truncate" style={{ fontSize: "0.78rem" }}>{direccionSeleccionada.direccion}</div>
+                    </div>
                   </div>
-                </div>
+                  {zonaError && (
+                    <div className="mt-2 p-3 rounded-3 d-flex align-items-start gap-2" style={{ background: "#fef2f2", border: "1px solid #fca5a5" }}>
+                      <i className="bi bi-exclamation-triangle-fill" style={{ color: "#dc2626", flexShrink: 0, marginTop: 2 }} />
+                      <div style={{ fontSize: "0.82rem", color: "#991b1b" }}>
+                        Tu dirección está a <strong>{zonaError.distancia_km} km</strong> del restaurante.
+                        Solo entregamos dentro de <strong>{zonaError.radio_km} km</strong>. Por favor elige otra dirección.
+                      </div>
+                    </div>
+                  )}
+                </>
               ) : (
                 <button type="button" className="btn btn-outline-secondary w-100 text-start" onClick={abrirSheet}>
                   <i className="bi bi-plus me-1" /> Agregar dirección
@@ -757,14 +776,17 @@ export default function OrdenarPage() {
           <button
             className="btn btn-brand w-100 py-3 fw-bold rounded-3"
             onClick={() => setPaso(p => p + 1)}
-            disabled={paso === 1 && comidas.some(c => {
-              if (!c.platoId) return true;
-              if (c.esAltPlato) {
-                const alt = dia?.alternativas_plato?.find(p => p.id === c.platoId);
-                if (alt?.variante_proteina && !c.platoVariante) return true;
-              }
-              return false;
-            })}
+            disabled={
+              (paso === 1 && comidas.some(c => {
+                if (!c.platoId) return true;
+                if (c.esAltPlato) {
+                  const alt = dia?.alternativas_plato?.find(p => p.id === c.platoId);
+                  if (alt?.variante_proteina && !c.platoVariante) return true;
+                }
+                return false;
+              })) ||
+              (paso === 2 && !!zonaError)
+            }
           >
             Continuar
             {paso === 1 && <span className="ms-2 opacity-75">· ${total}</span>}

@@ -184,6 +184,8 @@ def agregar_direccion():
         direccion=data["direccion"],
         referencias=data.get("referencias"),
         es_principal=es_primera,
+        lat=data.get("lat"),
+        lng=data.get("lng"),
     )
     db.session.add(d)
     db.session.commit()
