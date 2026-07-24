@@ -9,8 +9,8 @@ dayjs.extend(isoWeek);
 dayjs.extend(weekOfYear);
 dayjs.extend(isSameOrAfter);
 
-const DIAS_NOMBRES = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
-const DIAS_CORTOS  = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
+const DIAS_NOMBRES = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes"];
+const DIAS_CORTOS  = ["Lun", "Mar", "Mié", "Jue", "Vie"];
 
 const CATEGORIAS = ["entrada", "plato_fuerte", "guarnicion", "bebida", "postre"];
 
@@ -28,7 +28,7 @@ const diaVacio = (i) => ({
   alternativa_bebida_costo_extra: 0,
 });
 
-const diasVacios = () => Array.from({ length: 7 }, (_, i) => diaVacio(i));
+const diasVacios = () => Array.from({ length: 5 }, (_, i) => diaVacio(i));
 
 // Calcula cuántas categorías tiene llenas un día
 function categoriasLlenas(d) {
@@ -216,7 +216,7 @@ export default function MenuAdminPage() {
     const ini = dayjs(menu.fecha_inicio);
     const esActual = ini.isoWeek() === hoy.isoWeek() && ini.year() === hoy.year();
     // 0=Lun … 6=Dom
-    const todayIdx = hoy.day() === 0 ? 6 : hoy.day() - 1;
+    const todayIdx = Math.min(hoy.day() === 0 ? 6 : hoy.day() - 1, 4);
 
     setMenuActivo(menu);
     setMsg("");
@@ -426,9 +426,6 @@ export default function MenuAdminPage() {
               </button>
             </>
           )}
-          <button className="btn btn-brand fw-semibold px-3" onClick={crearMenuDeHoy}>
-            Menú de hoy
-          </button>
           <button className="btn btn-outline-secondary fw-semibold px-3" onClick={() => { setFechaSeleccionada(lunesMinimo); setModalFecha(true); }}>
             + Semana completa
           </button>
@@ -514,10 +511,15 @@ export default function MenuAdminPage() {
 
             {listaTab.length === 0 && !menuActivo && (
               <div className="text-center py-5 text-muted">
-                <i className="bi bi-calendar-x fs-1 mb-3 d-block" />
-                {tab === "menu" && <p>No hay menú para esta semana</p>}
-                {tab === "proximos" && <p>No hay menús próximos creados</p>}
-                {tab === "historico" && <p>Sin historial de menús</p>}
+                <img src="/ilustraciones/ilustracion-emptyState.png" alt="" style={{ width: 160, marginBottom: 16, opacity: 0.85 }} />
+                {tab === "menu" && <p className="mb-0">No hay menú para esta semana</p>}
+                {tab === "proximos" && <p className="mb-0">No hay menús próximos creados</p>}
+                {tab === "historico" && <p className="mb-0">Sin historial de menús</p>}
+                {menus.length === 0 && (
+                  <button className="btn btn-brand px-4 mt-3" onClick={() => { setFechaSeleccionada(lunesMinimo); setModalFecha(true); }}>
+                    Crear primer menú
+                  </button>
+                )}
               </div>
             )}
           </>
@@ -706,16 +708,7 @@ export default function MenuAdminPage() {
             </div>
           </div>
         </div>
-      ) : (
-        <div className="text-center py-5 text-muted">
-          <i className="bi bi-calendar-week fs-1 mb-3 d-block" />
-          <p>No hay ningún menú seleccionado</p>
-          {menus.length > 0
-            ? <p className="small">Selecciona una semana arriba</p>
-            : <button className="btn btn-brand px-4" onClick={() => { setFechaSeleccionada(lunesMinimo); setModalFecha(true); }}>Crear primer menú</button>
-          }
-        </div>
-      )}
+      ) : null}
 
       {/* Modal nueva semana */}
       {modalFecha && (

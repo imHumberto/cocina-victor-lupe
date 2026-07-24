@@ -49,6 +49,20 @@ function getMenuImg(nombre) {
   return null;
 }
 
+function FinDeSemana() {
+  return (
+    <div className="cliente-page d-flex flex-column align-items-center justify-content-center" style={{ minHeight: "80dvh", textAlign: "center", padding: "2rem 1.5rem" }}>
+      <h1 style={{ fontFamily: "Costa, sans-serif", fontSize: "2rem", fontWeight: 900, color: "var(--color-navy)", textTransform: "uppercase", lineHeight: 1.1, marginBottom: "2rem" }}>
+        Buen fin<br />de semana
+      </h1>
+      <img src="/ilustraciones/IMG-findeSemana.png" alt="Fin de semana" style={{ width: "100%", maxWidth: 300, marginBottom: "2rem" }} />
+      <p style={{ fontFamily: "Costa, sans-serif", fontSize: "1.1rem", fontWeight: 700, color: "var(--color-navy)", textTransform: "uppercase", lineHeight: 1.3, margin: 0 }}>
+        Estamos recargando batería.<br />¡Nos vemos en la semana!
+      </p>
+    </div>
+  );
+}
+
 export default function MenuPage() {
   const [menu, setMenu] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -56,16 +70,20 @@ export default function MenuPage() {
   const [pedidosPausados, setPedidosPausados] = useState(false);
   const navigate = useNavigate();
 
+  const esFindeSemana = [0, 6].includes(dayjs().day()); // 0=domingo, 6=sábado
   const hoyIdx = dayjs().day() === 0 ? 6 : dayjs().day() - 1;
-  const [tab, setTab] = useState(hoyIdx >= 0 && hoyIdx <= 6 ? hoyIdx : 0);
+  const [tab, setTab] = useState(hoyIdx >= 0 && hoyIdx <= 4 ? hoyIdx : 0);
 
   useEffect(() => {
+    if (esFindeSemana) return;
     api.get("/config/estado").then(({ data }) => setPedidosPausados(data.pedidos_pausados)).catch(() => {});
     api.get("/menu/actual")
       .then(({ data }) => setMenu(data))
       .catch(() => setError("No hay menú disponible esta semana"))
       .finally(() => setLoading(false));
   }, []);
+
+  if (esFindeSemana) return <FinDeSemana />;
 
   if (loading) return (
     <div className="d-flex justify-content-center align-items-center" style={{ minHeight: "60vh" }}>
