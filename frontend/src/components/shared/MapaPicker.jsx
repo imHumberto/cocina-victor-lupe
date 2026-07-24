@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import api from "../../services/api";
 
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -12,21 +13,18 @@ L.Icon.Default.mergeOptions({
 const CDMX = [19.4326, -99.1332];
 
 async function geocodificarInverso(lat, lng) {
-  const res = await fetch(`/api/geo/inverso?lat=${lat}&lng=${lng}`);
-  const data = await res.json();
-  return data.display_name ?? "";
+  const res = await api.get(`/geo/inverso?lat=${lat}&lng=${lng}`);
+  return res.data.display_name ?? "";
 }
 
 async function buscarDirecciones(query) {
-  const res = await fetch(`/api/geo/buscar?q=${encodeURIComponent(query)}`);
-  if (!res.ok) return [];
-  return await res.json();
+  const res = await api.get(`/geo/buscar?q=${encodeURIComponent(query)}`);
+  return res.data ?? [];
 }
 
 async function obtenerCoordenadasPlace(place_id) {
-  const res = await fetch(`/api/geo/detalle?place_id=${encodeURIComponent(place_id)}`);
-  if (!res.ok) return null;
-  const data = await res.json();
+  const res = await api.get(`/geo/detalle?place_id=${encodeURIComponent(place_id)}`);
+  const data = res.data;
   if (data.lat && data.lng) return { lat: data.lat, lng: data.lng };
   return null;
 }
