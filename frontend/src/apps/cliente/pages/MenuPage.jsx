@@ -91,12 +91,9 @@ export default function MenuPage() {
     </div>
   );
 
-  if (error) return (
-    <div className="p-4 text-center text-muted">
-      <i className="bi bi-calendar-x fs-1 d-block mb-2" />
-      {error}
-    </div>
-  );
+  const hoy = dayjs();
+  const diasDesdeElLunes = hoy.day() === 0 ? 6 : hoy.day() - 1;
+  const lunesEstaSemana = hoy.subtract(diasDesdeElLunes, "day");
 
   const dias = menu?.dias ?? [];
   const diaActivo = dias.find((d) => d.dia === tab);
@@ -104,7 +101,7 @@ export default function MenuPage() {
   const esHoy = tab === hoyIdx;
   const puedeOrdenar = esHoy && !pedidosPausados;
 
-  const fechaInicio = dayjs(menu.fecha_inicio);
+  const fechaInicio = menu ? dayjs(menu.fecha_inicio) : lunesEstaSemana;
   const fechaFin = fechaInicio.add(4, "day");
   const subtitulo = `Semana del ${fechaInicio.format("D [de] MMMM")} al ${fechaFin.format("D [de] MMMM")}`;
 
