@@ -348,8 +348,17 @@ export default function UsuariosPage() {
                 {/* Dirección */}
                 <div style={{ display: "flex", alignItems: "center" }}>
                   {u.rol === "cliente" ? (
-                    <div style={{ fontSize: "0.78rem", color: "#545454", lineHeight: 1.4, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
-                      {u.direccion_entrega || "—"}
+                    <div style={{ fontSize: "0.78rem", color: "#545454", lineHeight: 1.4 }}>
+                      {u.direcciones?.length > 0 ? (
+                        <div>
+                          {(u.direcciones.find(d => d.es_principal) || u.direcciones[0]).direccion}
+                          {u.direcciones.length > 1 && (
+                            <span style={{ color: "#94a3b8", marginLeft: 4 }}>+{u.direcciones.length - 1} más</span>
+                          )}
+                        </div>
+                      ) : (
+                        u.direccion_entrega || "—"
+                      )}
                     </div>
                   ) : (
                     <span style={{ fontSize: "0.78rem", color: "#d1d5db" }}>—</span>

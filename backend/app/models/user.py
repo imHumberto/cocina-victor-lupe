@@ -24,6 +24,7 @@ class User(db.Model):
     pedidos = db.relationship("Pedido", foreign_keys="Pedido.cliente_id", backref="cliente", lazy="dynamic")
     pedidos_repartidos = db.relationship("Pedido", foreign_keys="Pedido.repartidor_id", backref="repartidor", lazy="dynamic")
     notificaciones = db.relationship("Notificacion", backref="usuario", lazy="dynamic")
+    direcciones = db.relationship("DireccionCliente", backref="usuario", lazy="select", cascade="all, delete-orphan")
 
     def to_dict(self):
         return {
@@ -38,4 +39,5 @@ class User(db.Model):
             "notif_app": self.notif_app,
             "notif_whatsapp": self.notif_whatsapp,
             "activo": self.activo,
+            "direcciones": [d.to_dict() for d in self.direcciones],
         }
