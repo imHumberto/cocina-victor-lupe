@@ -1071,7 +1071,7 @@ export default function PedidosAdminPage() {
     w.document.write(`
       <html><head><title>Comanda #${p.id}</title>
       <style>body{font-family:monospace;padding:20px} h2{margin:0}</style></head><body>
-      <h2>La Cocina de Víctor y Lupe — Comanda #${p.id}</h2>
+      <h2>Sazón Mexa — Comanda #${p.id}</h2>
       <p>Recibe: <strong>${p.receptor_nombre || p.cliente?.nombre}</strong></p>
       <p>Dirección: ${p.direccion?.direccion ?? p.entrega_direccion ?? p.cliente?.direccion_entrega ?? "—"}</p>
       ${(p.direccion?.referencias || p.entrega_referencias) ? `<p>Referencias: ${p.direccion?.referencias ?? p.entrega_referencias}</p>` : ""}

@@ -42,7 +42,7 @@ export default function LoginPage() {
         {/* Logo */}
         <img
           src="/logo.svg"
-          alt="La Cocina de Víctor y Lupe"
+          alt="Sazón Mexa"
           style={{ width: 160, marginBottom: 20 }}
         />
 

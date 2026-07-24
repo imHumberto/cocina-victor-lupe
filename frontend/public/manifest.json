@@ -1,6 +1,6 @@
 {
-  "name": "La Cocina de Víctor y Lupe",
-  "short_name": "Sazón de Vic",
+  "name": "Sazón Mexa",
+  "short_name": "Sazón Mexa",
   "description": "Pedidos de comida corrida a domicilio",
   "start_url": "/",
   "display": "standalone",

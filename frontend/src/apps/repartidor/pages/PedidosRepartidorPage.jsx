@@ -299,7 +299,7 @@ function PedidoCard({ pedido: p, onTomar, onEntregar, repartidorNombre, showFech
   const tel = (p.receptor_telefono || p.cliente?.telefono_whatsapp)?.replace(/\D/g, "");
   const waMsg = tel
     ? encodeURIComponent(
-        `Hola ${p.receptor_nombre || p.cliente?.nombre || "Cliente"}, soy ${repartidorNombre || "el repartidor"} de La Cocina de Víctor y Lupe. Ya voy en camino con tu pedido, llego aproximadamente a las ${p.hora_entrega}. 🛵`
+        `Hola ${p.receptor_nombre || p.cliente?.nombre || "Cliente"}, soy ${repartidorNombre || "el repartidor"} de Sazón Mexa. Ya voy en camino con tu pedido, llego aproximadamente a las ${p.hora_entrega}. 🛵`
       )
     : null;
 

@@ -30,7 +30,7 @@ function PedidoColaCard({ pedido: p, expandidoId, setExpandidoId, onEntregar, re
   const address = p.entrega_direccion ?? p.direccion?.direccion ?? p.cliente?.direccion_entrega ?? null;
   const tel = (p.receptor_telefono || p.cliente?.telefono_whatsapp)?.replace(/\D/g, "");
   const waMsg = tel
-    ? encodeURIComponent(`Hola ${p.receptor_nombre || p.cliente?.nombre || "Cliente"}, soy ${repartidorNombre || "el repartidor"} de La Cocina de Víctor y Lupe. Ya voy en camino con tu pedido, llego aproximadamente a las ${p.hora_entrega}. 🛵`)
+    ? encodeURIComponent(`Hola ${p.receptor_nombre || p.cliente?.nombre || "Cliente"}, soy ${repartidorNombre || "el repartidor"} de Sazón Mexa. Ya voy en camino con tu pedido, llego aproximadamente a las ${p.hora_entrega}. 🛵`)
     : null;
 
   const rutaUrl = (() => {
