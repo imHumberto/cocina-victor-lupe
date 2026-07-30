@@ -21,9 +21,9 @@ class User(db.Model):
     activo = db.Column(db.Boolean, default=True)
     created_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 
-    pedidos = db.relationship("Pedido", foreign_keys="Pedido.cliente_id", backref="cliente", lazy="dynamic")
-    pedidos_repartidos = db.relationship("Pedido", foreign_keys="Pedido.repartidor_id", backref="repartidor", lazy="dynamic")
-    notificaciones = db.relationship("Notificacion", backref="usuario", lazy="dynamic")
+    pedidos = db.relationship("Pedido", foreign_keys="Pedido.cliente_id", backref="cliente", lazy="dynamic", cascade="all, delete-orphan")
+    pedidos_repartidos = db.relationship("Pedido", foreign_keys="Pedido.repartidor_id", backref="repartidor", lazy="dynamic", cascade="all, delete-orphan")
+    notificaciones = db.relationship("Notificacion", backref="usuario", lazy="dynamic", cascade="all, delete-orphan")
     direcciones = db.relationship("DireccionCliente", backref="usuario", lazy="select", cascade="all, delete-orphan")
 
     def to_dict(self):

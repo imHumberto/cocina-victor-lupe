@@ -443,9 +443,11 @@ export default function UsuariosPage() {
                     Editar
                   </button>
                   <button onClick={async () => {
-                    if (!confirm(`¿Eliminar a "${u.nombre}"?`)) return;
-                    await api.delete(`/admin/usuarios/${u.id}`);
-                    setUsuarios(us => us.filter(x => x.id !== u.id));
+                    if (!confirm(`¿Eliminar a "${u.nombre}"? Esto borrará también sus pedidos.`)) return;
+                    try {
+                      await api.delete(`/admin/usuarios/${u.id}`);
+                      setUsuarios(us => us.filter(x => x.id !== u.id));
+                    } catch (err) { alert(err.response?.data?.error ?? "Error al eliminar"); }
                   }}
                     style={{ background: "transparent", border: "none", borderRadius: 8, padding: "6px 8px", color: "#ef4444", cursor: "pointer", fontSize: "0.9rem" }}
                     title="Eliminar">
