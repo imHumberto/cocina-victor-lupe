@@ -44,6 +44,10 @@ export default function UsuariosPage() {
   const [inviteGenerado, setInviteGenerado] = useState(null);
   const [copiado, setCopiado]           = useState(false);
 
+  // Modal eliminar
+  const [modalEliminar, setModalEliminar] = useState(false);
+  const [confirmNombre, setConfirmNombre] = useState("");
+
   useEffect(() => {
     api.get("/admin/usuarios").then(({ data }) => setUsuarios(data));
   }, []);
@@ -121,14 +125,15 @@ export default function UsuariosPage() {
     }
   };
 
+  const abrirModalEliminar = () => { setConfirmNombre(""); setModalEliminar(true); };
+
   const eliminar = async () => {
-    const u = usuarios.find(x => x.id === editId);
-    if (!u || !confirm(`¿Eliminar a "${u.nombre}"?`)) return;
     try {
       await api.delete(`/admin/usuarios/${editId}`);
       setUsuarios(us => us.filter(x => x.id !== editId));
+      setModalEliminar(false);
       cerrar();
-    } catch (err) { setMsg(err.response?.data?.error ?? "Error al eliminar"); }
+    } catch (err) { setMsg(err.response?.data?.error ?? "Error al eliminar"); setModalEliminar(false); }
   };
 
   // Invite
@@ -290,7 +295,7 @@ export default function UsuariosPage() {
         {/* Footer */}
         <div style={{ padding: "16px 24px", borderTop: "1px solid #f3f4f6", display: "flex", gap: 10, flexShrink: 0 }}>
           {drawer === "editar" && (
-            <button type="button" onClick={eliminar}
+            <button type="button" onClick={abrirModalEliminar}
               style={{ background: "#fef2f2", color: "#ef4444", border: "none", borderRadius: 10, padding: "12px 16px", fontWeight: 600, fontSize: "0.85rem", cursor: "pointer" }}>
               Eliminar
             </button>
@@ -437,21 +442,10 @@ export default function UsuariosPage() {
                 </div>
 
                 {/* Acciones */}
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 6 }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end" }}>
                   <button onClick={() => abrirEditar(u)}
                     style={{ background: "#F1F4F9", border: "none", borderRadius: 8, padding: "6px 14px", color: "#545454", fontSize: "0.78rem", fontWeight: 600, cursor: "pointer" }}>
                     Editar
-                  </button>
-                  <button onClick={async () => {
-                    if (!confirm(`¿Eliminar a "${u.nombre}"? Esto borrará también sus pedidos.`)) return;
-                    try {
-                      await api.delete(`/admin/usuarios/${u.id}`);
-                      setUsuarios(us => us.filter(x => x.id !== u.id));
-                    } catch (err) { alert(err.response?.data?.error ?? "Error al eliminar"); }
-                  }}
-                    style={{ background: "transparent", border: "none", borderRadius: 8, padding: "6px 8px", color: "#ef4444", cursor: "pointer", fontSize: "0.9rem" }}
-                    title="Eliminar">
-                    <i className="bi bi-trash" />
                   </button>
                 </div>
               </div>
@@ -464,6 +458,55 @@ export default function UsuariosPage() {
           <Paginacion pagina={paginaActual} total={totalPaginas} onChange={setPagina} />
         )}
       </div>
+
+      {/* ── Modal eliminar ── */}
+      {modalEliminar && (() => {
+        const u = usuarios.find(x => x.id === editId);
+        const nombreOk = confirmNombre.trim().toLowerCase() === u?.nombre?.trim().toLowerCase();
+        return (
+          <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 70, display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
+            <div style={{ background: "#fff", borderRadius: 16, padding: 28, width: "100%", maxWidth: 400, boxShadow: "0 20px 60px rgba(0,0,0,0.2)" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
+                <div style={{ width: 40, height: 40, borderRadius: "50%", background: "#fef2f2", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  <i className="bi bi-exclamation-triangle-fill" style={{ color: "#ef4444", fontSize: "1.1rem" }} />
+                </div>
+                <div>
+                  <div style={{ fontWeight: 700, fontSize: "1rem", color: "#17181A" }}>Eliminar usuario</div>
+                  <div style={{ fontSize: "0.78rem", color: "#9ca3af" }}>Esta acción no se puede deshacer</div>
+                </div>
+              </div>
+
+              <p style={{ fontSize: "0.85rem", color: "#545454", marginBottom: 16 }}>
+                Se eliminará a <strong>{u?.nombre}</strong> junto con todos sus pedidos y direcciones guardadas.
+              </p>
+
+              <label style={{ display: "block", fontSize: "0.78rem", fontWeight: 600, color: "#809FB8", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.04em" }}>
+                Escribe el nombre del usuario para confirmar
+              </label>
+              <input
+                type="text"
+                value={confirmNombre}
+                onChange={e => setConfirmNombre(e.target.value)}
+                onKeyDown={e => { if (e.key === "Enter" && nombreOk) eliminar(); if (e.key === "Escape") setModalEliminar(false); }}
+                placeholder={u?.nombre}
+                autoFocus
+                style={{ width: "100%", padding: "10px 12px", borderRadius: 10, border: `1.5px solid ${nombreOk ? "#ef4444" : "#e5e7eb"}`, fontSize: "0.9rem", color: "#17181A", outline: "none", boxSizing: "border-box", marginBottom: 20 }}
+              />
+
+              <div style={{ display: "flex", gap: 10 }}>
+                <button onClick={() => setModalEliminar(false)}
+                  style={{ flex: 1, background: "#F1F4F9", color: "#545454", border: "none", borderRadius: 10, padding: "12px", fontWeight: 600, fontSize: "0.9rem", cursor: "pointer" }}>
+                  Cancelar
+                </button>
+                <button onClick={eliminar} disabled={!nombreOk}
+                  style={{ flex: 1, background: nombreOk ? "#ef4444" : "#fca5a5", color: "#fff", border: "none", borderRadius: 10, padding: "12px", fontWeight: 600, fontSize: "0.9rem", cursor: nombreOk ? "pointer" : "not-allowed", transition: "background 0.15s" }}>
+                  Eliminar
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* ── Modal invitar ── */}
       {modalInvite && (
