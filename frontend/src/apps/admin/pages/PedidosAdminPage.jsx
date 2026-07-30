@@ -290,8 +290,8 @@ function MapaEntrega({ pedido }) {
 // ── Resumen del pedido ───────────────────────────────────────────────────────
 
 function ResumenPedido({ pedido }) {
-  const PRECIO_BASE = 130;
-  const EXTRA_PLATO = 20;
+  const PRECIO_BASE = 120;
+  const EXTRA_PLATO = 10;
   const EXTRA_BEBIDA = 10;
   const total = PRECIO_BASE + (pedido.plato_elegido === "alternativa" ? EXTRA_PLATO : 0) + (pedido.bebida_elegida === "alternativa" ? EXTRA_BEBIDA : 0);
 
