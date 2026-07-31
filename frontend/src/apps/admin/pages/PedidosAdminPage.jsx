@@ -595,8 +595,8 @@ function DetalleFinalizado({ pedido: p }) {
     ? new Date(p.updated_at).toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" })
     : null;
 
-  const PRECIO_BASE = 130;
-  const EXTRA_PLATO = 20;
+  const PRECIO_BASE = 120;
+  const EXTRA_PLATO = 10;
   const EXTRA_BEBIDA = 10;
   const total = PRECIO_BASE + (p.plato_elegido === "alternativa" ? EXTRA_PLATO : 0) + (p.bebida_elegida === "alternativa" ? EXTRA_BEBIDA : 0);
 

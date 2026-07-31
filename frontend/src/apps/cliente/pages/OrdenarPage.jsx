@@ -15,8 +15,8 @@ const TIPOS_VIVIENDA = [
   { value: "otro",         icon: "📍", label: "Otro" },
 ];
 
-const PRECIO_BASE = 130;
-const EXTRA_PLATO = 20;
+const PRECIO_BASE = 120;
+const EXTRA_PLATO = 10;
 const EXTRA_BEBIDA = 10;
 const HORAS = ["13:00","13:30","14:00","14:30","15:00","15:30","16:00","16:30","17:00"];
 
