@@ -35,6 +35,7 @@ class Pedido(db.Model):
     receptor_telefono = db.Column(db.String(20))
     repartidor_id = db.Column(db.Integer, db.ForeignKey("users.id"))
     tomado_en = db.Column(db.DateTime(timezone=True))
+    postre_nombre = db.Column(db.Text)
     notas = db.Column(db.Text)
     created_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
     updated_at = db.Column(
@@ -55,6 +56,7 @@ class Pedido(db.Model):
             "plato_nombre": self.plato_nombre,
             "bebida_elegida": self.bebida_elegida,
             "bebida_nombre": self.bebida_nombre,
+            "postre_nombre": self.postre_nombre,
             "estado": self.estado,
             "metodo_pago": self.metodo_pago,
             "comprobante_url": self.comprobante_url,

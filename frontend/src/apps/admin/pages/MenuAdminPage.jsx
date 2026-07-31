@@ -19,9 +19,9 @@ const diaVacio = (i) => ({
   activo: true,
   platos_fuertes_ids: [],
   guarniciones_ids: [],
+  bebidas_ids: [],
+  postres_ids: [],
   entrada_id: null,
-  postre_id: null,
-  bebida_id: null,
   alternativa_plato_disponible: true,
   alternativa_bebida_disponible: true,
   alternativa_plato_costo_extra: 0,
@@ -36,8 +36,8 @@ function categoriasLlenas(d) {
   if (d.entrada_id) n++;
   if (d.platos_fuertes_ids?.length) n++;
   if (d.guarniciones_ids?.length) n++;
-  if (d.bebida_id) n++;
-  if (d.postre_id) n++;
+  if (d.bebidas_ids?.length) n++;
+  if (d.postres_ids?.length) n++;
   return n;
 }
 
@@ -47,8 +47,8 @@ function DotsCategorias({ d }) {
     !!d.entrada_id,
     !!d.platos_fuertes_ids?.length,
     !!d.guarniciones_ids?.length,
-    !!d.bebida_id,
-    !!d.postre_id,
+    !!d.bebidas_ids?.length,
+    !!d.postres_ids?.length,
   ];
   return (
     <div className="d-flex gap-1 mt-1">
@@ -233,9 +233,9 @@ export default function MenuAdminPage() {
           activo: (esPasado || esFuturo) ? false : (d.activo ?? true),
           platos_fuertes_ids: (d.platos_fuertes ?? []).map((p) => p.id),
           guarniciones_ids: (d.guarniciones ?? []).map((p) => p.id),
+          bebidas_ids: (d.bebidas ?? []).map((p) => p.id),
+          postres_ids: (d.postres ?? []).map((p) => p.id),
           entrada_id: d.entrada?.id ?? null,
-          postre_id: d.postre?.id ?? null,
-          bebida_id: d.bebida?.id ?? null,
           alternativa_plato_disponible: d.alternativa_plato_disponible ?? true,
           alternativa_bebida_disponible: d.alternativa_bebida_disponible ?? true,
           alternativa_plato_costo_extra: d.alternativa_plato_costo_extra ?? 0,
@@ -295,9 +295,9 @@ export default function MenuAdminPage() {
         activo: d.activo,
         platos_fuertes_ids: d.activo ? d.platos_fuertes_ids : [],
         guarniciones_ids: d.activo ? d.guarniciones_ids : [],
+        bebidas_ids: d.activo ? d.bebidas_ids : [],
+        postres_ids: d.activo ? d.postres_ids : [],
         entrada_id: d.activo ? d.entrada_id : null,
-        postre_id: d.activo ? d.postre_id : null,
-        bebida_id: d.activo ? d.bebida_id : null,
         alternativa_plato_disponible: d.alternativa_plato_disponible,
         alternativa_bebida_disponible: d.alternativa_bebida_disponible,
         alternativa_plato_costo_extra: d.alternativa_plato_costo_extra,
@@ -659,7 +659,7 @@ export default function MenuAdminPage() {
                   {/* Bebida */}
                   <SeccionCategoria
                     titulo="Bebida"
-                    count={d.bebida_id ? 1 : 0}
+                    count={d.bebidas_ids.length}
                     footer={altBebidas.length > 0 ? (
                       <FooterAlternativo
                         label="Alternativo de bebida fijo"
@@ -670,32 +670,28 @@ export default function MenuAdminPage() {
                       />
                     ) : null}
                   >
-                    {d.bebida_id && (
-                      <Chip nombre={nombrePlatillo(d.bebida_id)} onRemove={() => setDia("bebida_id", null)} disabled={publicado} />
-                    )}
-                    {!d.bebida_id && (
-                      <AgregarPlatillo
-                        opciones={porTipo("bebida")}
-                        seleccionados={d.bebida_id ? [d.bebida_id] : []}
-                        onAgregar={(id) => setDia("bebida_id", id)}
-                        disabled={publicado}
-                      />
-                    )}
+                    {d.bebidas_ids.map((id) => (
+                      <Chip key={id} nombre={nombrePlatillo(id)} onRemove={() => quitarChip("bebidas_ids", id)} disabled={publicado} />
+                    ))}
+                    <AgregarPlatillo
+                      opciones={porTipo("bebida")}
+                      seleccionados={d.bebidas_ids}
+                      onAgregar={(id) => agregarChip("bebidas_ids", id)}
+                      disabled={publicado}
+                    />
                   </SeccionCategoria>
 
                   {/* Postre */}
-                  <SeccionCategoria titulo="Postre" count={d.postre_id ? 1 : 0} disabled={publicado}>
-                    {d.postre_id && (
-                      <Chip nombre={nombrePlatillo(d.postre_id)} onRemove={() => setDia("postre_id", null)} disabled={publicado} />
-                    )}
-                    {!d.postre_id && (
-                      <AgregarPlatillo
-                        opciones={porTipo("postre")}
-                        seleccionados={d.postre_id ? [d.postre_id] : []}
-                        onAgregar={(id) => setDia("postre_id", id)}
-                        disabled={publicado}
-                      />
-                    )}
+                  <SeccionCategoria titulo="Postre" count={d.postres_ids.length}>
+                    {d.postres_ids.map((id) => (
+                      <Chip key={id} nombre={nombrePlatillo(id)} onRemove={() => quitarChip("postres_ids", id)} disabled={publicado} />
+                    ))}
+                    <AgregarPlatillo
+                      opciones={porTipo("postre")}
+                      seleccionados={d.postres_ids}
+                      onAgregar={(id) => agregarChip("postres_ids", id)}
+                      disabled={publicado}
+                    />
                   </SeccionCategoria>
 
                 </div>

@@ -80,11 +80,19 @@ def crear_pedido():
         plato_nombre = p.nombre if p else None
 
     bebida_nombre = None
-    if bebida_elegida == "alternativa" and bebida_id:
+    if bebida_id:
         b = Platillo.query.get(bebida_id)
         bebida_nombre = b.nombre if b else None
-    elif dia_menu.bebida:
-        bebida_nombre = dia_menu.bebida.nombre
+    elif dia_menu.bebidas:
+        bebida_nombre = dia_menu.bebidas[0].nombre
+
+    postre_id = data.get("postre_id")
+    postre_nombre = None
+    if postre_id:
+        p_postre = Platillo.query.get(postre_id)
+        postre_nombre = p_postre.nombre if p_postre else None
+    elif dia_menu.postres:
+        postre_nombre = dia_menu.postres[0].nombre
 
     pedido = Pedido(
         cliente_id=user_id,
@@ -96,6 +104,7 @@ def crear_pedido():
         bebida_nombre=bebida_nombre,
         metodo_pago=data["metodo_pago"],
         comprobante_url=data.get("comprobante_url") or None,
+        postre_nombre=postre_nombre,
         notas=data.get("notas"),
         direccion_id=direccion_id,
         entrega_direccion=data.get("entrega_direccion") or None,

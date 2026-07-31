@@ -8,9 +8,20 @@ dia_platos_fuertes = db.Table(
     db.Column("platillo_id", db.Integer, db.ForeignKey("platillos.id", ondelete="CASCADE"), primary_key=True),
 )
 
-
 dia_guarniciones = db.Table(
     "dia_guarniciones",
+    db.Column("dia_menu_id", db.Integer, db.ForeignKey("dias_menu.id", ondelete="CASCADE"), primary_key=True),
+    db.Column("platillo_id", db.Integer, db.ForeignKey("platillos.id", ondelete="CASCADE"), primary_key=True),
+)
+
+dia_bebidas = db.Table(
+    "dia_bebidas",
+    db.Column("dia_menu_id", db.Integer, db.ForeignKey("dias_menu.id", ondelete="CASCADE"), primary_key=True),
+    db.Column("platillo_id", db.Integer, db.ForeignKey("platillos.id", ondelete="CASCADE"), primary_key=True),
+)
+
+dia_postres = db.Table(
+    "dia_postres",
     db.Column("dia_menu_id", db.Integer, db.ForeignKey("dias_menu.id", ondelete="CASCADE"), primary_key=True),
     db.Column("platillo_id", db.Integer, db.ForeignKey("platillos.id", ondelete="CASCADE"), primary_key=True),
 )
@@ -47,22 +58,19 @@ class DiaMenu(db.Model):
     menu_semanal_id = db.Column(db.Integer, db.ForeignKey("menus_semanales.id"), nullable=False)
     activo = db.Column(db.Boolean, default=True, nullable=False)
 
-    # Campos simples (un solo platillo)
     entrada_id = db.Column(db.Integer, db.ForeignKey("platillos.id"))
-    postre_id = db.Column(db.Integer, db.ForeignKey("platillos.id"))
-    bebida_id = db.Column(db.Integer, db.ForeignKey("platillos.id"))
     alternativa_bebida_costo_extra = db.Column(db.Numeric(8, 2), default=0)
     alternativa_plato_costo_extra = db.Column(db.Numeric(8, 2), default=0)
     alternativa_plato_disponible = db.Column(db.Boolean, default=True, nullable=False)
     alternativa_bebida_disponible = db.Column(db.Boolean, default=True, nullable=False)
 
     entrada = db.relationship("Platillo", foreign_keys=[entrada_id])
-    postre = db.relationship("Platillo", foreign_keys=[postre_id])
-    bebida = db.relationship("Platillo", foreign_keys=[bebida_id])
 
-    # Campos multi-selección
+    # Multi-selección
     platos_fuertes = db.relationship("Platillo", secondary=dia_platos_fuertes, lazy="subquery")
     guarniciones = db.relationship("Platillo", secondary=dia_guarniciones, lazy="subquery")
+    bebidas = db.relationship("Platillo", secondary=dia_bebidas, lazy="subquery")
+    postres = db.relationship("Platillo", secondary=dia_postres, lazy="subquery")
 
     pedidos = db.relationship("Pedido", backref="dia_menu", lazy="dynamic")
 
@@ -86,9 +94,9 @@ class DiaMenu(db.Model):
             "alternativa_plato_costo_extra": float(self.alternativa_plato_costo_extra or 0),
             "alternativas_plato": [p.to_dict() for p in alt_platos],
             "guarniciones": [p.to_dict() for p in self.guarniciones],
-            "postre": self.postre.to_dict() if self.postre else None,
-            "bebida": self.bebida.to_dict() if self.bebida else None,
+            "bebidas": [b.to_dict() for b in self.bebidas],
             "alternativa_bebida_disponible": self.alternativa_bebida_disponible,
             "alternativa_bebida_costo_extra": float(self.alternativa_bebida_costo_extra or 0),
             "alternativas_bebida": [p.to_dict() for p in alt_bebidas],
+            "postres": [p.to_dict() for p in self.postres],
         }

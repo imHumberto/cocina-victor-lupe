@@ -34,7 +34,7 @@ def crear_platillo():
     duplicado = Platillo.query.filter(db.func.lower(Platillo.nombre) == nombre.lower()).first()
     if duplicado:
         return jsonify({"error": f'Ya existe un platillo llamado "{duplicado.nombre}"'}), 409
-    p = Platillo(nombre=nombre, tipo=data["tipo"], descripcion=data.get("descripcion"), foto_url=data.get("foto_url"), activo=data.get("activo", True), es_alternativa=data.get("es_alternativa", False), proteina=data.get("proteina") or None, variante_proteina=data.get("variante_proteina", False))
+    p = Platillo(nombre=nombre, tipo=data["tipo"], descripcion=data.get("descripcion"), foto_url=data.get("foto_url"), activo=data.get("activo", True), es_alternativa=data.get("es_alternativa", False), proteina=data.get("proteina") or None, variantes_proteina=data.get("variantes_proteina") or None)
     db.session.add(p)
     db.session.commit()
     return jsonify(p.to_dict()), 201
@@ -52,7 +52,7 @@ def editar_platillo(platillo_id):
         if duplicado:
             return jsonify({"error": f'Ya existe un platillo llamado "{duplicado.nombre}"'}), 409
         p.nombre = nombre
-    for campo in ("tipo", "descripcion", "foto_url", "activo", "es_alternativa", "proteina", "variante_proteina"):
+    for campo in ("tipo", "descripcion", "foto_url", "activo", "es_alternativa", "proteina", "variantes_proteina"):
         if campo in data:
             setattr(p, campo, data[campo])
     db.session.commit()
@@ -64,19 +64,14 @@ def editar_platillo(platillo_id):
 @require_role("admin")
 def eliminar_platillo(platillo_id):
     p = Platillo.query.get_or_404(platillo_id)
-    from app.models.menu import dia_platos_fuertes, dia_guarniciones
-    en_uso_simple = DiaMenu.query.filter(
-        db.or_(
-            DiaMenu.entrada_id == platillo_id,
-            DiaMenu.postre_id == platillo_id,
-            DiaMenu.bebida_id == platillo_id,
-        )
-    ).first()
-    en_uso_multi = db.session.execute(
-        db.select(dia_platos_fuertes.c.dia_menu_id).where(dia_platos_fuertes.c.platillo_id == platillo_id).limit(1)
-    ).first() or db.session.execute(
-        db.select(dia_guarniciones.c.dia_menu_id).where(dia_guarniciones.c.platillo_id == platillo_id).limit(1)
-    ).first()
+    from app.models.menu import dia_platos_fuertes, dia_guarniciones, dia_bebidas, dia_postres
+    en_uso_simple = DiaMenu.query.filter(DiaMenu.entrada_id == platillo_id).first()
+    en_uso_multi = (
+        db.session.execute(db.select(dia_platos_fuertes.c.dia_menu_id).where(dia_platos_fuertes.c.platillo_id == platillo_id).limit(1)).first() or
+        db.session.execute(db.select(dia_guarniciones.c.dia_menu_id).where(dia_guarniciones.c.platillo_id == platillo_id).limit(1)).first() or
+        db.session.execute(db.select(dia_bebidas.c.dia_menu_id).where(dia_bebidas.c.platillo_id == platillo_id).limit(1)).first() or
+        db.session.execute(db.select(dia_postres.c.dia_menu_id).where(dia_postres.c.platillo_id == platillo_id).limit(1)).first()
+    )
     if en_uso_simple or en_uso_multi:
         return jsonify({"error": f'"{p.nombre}" está en uso en un menú. Desactívalo en lugar de eliminarlo.'}), 409
     db.session.delete(p)
@@ -134,8 +129,6 @@ def guardar_dias_menu(menu_id):
             alternativa_plato_costo_extra=d.get("alternativa_plato_costo_extra", 0),
             alternativa_bebida_disponible=d.get("alternativa_bebida_disponible", True),
             alternativa_bebida_costo_extra=d.get("alternativa_bebida_costo_extra", 0),
-            postre_id=d.get("postre_id") or None,
-            bebida_id=d.get("bebida_id") or None,
         )
         db.session.add(dia)
         db.session.flush()
@@ -146,6 +139,8 @@ def guardar_dias_menu(menu_id):
 
         dia.platos_fuertes = ids_a_platillos(d.get("platos_fuertes_ids", []))
         dia.guarniciones = ids_a_platillos(d.get("guarniciones_ids", []))
+        dia.bebidas = ids_a_platillos(d.get("bebidas_ids", []))
+        dia.postres = ids_a_platillos(d.get("postres_ids", []))
 
     db.session.commit()
     return jsonify(menu.to_dict(include_dias=True))

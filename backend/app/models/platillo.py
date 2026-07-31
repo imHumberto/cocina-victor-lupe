@@ -15,7 +15,7 @@ class Platillo(db.Model):
     activo = db.Column(db.Boolean, default=True, nullable=False)
     es_alternativa = db.Column(db.Boolean, default=False, nullable=False)
     proteina = db.Column(db.String(20))  # pollo | res | cerdo | vegetariano | None
-    variante_proteina = db.Column(db.Boolean, default=False, nullable=False)
+    variantes_proteina = db.Column(db.Text)  # "pollo,res" | "pollo,cerdo" | "res,cerdo" | etc. | None
 
     def to_dict(self):
         return {
@@ -27,5 +27,5 @@ class Platillo(db.Model):
             "activo": self.activo,
             "es_alternativa": self.es_alternativa,
             "proteina": self.proteina,
-            "variante_proteina": self.variante_proteina,
+            "variantes_proteina": self.variantes_proteina,
         }

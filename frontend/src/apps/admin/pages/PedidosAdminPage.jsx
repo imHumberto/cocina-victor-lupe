@@ -316,6 +316,12 @@ function ResumenPedido({ pedido }) {
         <div className="d-flex justify-content-between align-items-center py-1 px-2" style={{ borderBottom: "1px solid #f3f4f6" }}>
           <span style={sub}>{bebida}</span>
         </div>
+        {/* Detalle postre */}
+        {pedido.postre_nombre && (
+          <div className="d-flex justify-content-between align-items-center py-1 px-2" style={{ borderBottom: "1px solid #f3f4f6" }}>
+            <span style={sub}>{pedido.postre_nombre}</span>
+          </div>
+        )}
         {/* Notas */}
         {pedido.notas && (
           <div className="py-2 px-2" style={{ borderBottom: "1px solid #f3f4f6" }}>

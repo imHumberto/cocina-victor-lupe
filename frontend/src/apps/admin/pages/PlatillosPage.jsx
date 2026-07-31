@@ -17,7 +17,13 @@ const TIPO_COLORS = {
   bebida:       { bg: "#e0f2fe", color: "#075985" },
 };
 
-const FORM_VACIO = { nombre: "", tipo: "", descripcion: "", foto_url: "", es_alternativa: false, proteina: "", variante_proteina: false };
+const FORM_VACIO = { nombre: "", tipo: "", descripcion: "", foto_url: "", es_alternativa: false, proteina: "", variantes_proteina: "" };
+
+const PROTEINAS = [
+  { value: "pollo", label: "🐔 Pollo" },
+  { value: "res",   label: "🥩 Res" },
+  { value: "cerdo", label: "🐷 Cerdo" },
+];
 
 export default function PlatillosPage() {
   const [platillos, setPlatillos] = useState([]);
@@ -48,7 +54,7 @@ export default function PlatillosPage() {
   };
 
   const abrirEditar = (p) => {
-    setForm({ nombre: p.nombre, tipo: p.tipo, descripcion: p.descripcion ?? "", foto_url: p.foto_url ?? "", es_alternativa: p.es_alternativa ?? false, proteina: p.proteina ?? "", variante_proteina: p.variante_proteina ?? false });
+    setForm({ nombre: p.nombre, tipo: p.tipo, descripcion: p.descripcion ?? "", foto_url: p.foto_url ?? "", es_alternativa: p.es_alternativa ?? false, proteina: p.proteina ?? "", variantes_proteina: p.variantes_proteina ?? "" });
     setEditId(p.id);
     setMsg("");
     setDrawer("editar");
@@ -259,7 +265,7 @@ export default function PlatillosPage() {
               <div style={{ fontSize: "0.75rem", color: "#809FB8", marginTop: 2 }}>Disponible como opción alternativa en menús</div>
             </div>
             <div
-              onClick={() => setForm(f => ({ ...f, es_alternativa: !f.es_alternativa, variante_proteina: !f.es_alternativa ? f.variante_proteina : false }))}
+              onClick={() => setForm(f => ({ ...f, es_alternativa: !f.es_alternativa }))}
               style={{
                 width: 44, height: 24, borderRadius: 999, cursor: "pointer",
                 background: form.es_alternativa ? "#1255F0" : "#e5e7eb",
@@ -276,29 +282,44 @@ export default function PlatillosPage() {
             </div>
           </div>
 
-          {/* Variante de proteína — para cualquier plato fuerte (principal o alternativa) */}
+          {/* Variantes de proteína — para cualquier plato fuerte */}
           {form.tipo === "plato_fuerte" && (
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 0", borderTop: "1px solid #f3f4f6" }}>
-              <div>
-                <div style={{ fontSize: "0.9rem", fontWeight: 600, color: "#17181A" }}>Pide variante de proteína</div>
-                <div style={{ fontSize: "0.75rem", color: "#809FB8", marginTop: 2 }}>El cliente elige 🐔 Pollo o 🥩 Res al ordenar</div>
+            <div style={{ padding: "14px 0", borderTop: "1px solid #f3f4f6" }}>
+              <div style={{ fontSize: "0.9rem", fontWeight: 600, color: "#17181A", marginBottom: 4 }}>Variantes de proteína</div>
+              <div style={{ fontSize: "0.75rem", color: "#809FB8", marginBottom: 10 }}>
+                El cliente elige al ordenar entre las proteínas que marques
               </div>
-              <div
-                onClick={() => setForm(f => ({ ...f, variante_proteina: !f.variante_proteina }))}
-                style={{
-                  width: 44, height: 24, borderRadius: 999, cursor: "pointer",
-                  background: form.variante_proteina ? "#094D40" : "#e5e7eb",
-                  position: "relative", transition: "background 0.15s", flexShrink: 0,
-                }}
-              >
-                <div style={{
-                  position: "absolute", top: 3,
-                  width: 18, height: 18, borderRadius: "50%",
-                  background: "#fff", transition: "left 0.15s",
-                  left: form.variante_proteina ? 23 : 3,
-                  boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
-                }} />
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                {PROTEINAS.map(({ value, label }) => {
+                  const activas = (form.variantes_proteina || "").split(",").filter(Boolean);
+                  const activa = activas.includes(value);
+                  return (
+                    <button
+                      key={value}
+                      type="button"
+                      onClick={() => {
+                        const nuevas = activa
+                          ? activas.filter(x => x !== value)
+                          : [...activas, value];
+                        setForm(f => ({ ...f, variantes_proteina: nuevas.join(",") }));
+                      }}
+                      style={{
+                        padding: "7px 16px", borderRadius: 999, fontSize: "0.82rem",
+                        fontWeight: activa ? 700 : 400, cursor: "pointer",
+                        border: `1.5px solid ${activa ? "#094D40" : "#e5e7eb"}`,
+                        background: activa ? "#094D40" : "#f9fafb",
+                        color: activa ? "#fff" : "#374151",
+                        transition: "all 0.12s",
+                      }}
+                    >{label}</button>
+                  );
+                })}
               </div>
+              {form.variantes_proteina && (
+                <div style={{ fontSize: "0.72rem", color: "#809FB8", marginTop: 8 }}>
+                  El cliente verá: {(form.variantes_proteina).split(",").filter(Boolean).map(v => PROTEINAS.find(p => p.value === v)?.label).join(" · ")}
+                </div>
+              )}
             </div>
           )}
         </form>

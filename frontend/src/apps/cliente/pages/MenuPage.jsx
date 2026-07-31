@@ -155,8 +155,8 @@ export default function MenuPage() {
           <div className="menu-detalle">
             <MenuRow icon="bi-egg-fried" label="Entrada" valor={platilloNombre(diaActivo.entrada)} />
             <MenuRow icon="bi-grid-3x3-gap" label="Guarnición" valor={diaActivo.guarniciones?.map(p => p.nombre).join(" / ") || "—"} />
-            <MenuRow icon="bi-cup-straw" label="Bebida" valor={platilloNombre(diaActivo.bebida)} />
-            <MenuRow icon="bi-cake2" label="Postre" valor={platilloNombre(diaActivo.postre)} />
+            <MenuRow icon="bi-cup-straw" label="Bebida" valor={diaActivo.bebidas?.length ? diaActivo.bebidas.map(b => b.nombre).join(" · ") : "—"} />
+            <MenuRow icon="bi-cake2" label="Postre" valor={diaActivo.postres?.length ? diaActivo.postres.map(p => p.nombre).join(" · ") : "—"} />
           </div>
 
           {!esHoy && tab < hoyIdx && (

@@ -112,9 +112,10 @@ const comidaVacia = (dia) => ({
   conEntrada: true,
   guarnicionId: dia?.guarniciones?.[0]?.id ?? null,
   conGuarnicion: true,
-  bebidaId: dia?.bebida?.id ?? null,
+  bebidaId: dia?.bebidas?.[0]?.id ?? null,
   esAltBebida: false,
   conBebida: true,
+  postreId: dia?.postres?.[0]?.id ?? null,
   conPostre: true,
   notas: "",
 });
@@ -296,6 +297,7 @@ export default function OrdenarPage() {
         plato_id: platoId,
         plato_variante: comidas[0]?.platoVariante ?? null,
         bebida_id: bebidaId,
+        postre_id: comidas[0]?.postreId ?? null,
         metodo_pago: metodoPago,
         comprobante_url: comprobante_url || null,
         notas: notas || null,
@@ -347,8 +349,9 @@ export default function OrdenarPage() {
         <p className="fw-bold mb-3" style={{ fontSize: "0.85rem", textTransform: "uppercase", letterSpacing: "0.05em", color: "#aaa" }}>Tu pedido</p>
         {comidas.map((c, idx) => {
           const pEleg = c.esAltPlato ? dia?.alternativas_plato?.find(p => p.id === c.platoId) : dia?.platos_fuertes?.find(p => p.id === c.platoId);
-          const bEleg = c.esAltBebida ? dia?.alternativas_bebida?.find(p => p.id === c.bebidaId) : dia?.bebida;
+          const bEleg = c.esAltBebida ? dia?.alternativas_bebida?.find(p => p.id === c.bebidaId) : dia?.bebidas?.find(b => b.id === c.bebidaId);
           const gEleg = dia?.guarniciones?.find(g => g.id === c.guarnicionId) ?? dia?.guarniciones?.[0];
+          const postEleg = dia?.postres?.find(p => p.id === c.postreId);
           return (
             <div key={idx} className={idx < comidas.length - 1 ? "mb-3 pb-3 border-bottom" : "mb-0"}>
               {comidas.length > 1 && (
@@ -357,8 +360,8 @@ export default function OrdenarPage() {
               {dia?.entrada && <FilaResumen label="Entrada" valor={c.conEntrada ? dia.entrada.nombre : "Sin entrada"} muted={!c.conEntrada} />}
               {pEleg && <FilaResumen label="Plato" valor={pEleg.nombre} />}
               {dia?.guarniciones?.length > 0 && <FilaResumen label="Guarnición" valor={c.conGuarnicion ? (gEleg?.nombre ?? "—") : "Sin guarnición"} muted={!c.conGuarnicion} />}
-              <FilaResumen label="Bebida" valor={c.conBebida ? (bEleg?.nombre ?? "—") : "Sin bebida"} muted={!c.conBebida} />
-              {dia?.postre && <FilaResumen label="Postre" valor={c.conPostre ? dia.postre.nombre : "Sin postre"} muted={!c.conPostre} />}
+              {dia?.bebidas?.length > 0 && <FilaResumen label="Bebida" valor={c.conBebida ? (bEleg?.nombre ?? "—") : "Sin bebida"} muted={!c.conBebida} />}
+              {dia?.postres?.length > 0 && <FilaResumen label="Postre" valor={c.conPostre ? (postEleg?.nombre ?? "—") : "Sin postre"} muted={!c.conPostre} />}
               {c.notas && <FilaResumen label="Nota" valor={c.notas} muted />}
             </div>
           );
@@ -446,9 +449,9 @@ export default function OrdenarPage() {
                   else if (dia?.platos_fuertes?.length > 1 && c.platoId !== dia.platos_fuertes[0]?.id) cambios.push(dia?.platos_fuertes?.find(p => p.id === c.platoId)?.nombre);
                   if (!c.conEntrada && dia?.entrada) cambios.push("sin entrada");
                   if (!c.conGuarnicion && dia?.guarniciones?.length) cambios.push("sin guarnición");
-                  if (!c.conBebida && dia?.bebida) cambios.push("sin bebida");
+                  if (!c.conBebida && dia?.bebidas?.length) cambios.push("sin bebida");
                   else if (c.esAltBebida && c.bebidaId) cambios.push(dia?.alternativas_bebida?.find(p => p.id === c.bebidaId)?.nombre);
-                  if (!c.conPostre && dia?.postre) cambios.push("sin postre");
+                  if (!c.conPostre && dia?.postres?.length) cambios.push("sin postre");
                   const lista = cambios.filter(Boolean);
                   return (
                     <div className="text-muted small">
@@ -487,21 +490,23 @@ export default function OrdenarPage() {
                   ))}
                   {/* Sub-selector de proteína (plato principal o alternativa) */}
                   {(() => {
+                    const PROTEINA_LABELS = { pollo: "🐔 Pollo", res: "🥩 Res", cerdo: "🐷 Cerdo" };
                     const platoPrincipal = dia.platos_fuertes?.find(p => p.id === c.platoId);
                     const platoAlt = dia.alternativas_plato?.find(p => p.id === c.platoId);
                     const platoSel = c.esAltPlato ? platoAlt : platoPrincipal;
-                    if (!platoSel?.variante_proteina) return null;
+                    const opciones = platoSel?.variantes_proteina?.split(",").filter(Boolean) ?? [];
+                    if (!opciones.length) return null;
                     return (
                       <div className="proteina-selector">
                         <div className="proteina-selector__label">¿De qué proteína?</div>
                         <div className="proteina-opciones">
-                          {[{ value: "pollo", label: "🐔 Pollo" }, { value: "res", label: "🥩 Res" }].map(({ value, label }) => (
+                          {opciones.map((value) => (
                             <button
                               key={value}
                               type="button"
                               className={`proteina-btn${c.platoVariante === value ? " proteina-btn--activo" : ""}`}
                               onClick={() => setComida(idx, "platoVariante", c.platoVariante === value ? null : value)}
-                            >{label}</button>
+                            >{PROTEINA_LABELS[value] ?? value}</button>
                           ))}
                         </div>
                       </div>
@@ -519,11 +524,13 @@ export default function OrdenarPage() {
                   </SeccionOpcional>
                 )}
 
-                {dia.bebida && (
+                {dia.bebidas?.length > 0 && (
                   <SeccionOpcional titulo="Bebida" activo={c.conBebida} onToggle={() => setComida(idx, "conBebida", !c.conBebida)}>
-                    <RadioOpcion nombre={dia.bebida.nombre} precio={0}
-                      seleccionado={c.conBebida && !c.esAltBebida}
-                      onSelect={() => { setComida(idx, "bebidaId", dia.bebida.id); setComida(idx, "esAltBebida", false); setComida(idx, "conBebida", true); }} />
+                    {dia.bebidas.map((b) => (
+                      <RadioOpcion key={b.id} nombre={b.nombre} precio={0}
+                        seleccionado={c.conBebida && !c.esAltBebida && c.bebidaId === b.id}
+                        onSelect={() => { setComida(idx, "bebidaId", b.id); setComida(idx, "esAltBebida", false); setComida(idx, "conBebida", true); }} />
+                    ))}
                     {dia.alternativa_bebida_disponible && dia.alternativas_bebida?.map((p) => (
                       <RadioOpcion key={p.id} nombre={p.nombre} precio={EXTRA_BEBIDA}
                         seleccionado={c.conBebida && c.esAltBebida && c.bebidaId === p.id}
@@ -532,10 +539,13 @@ export default function OrdenarPage() {
                   </SeccionOpcional>
                 )}
 
-                {dia.postre && (
+                {dia.postres?.length > 0 && (
                   <SeccionOpcional titulo="Postre" activo={c.conPostre} onToggle={() => setComida(idx, "conPostre", !c.conPostre)}>
-                    <RadioOpcion nombre={dia.postre.nombre} precio={0} descripcion={dia.postre.descripcion}
-                      seleccionado={c.conPostre} onSelect={() => setComida(idx, "conPostre", true)} />
+                    {dia.postres.map((p) => (
+                      <RadioOpcion key={p.id} nombre={p.nombre} precio={0} descripcion={p.descripcion}
+                        seleccionado={c.conPostre && c.postreId === p.id}
+                        onSelect={() => { setComida(idx, "postreId", p.id); setComida(idx, "conPostre", true); }} />
+                    ))}
                   </SeccionOpcional>
                 )}
 
@@ -706,9 +716,9 @@ export default function OrdenarPage() {
                         cambios.push({ label: `${pElegido.nombre}${variante}`, precio: `+$${EXTRA_PLATO}` });
                       }
                       if (!c.conGuarnicion && dia?.guarniciones?.length) cambios.push({ label: "Sin guarnición" });
-                      if (!c.conBebida && dia?.bebida)    cambios.push({ label: "Sin bebida" });
+                      if (!c.conBebida && dia?.bebidas?.length) cambios.push({ label: "Sin bebida" });
                       else if (c.esAltBebida && bElegida) cambios.push({ label: bElegida.nombre, precio: `+$${EXTRA_BEBIDA}` });
-                      if (!c.conPostre && dia?.postre)    cambios.push({ label: "Sin postre" });
+                      if (!c.conPostre && dia?.postres?.length) cambios.push({ label: "Sin postre" });
                       if (c.notas) cambios.push({ label: `"${c.notas}"` });
                       return cambios.length === 0
                         ? null
@@ -779,10 +789,10 @@ export default function OrdenarPage() {
             disabled={
               (paso === 1 && comidas.some(c => {
                 if (!c.platoId) return true;
-                if (c.esAltPlato) {
-                  const alt = dia?.alternativas_plato?.find(p => p.id === c.platoId);
-                  if (alt?.variante_proteina && !c.platoVariante) return true;
-                }
+                const platoPrincipal = dia?.platos_fuertes?.find(p => p.id === c.platoId);
+                const platoAlt = dia?.alternativas_plato?.find(p => p.id === c.platoId);
+                const platoSel = c.esAltPlato ? platoAlt : platoPrincipal;
+                if (platoSel?.variantes_proteina && !c.platoVariante) return true;
                 return false;
               })) ||
               (paso === 2 && !!zonaError)
