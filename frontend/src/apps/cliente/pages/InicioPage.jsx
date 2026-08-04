@@ -119,7 +119,8 @@ export default function InicioPage() {
   const hoy = dayjs();
   const tieneContenido = (dia?.platos_fuertes?.length ?? 0) > 0;
   const esVacio = !loading && (!dia || !tieneContenido);
-  const puedeOrdenar = !esVacio && !pedidosPausados;
+  const fueraDeHorario = hoy.hour() > 15 || (hoy.hour() === 15 && hoy.minute() >= 40);
+  const puedeOrdenar = !esVacio && !pedidosPausados && !fueraDeHorario;
 
   const DISMISS_KEY = "pedido_dismissed";
 
@@ -295,7 +296,7 @@ export default function InicioPage() {
                   className="cliente-btn-ordenar"
                   onClick={() => navigate("/cliente/ordenar", { state: { cantidad } })}
                 >
-                  Ordenar · ${130 * cantidad}
+                  Ordenar · ${120 * cantidad}
                 </button>
                 <button
                   className="cliente-btn-contador"
@@ -311,9 +312,9 @@ export default function InicioPage() {
               </div>
             )
           ) : (
-            !pedidosPausados && (
+            !pedidosPausados && fueraDeHorario && (
               <p className="text-muted text-center small mt-3">
-                El tiempo para ordenar hoy ya pasó (límite 3:40 PM)
+                El horario para pedir ha terminado (límite 3:40 PM)
               </p>
             )
           )}
