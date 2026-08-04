@@ -292,7 +292,7 @@ export default function MenuAdminPage() {
     try {
       const payload = dias.map((d) => ({
         dia: d.dia,
-        activo: d.activo,
+        activo: d.activo && d.platos_fuertes_ids.length > 0,
         platos_fuertes_ids: d.activo ? d.platos_fuertes_ids : [],
         guarniciones_ids: d.activo ? d.guarniciones_ids : [],
         bebidas_ids: d.activo ? d.bebidas_ids : [],
