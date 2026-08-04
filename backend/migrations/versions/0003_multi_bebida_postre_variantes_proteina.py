@@ -7,7 +7,7 @@ Create Date: 2026-07-31
 from alembic import op
 import sqlalchemy as sa
 
-revision = '0003_multi_bebida_postre_variantes_proteina'
+revision = '0003_multi_menu_variantes'
 down_revision = '0002_add_direccion_coords_radio'
 branch_labels = None
 depends_on = None
